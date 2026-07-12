@@ -4,7 +4,7 @@ Plataforma gamificada de micro-recompensas con una economía interna auditable. 
 
 ## Estado
 
-La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, Tap Miner, Memory Drops y misiones diarias server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
+La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, Tap Miner, Memory Drops, misiones diarias, tienda y minería virtual server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
 
 ## Inicio local
 
@@ -18,6 +18,12 @@ corepack pnpm db:generate
 corepack pnpm db:migrate
 corepack pnpm db:seed
 corepack pnpm dev
+```
+
+La liquidación diaria de minería se ejecuta únicamente para un período UTC ya cerrado; sin argumento usa ayer:
+
+```powershell
+corepack pnpm mining:settle -- 2026-07-11
 ```
 
 - Web: http://localhost:3000
@@ -53,6 +59,9 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Faucet con challenges de un solo uso, cooldown, dispositivo vinculado a sesión, límites de cuenta/dispositivo/IP, presupuesto UTC, racha y acreditación atómica al ledger.
 - Tap Miner y Memory Drops con energía regenerable, sesiones firmadas, secuencia e idempotencia de eventos, validación temporal y recompensas calculadas exclusivamente por el servidor.
 - Misiones derivadas de claims y recompensas realmente posteadas, con períodos UTC, claim explícito e idempotente, presupuesto propio y acreditación atómica.
+- Tienda con catálogo versionado, cobro promocional primero, split contable 40/40/20, límites y efectos aplicados en una sola transacción.
+- Minería virtual sin PoW, energía separada de juegos, mineros persistentes, boosts, mejoras, reparaciones y contribución ponderada por tiempo.
+- Liquidación minera UTC idempotente: un asiento global pool→usuarios, redondeo hacia abajo con residuo explícito y bloqueo sin pagos parciales si el pool no está completamente respaldado.
 - Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica

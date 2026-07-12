@@ -100,6 +100,11 @@ export class PrismaLedgerStore implements LedgerPostingStore {
     if (!original) {
       throw new LedgerTransactionNotFoundError(input.transactionId);
     }
+    if (["store_purchase", "miner_action"].includes(original.sourceType)) {
+      throw new LedgerReversalError(
+        `Source ${original.sourceType} requires a dedicated effect-clawback workflow`,
+      );
+    }
 
     const reversalInput = makeReversalInput(original, input);
     const existing = await findExisting(tx, reversalInput);
@@ -215,6 +220,24 @@ async function rejectRewardProjection(
       },
       data: { status: "REJECTED" },
     });
+    return;
+  }
+  if (transaction.sourceType === "mining_epoch") {
+    const periodDate = new Date(`${transaction.sourceId}T00:00:00.000Z`);
+    if (!Number.isNaN(periodDate.getTime())) {
+      await tx.miningEpoch.updateMany({
+        where: {
+          periodDate,
+          transactionId: transaction.id,
+          status: "SETTLED",
+        },
+        data: { status: "REVERSED", reasonCode: "PAYOUT_REVERSED" },
+      });
+      await tx.miningPayout.updateMany({
+        where: { transactionId: transaction.id, status: "POSTED" },
+        data: { status: "REVERSED", reversedAt: new Date() },
+      });
+    }
   }
 }
 

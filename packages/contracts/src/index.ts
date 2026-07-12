@@ -313,6 +313,235 @@ export const missionClaimResponseSchema = z.object({
   replayed: z.boolean(),
 });
 
+export const storeProductIdSchema = z.enum([
+  "b1",
+  "b2",
+  "b3",
+  "b4",
+  "b5",
+  "b6",
+]);
+export const storePurchaseRequestSchema = z.object({
+  productId: storeProductIdSchema,
+  configVersion: z.number().int().positive(),
+});
+export const storeCatalogResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  configVersion: z.number().int().positive(),
+  paymentBalances: z.object({
+    AVAILABLE: z.string().regex(/^\d+$/),
+    PROMOTIONAL: z.string().regex(/^\d+$/),
+  }),
+  paymentOrder: z.tuple([z.literal("PROMOTIONAL"), z.literal("AVAILABLE")]),
+  allowedPaymentBuckets: z.tuple([
+    z.literal("PROMOTIONAL"),
+    z.literal("AVAILABLE"),
+  ]),
+  slots: z.object({
+    used: z.number().int().nonnegative(),
+    max: z.number().int().positive(),
+  }),
+  split: z.object({
+    burnBps: z.number().int().nonnegative(),
+    recycleBps: z.number().int().nonnegative(),
+    treasuryBps: z.number().int().nonnegative(),
+  }),
+  products: z.array(
+    z.object({
+      id: storeProductIdSchema,
+      kind: z.enum([
+        "ENERGY_REFILL",
+        "HASH_BOOST",
+        "LOCKED",
+        "REPAIR_KIT",
+        "MINER",
+      ]),
+      name: z.string(),
+      description: z.string(),
+      category: z.enum(["UTILITY", "BOOST", "PREMIUM", "MINER"]),
+      enabled: z.boolean(),
+      lockedReason: z.string().nullable(),
+      state: z.enum([
+        "AVAILABLE",
+        "LOCKED",
+        "ACTIVE",
+        "LIMIT_REACHED",
+        "NO_SLOT",
+        "DISABLED",
+      ]),
+      reasonCode: z.string().nullable(),
+      priceMinorUnits: z.string().regex(/^\d+$/),
+      price: z.object({
+        asset: z.literal("ZYXE"),
+        minorUnits: z.string().regex(/^\d+$/),
+      }),
+      meta: z.string(),
+      purchasesToday: z.number().int().nonnegative(),
+      remainingToday: z.number().int().nonnegative().nullable(),
+      effect: z.object({
+        type: z.string(),
+        label: z.string(),
+        durationSeconds: z.number().int().positive().optional(),
+        multiplierBps: z.number().int().positive().optional(),
+        maxPerDay: z.number().int().positive().optional(),
+        energyTo: z.number().int().positive().optional(),
+        miner: z
+          .object({
+            modelId: z.string(),
+            name: z.string(),
+            tier: z.string(),
+            hashRate: z.number().int().positive(),
+            energyPerHour: z.number().int().nonnegative(),
+            efficiencyBps: z.number().int().positive(),
+          })
+          .optional(),
+      }),
+      limits: z.object({
+        perUtcDay: z.number().int().positive().nullable(),
+        remainingToday: z.number().int().nonnegative().nullable(),
+        maxActive: z.number().int().positive().nullable(),
+        requiresSlot: z.boolean(),
+      }),
+    }),
+  ),
+});
+
+export const miningStatusResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  configVersion: z.number().int().positive(),
+  state: z.enum([
+    "ACTIVE",
+    "IDLE",
+    "OUT_OF_ENERGY",
+    "DISABLED",
+    "RISK_BLOCKED",
+  ]),
+  reasonCode: z.string().nullable(),
+  profile: z.object({
+    energy: z.object({
+      current: z.number().int().nonnegative(),
+      max: z.number().int().positive(),
+      consumptionPerHour: z.number().int().nonnegative(),
+      estimatedExhaustsAt: z.string().datetime().nullable(),
+    }),
+    boost: z
+      .object({
+        multiplierBps: z.number().int().positive(),
+        expiresAt: z.string().datetime(),
+      })
+      .nullable(),
+    repairKits: z.number().int().nonnegative(),
+    activeMiners: z.number().int().nonnegative(),
+    maxSlots: z.number().int().positive(),
+  }),
+  miners: z.array(
+    z.object({
+      id: z.string().uuid(),
+      modelId: z.string(),
+      name: z.string(),
+      tier: z.string(),
+      slot: z.number().int().positive(),
+      status: z.enum(["ACTIVE", "DISABLED"]),
+      reasonCode: z.string().nullable(),
+      level: z.number().int().positive(),
+      hashRate: z.number().int().positive(),
+      energyPerHour: z.number().int().nonnegative(),
+      efficiencyBps: z.number().int().positive(),
+      durabilityBps: z.number().int().nonnegative(),
+      effectiveHashRate: z.number().int().nonnegative(),
+      upgrade: z.object({
+        nextLevel: z.number().int().positive(),
+        priceMinorUnits: z.string().regex(/^\d+$/),
+        hashRate: z.number().int().positive(),
+        enabled: z.boolean(),
+      }),
+      repair: z.object({
+        priceMinorUnits: z.string().regex(/^\d+$/),
+        usesKit: z.boolean(),
+        enabled: z.boolean(),
+      }),
+    }),
+  ),
+  today: z.object({
+    periodKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startAt: z.string().datetime(),
+    endAt: z.string().datetime(),
+    hashMillis: z.string().regex(/^\d+$/),
+    poolMinorUnits: z.string().regex(/^\d+$/),
+    estimatedPayoutMinorUnits: z.string().regex(/^\d+$/),
+    asOf: z.string().datetime(),
+    isGuaranteed: z.literal(false),
+    status: z.enum(["OPEN", "BLOCKED", "SETTLED", "REVERSED"]),
+    allocatedMinorUnits: z.string().regex(/^\d+$/).nullable(),
+    residueMinorUnits: z.string().regex(/^\d+$/),
+    userWeight: z.string().regex(/^\d+$/),
+    totalWeight: z.string().regex(/^\d+$/),
+  }),
+});
+
+const appliedEffectSchema = z.object({
+  type: z.string(),
+  status: z.literal("APPLIED"),
+  refId: z.string(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime().nullable(),
+});
+export const storePurchaseResponseSchema = z.object({
+  purchase: z.object({
+    id: z.string().uuid(),
+    productId: storeProductIdSchema,
+    status: z.literal("POSTED"),
+    quantity: z.literal(1),
+    totalMinorUnits: z.string().regex(/^\d+$/),
+    price: z.object({
+      asset: z.literal("ZYXE"),
+      minorUnits: z.string().regex(/^\d+$/),
+    }),
+    payment: z.object({
+      availableMinorUnits: z.string().regex(/^\d+$/),
+      promotionalMinorUnits: z.string().regex(/^\d+$/),
+    }),
+    split: z.object({
+      burnMinorUnits: z.string().regex(/^\d+$/),
+      rewardPoolsMinorUnits: z.string().regex(/^\d+$/),
+      recycleMinorUnits: z.string().regex(/^\d+$/),
+      treasuryMinorUnits: z.string().regex(/^\d+$/),
+    }),
+    effect: appliedEffectSchema,
+    transactionId: z.string().uuid(),
+    configVersion: z.number().int().positive(),
+    createdAt: z.string().datetime(),
+  }),
+  mining: miningStatusResponseSchema,
+  replayed: z.boolean(),
+});
+
+export const minerMutationRequestSchema = z.object({
+  configVersion: z.number().int().positive(),
+});
+export const minerActionResponseSchema = z.object({
+  action: z.object({
+    id: z.string().uuid(),
+    minerId: z.string().uuid(),
+    type: z.enum(["UPGRADE", "REPAIR"]),
+    status: z.literal("POSTED"),
+    costMinorUnits: z.string().regex(/^\d+$/),
+    payment: z.object({
+      availableMinorUnits: z.string().regex(/^\d+$/),
+      promotionalMinorUnits: z.string().regex(/^\d+$/),
+    }),
+    split: z.object({
+      burnMinorUnits: z.string().regex(/^\d+$/),
+      recycleMinorUnits: z.string().regex(/^\d+$/),
+      treasuryMinorUnits: z.string().regex(/^\d+$/),
+    }),
+    transactionId: z.string().uuid().nullable(),
+    configVersion: z.number().int().positive(),
+  }),
+  mining: miningStatusResponseSchema,
+  replayed: z.boolean(),
+});
+
 export const registerRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z
@@ -389,3 +618,9 @@ export type MissionCatalogResponse = z.infer<
   typeof missionCatalogResponseSchema
 >;
 export type MissionClaimResponse = z.infer<typeof missionClaimResponseSchema>;
+export type StorePurchaseRequest = z.infer<typeof storePurchaseRequestSchema>;
+export type StoreCatalogResponse = z.infer<typeof storeCatalogResponseSchema>;
+export type StorePurchaseResponse = z.infer<typeof storePurchaseResponseSchema>;
+export type MiningStatusResponse = z.infer<typeof miningStatusResponseSchema>;
+export type MinerMutationRequest = z.infer<typeof minerMutationRequestSchema>;
+export type MinerActionResponse = z.infer<typeof minerActionResponseSchema>;

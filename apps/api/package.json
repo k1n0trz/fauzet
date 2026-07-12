@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "mining:settle": "tsx src/scripts/settle-mining.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.0.2",

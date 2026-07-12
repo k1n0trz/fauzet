@@ -1084,6 +1084,633 @@
   color: #bbf7d0;
   font-size: 13px;
 }
+
+/* Store and mining vertical */
+.commerceHeading,
+.miningHeading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 36px;
+  align-items: center;
+}
+.commerceHeroArt,
+.miningMachineArt {
+  object-fit: contain;
+  filter: drop-shadow(0 20px 30px rgba(34, 211, 238, 0.14));
+}
+.commerceSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 30px 0 22px;
+}
+.commerceSummary article,
+.miningStats article {
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(229, 231, 235, 0.08);
+  border-top: 2px solid var(--green);
+  border-radius: 13px;
+  background: var(--surface);
+}
+.commerceSummary article.promotional {
+  border-top-color: #f59e0b;
+}
+.commerceSummary span,
+.commerceSummary strong,
+.commerceSummary small,
+.miningStats span,
+.miningStats strong {
+  display: block;
+}
+.commerceSummary span,
+.miningStats span {
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.commerceSummary strong,
+.miningStats strong {
+  margin-top: 6px;
+  color: var(--text);
+  font: 700 17px var(--font-display);
+  overflow-wrap: anywhere;
+}
+.commerceSummary small {
+  margin-top: 5px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+.storeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.storeCard {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid rgba(229, 231, 235, 0.08);
+  border-radius: 15px;
+  background: var(--surface);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
+}
+.storeCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(57, 255, 136, 0.26);
+}
+.storeCard.locked {
+  border-color: rgba(124, 58, 237, 0.25);
+}
+.storeCardTop,
+.storeCardAction,
+.minerCardHeading,
+.miningPanelTitle,
+.miningSectionTitle,
+.miningStatusLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.storeProductArt {
+  width: 58px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(34, 211, 238, 0.09);
+}
+.storeProductArt img {
+  max-width: 100%;
+  object-fit: contain;
+}
+.storeKind {
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: var(--cyan);
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+}
+.storeKind.kind-premium,
+.storeKind.kind-miner {
+  color: #c4a5f5;
+}
+.storeKind.kind-boost {
+  color: var(--green);
+}
+.storeCard h2 {
+  margin: 16px 0 5px;
+  font: 700 17px var(--font-display);
+}
+.storeCard > p {
+  flex: 1;
+  margin: 0 0 9px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.storeCard > small {
+  color: #6b7280;
+  font-size: 10.5px;
+}
+.storeProductFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+.storeProductFacts div {
+  min-width: 90px;
+  flex: 1;
+  padding: 8px 9px;
+  border-radius: 8px;
+  background: rgba(229, 231, 235, 0.035);
+}
+.storeProductFacts dt,
+.economicRows dt,
+.purchaseReceipt dt,
+.periodPanel dt {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.storeProductFacts dd,
+.economicRows dd,
+.purchaseReceipt dd,
+.periodPanel dd {
+  margin: 5px 0 0;
+  color: var(--text);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.storeReason {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 13px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.08);
+  color: #c4a5f5;
+  font-size: 10px;
+}
+.storeReason code,
+.minerState code,
+.miningStatusLine code {
+  color: #9ca3af;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+.storeCardAction {
+  margin-top: auto;
+}
+.storeCardAction strong {
+  color: var(--text);
+  font: 700 15px var(--font-display);
+}
+.storeCardAction strong::first-line {
+  color: var(--green);
+}
+.storeCardAction button {
+  border: 0;
+  border-radius: 8px;
+  background: rgba(229, 231, 235, 0.07);
+  color: #6b7280;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+.storeCardAction button.button {
+  background: var(--green);
+  color: #04140a;
+}
+.storeCardAction button:disabled {
+  cursor: not-allowed;
+}
+.commercePolicy,
+.miningFormula {
+  margin-top: 20px;
+  padding: 15px 18px;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 13px;
+  background: rgba(34, 211, 238, 0.05);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.commercePolicy strong,
+.miningFormula strong {
+  color: #bae6fd;
+}
+.economicOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(7px);
+}
+.economicDialog {
+  width: min(430px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  border-radius: 18px;
+  background: #0d1220;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+}
+.economicDialog h2 {
+  margin: 0 0 14px;
+  font: 700 19px var(--font-display);
+}
+.economicDialogBody {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.economicRows {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.economicRows div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 15px;
+}
+.economicRows dd {
+  margin: 0;
+  text-align: right;
+  font: 650 12px var(--font-display);
+}
+.economicWarning {
+  margin: 14px 0;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.economicDialogError {
+  margin-bottom: 14px;
+  padding: 10px 11px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 9px;
+  background: rgba(248, 113, 113, 0.07);
+  color: #fecaca;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.economicDialogActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.economicDialogActions button {
+  border: 1px solid rgba(229, 231, 235, 0.14);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  padding: 11px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+.economicDialogActions button.button {
+  border-color: var(--green);
+  background: var(--green);
+  color: #04140a;
+}
+.economicDialogActions button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.purchaseReceipt {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: center;
+  margin: 20px 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(57, 255, 136, 0.25);
+  border-radius: 13px;
+  background: rgba(57, 255, 136, 0.06);
+}
+.purchaseReceipt > div > strong,
+.purchaseReceipt > div > small {
+  display: block;
+}
+.purchaseReceipt > div > strong {
+  color: #bbf7d0;
+}
+.purchaseReceipt > div > small {
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+.purchaseReceipt > dl {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+.purchaseReceipt > dl div {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(8, 11, 18, 0.45);
+}
+.miningHeading {
+  min-height: 160px;
+}
+.miningMachineArt {
+  width: min(280px, 28vw);
+  height: auto;
+}
+.miningStatusLine {
+  margin: 24px 0 10px;
+  justify-content: flex-end;
+  color: #6b7280;
+  font-size: 10px;
+}
+.miningStatusLine > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+  font-weight: 800;
+}
+.miningStatusLine i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6b7280;
+}
+.miningStatusLine > span.active {
+  color: var(--green);
+}
+.miningStatusLine > span.active i {
+  background: var(--green);
+  box-shadow: 0 0 12px rgba(57, 255, 136, 0.5);
+}
+.miningStats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.miningStats article {
+  border-top: 1px solid rgba(229, 231, 235, 0.08);
+}
+.miningStats article.accent strong {
+  color: var(--green);
+}
+.miningFormula {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 20px;
+  align-items: center;
+}
+.miningFormula code {
+  color: #bae6fd;
+  font-size: 11px;
+  text-align: right;
+}
+.miningFormula span {
+  grid-column: 1 / -1;
+  font-size: 10px;
+}
+.miningSectionTitle {
+  margin: 28px 0 12px;
+}
+.miningSectionTitle > div > span,
+.miningSectionTitle > div > small {
+  display: block;
+}
+.miningSectionTitle > div > span {
+  font: 700 18px var(--font-display);
+}
+.miningSectionTitle > div > small {
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 10px;
+}
+.miningSectionTitle > a,
+.miningPanel > a {
+  border: 1px solid rgba(124, 58, 237, 0.36);
+  border-radius: 9px;
+  background: rgba(124, 58, 237, 0.11);
+  color: #c4a5f5;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.minerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.minerCard,
+.miningPanel {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid rgba(229, 231, 235, 0.08);
+  border-radius: 15px;
+  background: var(--surface);
+}
+.minerCard.maintenance {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+.minerCardHeading {
+  justify-content: flex-start;
+}
+.minerCardHeading > span {
+  width: 74px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 11px;
+  background: #0a0e17;
+}
+.minerCardHeading img {
+  object-fit: contain;
+}
+.minerCardHeading > div {
+  min-width: 0;
+  flex: 1;
+}
+.minerCardHeading h2 {
+  margin: 0 0 4px;
+  font: 700 15px var(--font-display);
+}
+.minerCardHeading small {
+  color: #6b7280;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.minerCardHeading > b {
+  color: var(--cyan);
+  font-size: 9px;
+}
+.minerBars {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 12px;
+}
+.minerBars > div > span {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  color: #6b7280;
+  font-size: 9px;
+}
+.minerBars > div > span b {
+  color: var(--muted);
+}
+.minerBars progress,
+.miningPanel > progress {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(229, 231, 235, 0.07);
+}
+.minerBars progress::-webkit-progress-bar,
+.miningPanel > progress::-webkit-progress-bar {
+  background: rgba(229, 231, 235, 0.07);
+}
+.minerBars progress::-webkit-progress-value,
+.miningPanel > progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--cyan);
+}
+.minerBars progress.warning::-webkit-progress-value {
+  background: #f59e0b;
+}
+.minerBars progress::-moz-progress-bar,
+.miningPanel > progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: var(--cyan);
+}
+.minerBars progress.warning::-moz-progress-bar {
+  background: #f59e0b;
+}
+.minerState {
+  min-height: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 800;
+}
+.minerActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.minerActions button {
+  border: 1px solid rgba(57, 255, 136, 0.3);
+  border-radius: 8px;
+  background: rgba(57, 255, 136, 0.09);
+  color: var(--green);
+  padding: 9px;
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+.minerActions button.repair {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+}
+.minerActions button:disabled {
+  border-color: rgba(229, 231, 235, 0.08);
+  background: rgba(229, 231, 235, 0.035);
+  color: #4b5563;
+  cursor: not-allowed;
+}
+.minerReason {
+  display: block;
+  margin-top: 7px;
+  color: #fbbf24;
+  font-size: 9px;
+}
+.miningBottomGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+.miningPanelTitle {
+  margin-bottom: 13px;
+}
+.miningPanelTitle > span {
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.miningPanelTitle > strong {
+  color: var(--cyan);
+  font: 700 13px var(--font-display);
+}
+.miningPanel > p {
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.energyMeta {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.miningPanel > a {
+  display: block;
+  margin-top: 12px;
+  text-align: center;
+}
+.periodPanel dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.periodPanel dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.periodPanel dd {
+  margin: 0;
+  text-align: right;
+}
+.miningReceipt {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.miningReceipt > span {
+  color: var(--green);
+  font: 700 17px var(--font-display);
+}
 .rewardFilters button:focus-visible,
 .gameCta:focus-visible,
 .gameStartButton:focus-visible,
@@ -1091,7 +1718,12 @@
 .memoryCard:focus-visible,
 .missionReward button:focus-visible,
 .gameResultActions .button:focus-visible,
-.rewardError button:focus-visible {
+.rewardError button:focus-visible,
+.storeCardAction button:focus-visible,
+.economicDialogActions button:focus-visible,
+.minerActions button:focus-visible,
+.miningSectionTitle a:focus-visible,
+.miningPanel a:focus-visible {
   outline: 3px solid rgba(34, 211, 238, 0.58);
   outline-offset: 3px;
 }
@@ -1105,6 +1737,13 @@
   }
   .energyCard {
     max-width: 360px;
+  }
+  .storeGrid,
+  .minerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .miningStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (max-width: 700px) {
@@ -1125,6 +1764,28 @@
   }
   .gameCardBody > p {
     min-height: 0;
+  }
+  .commerceHeading,
+  .miningHeading {
+    grid-template-columns: 1fr;
+  }
+  .commerceHeroArt {
+    display: none;
+  }
+  .miningMachineArt {
+    width: min(300px, 80vw);
+    grid-row: 1;
+  }
+  .commerceSummary,
+  .miningBottomGrid,
+  .minerGrid {
+    grid-template-columns: 1fr;
+  }
+  .purchaseReceipt {
+    grid-template-columns: 1fr;
+  }
+  .purchaseReceipt > dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (max-width: 520px) {
@@ -1169,6 +1830,38 @@
     align-items: flex-start;
     flex-direction: column;
   }
+  .storeGrid {
+    grid-template-columns: 1fr;
+  }
+  .miningStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .miningFormula {
+    grid-template-columns: 1fr;
+  }
+  .miningFormula code {
+    text-align: left;
+  }
+  .miningFormula span {
+    grid-column: 1;
+  }
+  .miningSectionTitle {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .minerCardHeading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .minerCardHeading > div {
+    min-width: 150px;
+  }
+  .purchaseReceipt > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .economicDialog {
+    padding: 20px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .tapTarget:active {
@@ -1182,6 +1875,25 @@
   .appNav a,
   .appNav span {
     padding: 8px;
+  }
+  .rewardsHeader {
+    gap: 10px;
+  }
+  .rewardsHeader .brand {
+    flex: none;
+  }
+  .rewardsHeader .appNav {
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+  .rewardsHeader .appNav::-webkit-scrollbar {
+    display: none;
+  }
+  .rewardsHeader .appNav a,
+  .rewardsHeader .appNav span {
+    flex: none;
   }
   .faucetPage {
     padding-inline: 18px;

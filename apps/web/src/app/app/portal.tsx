@@ -270,6 +270,38 @@ export function AuthPortal() {
               </span>
               <span aria-hidden="true">→</span>
             </Link>
+            <Link className="faucetShortcut" href="/app/mining">
+              <span className="faucetShortcutIcon">
+                <Image
+                  src="/rewards/ic-mining.png"
+                  width={30}
+                  height={30}
+                  alt=""
+                />
+              </span>
+              <span>
+                <strong>Sala de minería</strong>
+                <small>
+                  Consulta hashpower válido, energía y el pool estimado.
+                </small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link className="faucetShortcut" href="/app/store">
+              <span className="faucetShortcutIcon">
+                <Image
+                  src="/rewards/ic-boost.png"
+                  width={27}
+                  height={31}
+                  alt=""
+                />
+              </span>
+              <span>
+                <strong>Tienda de boosts</strong>
+                <small>Compra utilidades con precio y pago versionados.</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </nav>
           {balanceError && (
             <div className="notice" role="alert">

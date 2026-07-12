@@ -15,12 +15,18 @@ import { BalanceService, type BalanceStore } from "./domain/balances.js";
 import { FaucetService, type FaucetStore } from "./domain/faucet.js";
 import { GameService, type GameStore } from "./domain/games.js";
 import { MissionService, type MissionStore } from "./domain/missions.js";
+import {
+  MiningService,
+  StoreService,
+  type CommerceStore,
+} from "./domain/commerce.js";
 import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
 import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
 import { MemoryFaucetStore } from "./infrastructure/memory-faucet-store.js";
 import { MemoryGameStore } from "./infrastructure/memory-game-store.js";
 import { MemoryMissionStore } from "./infrastructure/memory-mission-store.js";
+import { MemoryCommerceStore } from "./infrastructure/memory-commerce-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
 import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
@@ -28,6 +34,7 @@ import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
 import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
+import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
 import { SmtpMailer } from "./infrastructure/smtp-mailer.js";
 import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
 import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
@@ -37,6 +44,7 @@ import { registerBalanceRoutes } from "./routes/balances.js";
 import { registerFaucetRoutes } from "./routes/faucet.js";
 import { registerGameRoutes } from "./routes/games.js";
 import { registerMissionRoutes } from "./routes/missions.js";
+import { registerCommerceRoutes } from "./routes/commerce.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
@@ -44,6 +52,7 @@ export interface AppDependencies {
   faucetStore?: FaucetStore;
   gameStore?: GameStore;
   missionStore?: MissionStore;
+  commerceStore?: CommerceStore;
   accountSecurityStore?: AccountSecurityStore;
   mailer?: TransactionalMailer;
   welcomeBonus?: WelcomeBonusIssuer;
@@ -136,6 +145,18 @@ export async function createApp(
     app,
     auth,
     new MissionService(missionStore),
+    config.sessionSecret,
+  );
+  const commerceStore =
+    dependencies.commerceStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryCommerceStore()
+      : new PrismaCommerceStore());
+  await registerCommerceRoutes(
+    app,
+    auth,
+    new StoreService(commerceStore),
+    new MiningService(commerceStore),
     config.sessionSecret,
   );
 

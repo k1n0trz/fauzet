@@ -58,6 +58,11 @@ export function canDiscardGameState(caught: unknown) {
   ]).has(caught.code ?? "");
 }
 
+export function shouldKeepMutationAttempt(caught: unknown) {
+  if (!(caught instanceof ApiRequestError)) return true;
+  return [408, 425, 429].includes(caught.status) || caught.status >= 500;
+}
+
 export function asRecord(value: unknown): UnknownRecord | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as UnknownRecord;

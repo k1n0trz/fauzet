@@ -15,7 +15,8 @@
     "db:migrate": "corepack pnpm --filter @fauzet/database migrate",
     "db:migrate:deploy": "corepack pnpm --filter @fauzet/database exec prisma migrate deploy",
     "db:studio": "corepack pnpm --filter @fauzet/database studio",
-    "db:seed": "corepack pnpm --filter @fauzet/database seed"
+    "db:seed": "corepack pnpm --filter @fauzet/database seed",
+    "mining:settle": "corepack pnpm --filter @fauzet/api mining:settle"
   },
   "devDependencies": {
     "cross-env": "7.0.3",

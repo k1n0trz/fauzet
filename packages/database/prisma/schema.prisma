@@ -66,6 +66,42 @@ enum GameSessionStatus {
   ABORTED
 }
 
+enum StorePurchaseStatus {
+  POSTED
+  REJECTED
+  REVERSED
+  REVERSAL_PENDING
+}
+
+enum MinerStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum MinerActionKind {
+  UPGRADE
+  REPAIR
+}
+
+enum MinerActionStatus {
+  POSTED
+  REJECTED
+  REVERSAL_PENDING
+}
+
+enum MiningEpochStatus {
+  OPEN
+  BLOCKED
+  SETTLED
+  REVERSED
+}
+
+enum MiningPayoutStatus {
+  POSTED
+  REJECTED
+  REVERSED
+}
+
 model User {
   id                      String                   @id @default(uuid())
   email                   String                   @unique
@@ -89,6 +125,12 @@ model User {
   gameEnergy              GameEnergy?
   gameSessions            GameSession[]
   missionClaims           MissionClaim[]
+  storePurchases          StorePurchase[]
+  miningProfile           MiningProfile?
+  miners                  UserMiner[]
+  minerActions            MinerAction[]
+  miningContributions     MiningContribution[]
+  miningPayouts           MiningPayout[]
   auditEvents             AuditEvent[]             @relation("AuditActor")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
@@ -179,6 +221,10 @@ model LedgerTransaction {
   faucetClaim    FaucetClaim?
   gameSession    GameSession?
   missionClaim   MissionClaim?
+  storePurchase  StorePurchase?          @relation("StorePurchaseTransaction")
+  minerAction    MinerAction?            @relation("MinerActionTransaction")
+  miningEpoch    MiningEpoch?            @relation("MiningEpochSettlement")
+  miningPayouts  MiningPayout[]          @relation("MiningPayoutTransaction")
 
   @@unique([sourceType, sourceId, type])
 }
@@ -197,19 +243,24 @@ model LedgerPosting {
 }
 
 model EconomicConfigVersion {
-  id            Int                 @id @default(autoincrement())
-  status        String              @default("DRAFT")
-  parameters    Json
-  reason        String
-  createdById   String
-  approvedById  String?
-  effectiveAt   DateTime?
-  createdAt     DateTime            @default(now())
-  transactions  LedgerTransaction[]
-  faucetClaims  FaucetClaim[]
-  gameEnergy    GameEnergy[]
-  gameSessions  GameSession[]
-  missionClaims MissionClaim[]
+  id             Int                 @id @default(autoincrement())
+  status         String              @default("DRAFT")
+  parameters     Json
+  reason         String
+  createdById    String
+  approvedById   String?
+  effectiveAt    DateTime?
+  createdAt      DateTime            @default(now())
+  transactions   LedgerTransaction[]
+  faucetClaims   FaucetClaim[]
+  gameEnergy     GameEnergy[]
+  gameSessions   GameSession[]
+  missionClaims  MissionClaim[]
+  storePurchases StorePurchase[]
+  miningProfiles MiningProfile[]
+  miners         UserMiner[]
+  minerActions   MinerAction[]
+  miningEpochs   MiningEpoch[]
 }
 
 model FaucetChallenge {
@@ -340,6 +391,155 @@ model MissionClaim {
 
   @@unique([userId, missionId, periodKey])
   @@index([ruleVersion, periodKey, status])
+}
+
+model StorePurchase {
+  id                    String                @id @default(uuid())
+  userId                String
+  productId             String
+  idempotencyKey        String                @unique
+  status                StorePurchaseStatus   @default(POSTED)
+  priceMinor            Decimal               @db.Decimal(36, 0)
+  availableDebitMinor   Decimal               @db.Decimal(36, 0)
+  promotionalDebitMinor Decimal               @db.Decimal(36, 0)
+  burnMinor             Decimal               @db.Decimal(36, 0)
+  recycleMinor          Decimal               @db.Decimal(36, 0)
+  treasuryMinor         Decimal               @db.Decimal(36, 0)
+  effectType            String
+  effectRef             String?
+  evidence              Json                  @default("{}")
+  ruleVersion           Int
+  periodDate            DateTime              @db.Date
+  transactionId         String?               @unique
+  postedAt              DateTime?
+  reversedAt            DateTime?
+  createdAt             DateTime              @default(now())
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config                EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction           LedgerTransaction?    @relation("StorePurchaseTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+  miners                UserMiner[]
+
+  @@index([userId, periodDate, productId, status])
+  @@index([ruleVersion, periodDate, status])
+}
+
+model MiningProfile {
+  userId             String                @id
+  energyCreditMillis Decimal               @db.Decimal(36, 0)
+  lastCheckpointAt   DateTime
+  boostExpiresAt     DateTime?
+  repairKitCount     Int                   @default(0)
+  ruleVersion        Int
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config             EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+}
+
+model UserMiner {
+  id               String                @id @default(uuid())
+  userId           String
+  modelId          String
+  name             String
+  tier             String
+  status           MinerStatus           @default(ACTIVE)
+  slot             Int
+  level            Int                   @default(1)
+  hashRate         Int
+  energyPerHour    Int
+  efficiencyBps    Int
+  durabilityBps    Int                   @default(10000)
+  ruleVersion      Int
+  sourcePurchaseId String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config           EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  sourcePurchase   StorePurchase?        @relation(fields: [sourcePurchaseId], references: [id], onDelete: Restrict)
+  actions          MinerAction[]
+
+  @@unique([sourcePurchaseId])
+  @@unique([userId, slot])
+  @@index([userId, status, createdAt])
+}
+
+model MinerAction {
+  id               String                @id @default(uuid())
+  userId           String
+  minerId          String
+  kind             MinerActionKind
+  idempotencyKey   String                @unique
+  status           MinerActionStatus     @default(POSTED)
+  costMinor        Decimal               @db.Decimal(36, 0)
+  levelBefore      Int
+  levelAfter       Int
+  durabilityBefore Int
+  durabilityAfter  Int
+  formula          Json                  @default("{}")
+  ruleVersion      Int
+  transactionId    String?               @unique
+  postedAt         DateTime?
+  createdAt        DateTime              @default(now())
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  miner            UserMiner             @relation(fields: [minerId], references: [id], onDelete: Restrict)
+  config           EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction      LedgerTransaction?    @relation("MinerActionTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, minerId, createdAt])
+}
+
+model MiningContribution {
+  id         String      @id @default(uuid())
+  userId     String
+  periodDate DateTime    @db.Date
+  hashMillis Decimal     @db.Decimal(36, 0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  user       User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  epoch      MiningEpoch @relation(fields: [periodDate], references: [periodDate], onDelete: Restrict)
+
+  @@unique([userId, periodDate])
+  @@index([periodDate, hashMillis])
+}
+
+model MiningEpoch {
+  periodDate         DateTime              @id @db.Date
+  status             MiningEpochStatus     @default(OPEN)
+  ruleVersion        Int
+  configuredMinor    Decimal               @db.Decimal(36, 0)
+  distributableMinor Decimal               @db.Decimal(36, 0)
+  allocatedMinor     Decimal               @db.Decimal(36, 0)
+  residueMinor       Decimal               @db.Decimal(36, 0)
+  totalHashMillis    Decimal               @db.Decimal(36, 0)
+  reasonCode         String?
+  settlementKey      String?               @unique
+  transactionId      String?               @unique
+  settledAt          DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  config             EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction        LedgerTransaction?    @relation("MiningEpochSettlement", fields: [transactionId], references: [id], onDelete: Restrict)
+  contributions      MiningContribution[]
+  payouts            MiningPayout[]
+}
+
+model MiningPayout {
+  id            String             @id @default(uuid())
+  periodDate    DateTime           @db.Date
+  userId        String
+  status        MiningPayoutStatus @default(POSTED)
+  hashMillis    Decimal            @db.Decimal(36, 0)
+  rewardMinor   Decimal            @db.Decimal(36, 0)
+  transactionId String
+  createdAt     DateTime           @default(now())
+  reversedAt    DateTime?
+  epoch         MiningEpoch        @relation(fields: [periodDate], references: [periodDate], onDelete: Restrict)
+  user          User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transaction   LedgerTransaction  @relation("MiningPayoutTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([periodDate, userId])
+  @@index([userId, periodDate, status])
+  @@index([transactionId, status])
 }
 
 model AuditEvent {

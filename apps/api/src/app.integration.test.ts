@@ -7,6 +7,9 @@ import {
   gameSessionResponseSchema,
   missionCatalogResponseSchema,
   missionClaimResponseSchema,
+  miningStatusResponseSchema,
+  storeCatalogResponseSchema,
+  storePurchaseResponseSchema,
 } from "@fauzet/contracts";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
@@ -19,6 +22,7 @@ import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.
 import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
+import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
 
 const integration = process.env.RUN_INTEGRATION === "true";
 
@@ -45,6 +49,7 @@ describe.runIf(integration)("persistent auth vertical", () => {
         () => new Date(gameNow),
       ),
       missionStore: new PrismaMissionStore(database, () => new Date(gameNow)),
+      commerceStore: new PrismaCommerceStore(database, () => new Date(gameNow)),
     },
   );
 
@@ -1096,6 +1101,112 @@ describe.runIf(integration)("persistent auth vertical", () => {
     });
     expect(reversedReplay.statusCode).toBe(409);
     expect(reversedReplay.json().error.code).toBe("MISSION_CLAIM_REVERSED");
+  });
+
+  it("serves the store and applies a funded mining refill exactly once", async () => {
+    const app = await appPromise;
+    gameNow = new Date();
+    const remoteAddress = testRemoteAddress();
+    const deviceId = crypto.randomUUID();
+    const email = `commerce-${crypto.randomUUID()}@fauzet.local`;
+    const registration = await app.inject({
+      method: "POST",
+      url: "/v1/auth/register",
+      headers: { "x-device-id": deviceId },
+      payload: {
+        email,
+        password: "ValidPassword123",
+        displayName: "Commerce User",
+        countryCode: "CO",
+        locale: "es",
+        acceptedTerms: true,
+        isAdult: true,
+      },
+    });
+    const cookie = registration.cookies.find(
+      ({ name }) => name === "fz_session",
+    )!;
+    await app.inject({
+      method: "POST",
+      url: "/v1/auth/email-verification/request",
+      cookies: { fz_session: cookie.value },
+    });
+    const verification = mailer.verification.at(-1)!;
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/v1/auth/email-verification/confirm",
+          payload: { token: verification.token },
+        })
+      ).statusCode,
+    ).toBe(200);
+
+    const catalogResponse = await app.inject({
+      method: "GET",
+      remoteAddress,
+      url: "/v1/store/catalog",
+      headers: { "x-device-id": deviceId },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(catalogResponse.statusCode).toBe(200);
+    const catalog = storeCatalogResponseSchema.parse(catalogResponse.json());
+    expect(catalog.products).toHaveLength(6);
+    expect(
+      catalog.products.filter(
+        ({ id, enabled }) => ["b3", "b5"].includes(id) && !enabled,
+      ),
+    ).toHaveLength(2);
+    expect(catalog.paymentBalances.PROMOTIONAL).toBe("100");
+
+    gameNow = new Date(gameNow.getTime() + 3_600_000);
+    const purchaseKey = `store-refill-${crypto.randomUUID()}`;
+    const attempts = await Promise.all(
+      [0, 1].map(() =>
+        app.inject({
+          method: "POST",
+          remoteAddress,
+          url: "/v1/store/purchases",
+          headers: {
+            "x-device-id": deviceId,
+            "idempotency-key": purchaseKey,
+          },
+          cookies: { fz_session: cookie.value },
+          payload: { productId: "b1", configVersion: catalog.configVersion },
+        }),
+      ),
+    );
+    expect(attempts.map(({ statusCode }) => statusCode)).toEqual([200, 200]);
+    const receipts = attempts.map((response) =>
+      storePurchaseResponseSchema.parse(response.json()),
+    );
+    expect(receipts.map(({ replayed }) => replayed).sort()).toEqual([
+      false,
+      true,
+    ]);
+    expect(receipts[0]!.purchase).toMatchObject({
+      payment: { promotionalMinorUnits: "80", availableMinorUnits: "0" },
+      split: {
+        burnMinorUnits: "32",
+        recycleMinorUnits: "32",
+        treasuryMinorUnits: "16",
+      },
+    });
+
+    const miningResponse = await app.inject({
+      method: "GET",
+      remoteAddress,
+      url: "/v1/mining/status",
+      headers: { "x-device-id": deviceId },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(miningResponse.statusCode).toBe(200);
+    const mining = miningStatusResponseSchema.parse(miningResponse.json());
+    expect(mining.profile).toMatchObject({
+      energy: { current: 100, max: 100 },
+      activeMiners: 1,
+      maxSlots: 4,
+    });
   });
 
   it("registers, verifies, resets password and revokes the old session", async () => {

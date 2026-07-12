@@ -35,6 +35,14 @@ const missionsPoolFundingMinor = positiveIntegerEnv(
   "MISSIONS_POOL_FUNDING_MINOR",
   missionsDailyBudgetMinor * 30,
 );
+const miningDailyPoolMinor = positiveIntegerEnv(
+  "MINING_DAILY_POOL_MINOR",
+  250_000,
+);
+const miningPoolFundingMinor = positiveIntegerEnv(
+  "MINING_POOL_FUNDING_MINOR",
+  miningDailyPoolMinor * 30,
+);
 if (welcomeBonusBudgetMinor < welcomeBonusMinor) {
   throw new Error("WELCOME_BONUS_BUDGET_MINOR must cover at least one bonus");
 }
@@ -68,6 +76,11 @@ const systemAccounts: Array<{
   {
     code: "platform:zyxe:mission-reward-pool",
     name: "ZYXE mission reward pool",
+    kind: "EQUITY",
+  },
+  {
+    code: "platform:zyxe:mining-reward-pool",
+    name: "ZYXE virtual mining reward pool",
     kind: "EQUITY",
   },
   { code: "platform:zyxe:burn", name: "ZYXE burned", kind: "CONTRA" },
@@ -219,6 +232,102 @@ async function seed() {
       },
     ],
   } as const;
+  const storeParameters = {
+    enabled: true,
+    maxRiskLevel: 50,
+    split: { burnBps: 4000, recycleBps: 4000, treasuryBps: 2000 },
+    products: [
+      {
+        id: "b1",
+        kind: "ENERGY_REFILL",
+        name: "Recarga de energía",
+        description: "Restaura la energía minera al 100%.",
+        category: "UTILITY",
+        enabled: true,
+        priceMinor: 80,
+      },
+      {
+        id: "b2",
+        kind: "HASH_BOOST",
+        name: "Boost de hashpower ×1.5",
+        description: "Aumenta el hash válido durante 6 horas; no acumulable.",
+        category: "BOOST",
+        enabled: true,
+        priceMinor: 150,
+      },
+      {
+        id: "b3",
+        kind: "LOCKED",
+        name: "Acelerador de cooldown",
+        description: "Integración de faucet no disponible.",
+        category: "BOOST",
+        enabled: false,
+        priceMinor: 200,
+        lockedReason: "FAUCET_BOOST_NOT_AVAILABLE",
+      },
+      {
+        id: "b4",
+        kind: "REPAIR_KIT",
+        name: "Kit de reparación",
+        description: "Repara completamente un minero.",
+        category: "UTILITY",
+        enabled: true,
+        priceMinor: 120,
+      },
+      {
+        id: "b5",
+        kind: "LOCKED",
+        name: "Pase de misión premium",
+        description: "Proveedor de misiones premium no disponible.",
+        category: "PREMIUM",
+        enabled: false,
+        priceMinor: 350,
+        lockedReason: "PREMIUM_MISSIONS_NOT_AVAILABLE",
+      },
+      {
+        id: "b6",
+        kind: "MINER",
+        name: "Nova Rig II",
+        description: "Minero premium permanente de 74 GH/s.",
+        category: "MINER",
+        enabled: true,
+        priceMinor: 1200,
+      },
+    ],
+  } as const;
+  const miningParameters = {
+    enabled: true,
+    maxRiskLevel: 50,
+    maxSlots: 4,
+    maxEnergy: 100,
+    initialEnergy: 100,
+    refillMaxPerDay: 3,
+    boostMultiplierBps: 15_000,
+    boostDurationSeconds: 6 * 60 * 60,
+    dailyPoolMinor: miningDailyPoolMinor,
+    maxLevel: 10,
+    upgradeCostMultiplierBps: 16_000,
+    upgradeHashMultiplierBps: 12_500,
+    repairBaseMinor: 200,
+    starter: {
+      modelId: "drip-node",
+      name: "Drip Node",
+      tier: "BASIC",
+      hashRate: 20,
+      energyPerHour: 2,
+      efficiencyBps: 9600,
+      upgradeBaseMinor: 220,
+    },
+    nova: {
+      modelId: "nova-rig-ii",
+      name: "Nova Rig II",
+      tier: "PREMIUM",
+      hashRate: 74,
+      energyPerHour: 6,
+      efficiencyBps: 9200,
+      upgradeBaseMinor: 900,
+    },
+  } as const;
   let activeConfig = await database.economicConfigVersion.findFirst({
     where: { status: "ACTIVE" },
     orderBy: { id: "desc" },
@@ -237,6 +346,8 @@ async function seed() {
           faucet: faucetParameters,
           games: gamesParameters,
           missions: missionsParameters,
+          store: storeParameters,
+          mining: miningParameters,
           purchaseSplit: { burn: 40, recycle: 40, treasury: 20 },
           referralsEnabled: false,
           withdrawalsEnabled: false,
@@ -261,6 +372,8 @@ async function seed() {
             faucet: faucetParameters,
             games: gamesParameters,
             missions: missionsParameters,
+            store: storeParameters,
+            mining: miningParameters,
           },
         },
       });
@@ -280,6 +393,7 @@ async function seed() {
     rewardPool,
     gameRewardPool,
     missionRewardPool,
+    miningRewardPool,
   ] = await Promise.all([
     database.ledgerAccount.findUniqueOrThrow({
       where: { code: "platform:zyxe:issuance" },
@@ -295,6 +409,9 @@ async function seed() {
     }),
     database.ledgerAccount.findUniqueOrThrow({
       where: { code: "platform:zyxe:mission-reward-pool" },
+    }),
+    database.ledgerAccount.findUniqueOrThrow({
+      where: { code: "platform:zyxe:mining-reward-pool" },
     }),
   ]);
   await database.ledgerTransaction.upsert({
@@ -367,6 +484,19 @@ async function seed() {
     },
   });
   await fundPool({
+    idempotencyKey: "seed:closed-beta:mining-reward-pool",
+    type: "MINING_REWARD_POOL_FUNDED",
+    sourceId: `${activeConfig.id}:mining-reward-pool`,
+    configVersion: activeConfig.id,
+    amount: miningPoolFundingMinor,
+    issuanceId: issuance.id,
+    poolId: miningRewardPool.id,
+    metadata: {
+      dailyBudgetMinor: String(miningDailyPoolMinor),
+      fundedMinor: String(miningPoolFundingMinor),
+    },
+  });
+  await fundPool({
     idempotencyKey: "seed:closed-beta:mission-reward-pool",
     type: "MISSION_REWARD_POOL_FUNDED",
     sourceId: `${activeConfig.id}:mission-reward-pool`,
@@ -416,7 +546,11 @@ async function fundPool(input: {
 function hasRuntimeParameters(value: unknown): boolean {
   const parameters = asParameterRecord(value);
   return (
-    "faucet" in parameters && "games" in parameters && "missions" in parameters
+    "faucet" in parameters &&
+    "games" in parameters &&
+    "missions" in parameters &&
+    "store" in parameters &&
+    "mining" in parameters
   );
 }
 

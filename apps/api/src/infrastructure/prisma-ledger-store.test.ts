@@ -5,6 +5,7 @@ import {
   LedgerAccountPolicyError,
   LedgerInsufficientBalanceError,
   LedgerPostingConflictError,
+  LedgerReversalError,
 } from "../domain/ledger-posting.js";
 import { PrismaLedgerStore } from "./prisma-ledger-store.js";
 
@@ -307,6 +308,75 @@ describe("PrismaLedgerStore", () => {
       });
     },
   );
+
+  it.each(["store_purchase", "miner_action"])(
+    "blocks generic reversal for effectful source %s",
+    async (sourceType) => {
+      const original = transactionRecord({ sourceType });
+      const { database, tx } = fakeDatabase();
+      tx.ledgerTransaction.findUnique.mockResolvedValue(original);
+
+      await expect(
+        new PrismaLedgerStore(database).reverse({
+          transactionId: original.id,
+          idempotencyKey: `reverse:${sourceType}`,
+        }),
+      ).rejects.toBeInstanceOf(LedgerReversalError);
+      expect(tx.ledgerTransaction.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it("marks a reversed mining epoch and its payouts as reversed", async () => {
+    const original = transactionRecord({
+      sourceType: "mining_epoch",
+      sourceId: "2026-07-11",
+      type: "MINING_EPOCH_PAYOUT",
+    });
+    const reversal = transactionRecord({
+      id: "transaction-reversal",
+      idempotencyKey: "reverse:mining:2026-07-11",
+      type: "MINING_EPOCH_PAYOUT_REVERSAL",
+      sourceType: "ledger_transaction",
+      sourceId: original.id,
+      metadata: {},
+      postings: [
+        postingRecord("reversal-posting-1", "treasury", "EQUITY", 25n),
+        postingRecord("reversal-posting-2", "user", "LIABILITY", -25n),
+      ],
+    });
+    const reversedOriginal = transactionRecord({
+      ...original,
+      status: "REVERSED",
+      reversedById: reversal.id,
+    });
+    const { database, tx } = fakeDatabase();
+    tx.ledgerTransaction.findUnique
+      .mockResolvedValueOnce(original)
+      .mockResolvedValueOnce(reversedOriginal);
+    tx.ledgerTransaction.findMany.mockResolvedValue([]);
+    tx.ledgerTransaction.create.mockResolvedValue(reversal);
+    tx.ledgerTransaction.updateMany.mockResolvedValue({ count: 1 });
+
+    await new PrismaLedgerStore(database).reverse({
+      transactionId: original.id,
+      idempotencyKey: reversal.idempotencyKey,
+    });
+
+    expect(tx.miningEpoch.updateMany).toHaveBeenCalledWith({
+      where: {
+        periodDate: new Date("2026-07-11T00:00:00.000Z"),
+        transactionId: original.id,
+        status: "SETTLED",
+      },
+      data: { status: "REVERSED", reasonCode: "PAYOUT_REVERSED" },
+    });
+    expect(tx.miningPayout.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { transactionId: original.id, status: "POSTED" },
+        data: expect.objectContaining({ status: "REVERSED" }),
+      }),
+    );
+  });
 });
 
 function fakeDatabase() {
@@ -337,6 +407,8 @@ function fakeDatabase() {
     gameSession: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
     missionClaim: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
     faucetClaim: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    miningEpoch: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    miningPayout: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
   };
   const database = {
     ...tx,
