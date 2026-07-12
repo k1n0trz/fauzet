@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Fauzet — Admin</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#080B12;color:#E5E7EB;font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#22D3EE;text-decoration:none}
+a:hover{color:#7ee6f5}
+input,select,button{font-family:'Manrope',sans-serif}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+::selection{background:#22D3EE;color:#080B12}
+</style>
+</helmet>
+
+<div style="display:flex;min-height:100vh">
+
+  <!-- Admin sidebar -->
+  <aside style="width:224px;flex:none;background:#0A0E17;border-right:1px solid rgba(229,231,235,.06);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column">
+    <div style="padding:18px 20px 10px;display:flex;align-items:center;gap:10px">
+      <img src="assets/logo-white.png" alt="Fauzet" style="height:30px">
+      <span style="font-size:10px;font-weight:800;letter-spacing:.1em;color:#22D3EE;background:rgba(34,211,238,.1);padding:3px 8px;border-radius:6px">ADMIN</span>
+    </div>
+    <nav style="flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:1px" aria-label="Admin">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="10">
+        <sc-if value="{{ n.isHeading }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#4B5563;padding:14px 12px 5px">{{ n.label }}</div>
+        </sc-if>
+        <sc-if value="{{ n.isItem }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ n.go }}" style="display:flex;align-items:center;gap:11px;background:{{ n.bg }};border:none;border-radius:9px;padding:8px 12px;color:{{ n.color }};font-size:13px;font-weight:700;cursor:pointer;text-align:left;width:100%;transition:background .15s ease" style-hover="background:rgba(229,231,235,.05)">
+            <span style="font-size:14px;width:18px;text-align:center">{{ n.icon }}</span> {{ n.label }}
+            <sc-if value="{{ n.badge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;background:rgba(248,113,113,.15);color:#f87171;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px">{{ n.badge }}</span></sc-if>
+          </button>
+        </sc-if>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 16px;border-top:1px solid rgba(229,231,235,.06);display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#7C3AED);display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff">O</div>
+      <div style="flex:1">
+        <div style="font-size:12.5px;font-weight:800">owner@fauzet</div>
+        <div style="font-size:10.5px;color:#f59e0b">Owner · 2FA ✓</div>
+      </div>
+      <a href="Fauzet App.dc.html" title="Exit admin" style="color:#6B7280;font-size:14px">⏻</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="position:sticky;top:0;z-index:40;background:rgba(8,11,18,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(229,231,235,.06);padding:0 24px;height:56px;display:flex;align-items:center;gap:14px">
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700">{{ screenTitle }}</span>
+      <div style="flex:1"></div>
+      <span style="font-size:11px;color:#6B7280">MOCK DATA · {{ nowLabel }}</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#2EE6A6;font-weight:700"><span style="width:6px;height:6px;border-radius:50%;background:#2EE6A6"></span>{{ healthLabel }}</span>
+    </header>
+
+    <main style="flex:1;padding:26px 26px 48px;max-width:1240px;width:100%;margin:0 auto;box-sizing:border-box">
+
+      <!-- ===== OVERVIEW ===== -->
+      <sc-if value="{{ scrOverview }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="8">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:13px;padding:16px 18px">
+              <div style="font-size:10.5px;color:#6B7280;font-weight:800;letter-spacing:.06em;margin-bottom:6px">{{ k.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:{{ k.color }}">{{ k.value }}</div>
+              <div style="font-size:11px;color:{{ k.deltaColor }};margin-top:3px">{{ k.delta }} <span style="color:#4B5563">{{ vsLabel }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:18px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ issuanceChartLabel }}</span>
+              <span style="font-size:11px;color:#6B7280"><span style="color:#2EE6A6">■</span> {{ issuedLabel }} <span style="color:#f87171;margin-left:8px">■</span> {{ burnedLabel }}</span>
+            </div>
+            <svg viewBox="0 0 600 180" style="width:100%;height:auto;display:block" aria-label="Issuance vs burn">
+              <sc-for list="{{ issuanceBars }}" as="ib" hint-placeholder-count="14">
+                <rect x="{{ ib.x }}" y="{{ ib.y1 }}" width="16" height="{{ ib.h1 }}" fill="rgba(57,255,136,.7)" rx="2"></rect>
+                <rect x="{{ ib.x2 }}" y="{{ ib.y2 }}" width="16" height="{{ ib.h2 }}" fill="rgba(248,113,113,.6)" rx="2"></rect>
+              </sc-for>
+            </svg>
+            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:#4B5563;margin-top:6px"><span>Jun 28</span><span>Jul 11</span></div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ alertsLabel }}</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ overviewAlerts }}" as="oa" hint-placeholder-count="4">
+                <button onClick="{{ oa.go }}" style="background:#0A0E17;border:1px solid rgba(229,231,235,.06);border-left:3px solid {{ oa.accent }};border-radius:10px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;color:#E5E7EB">
+                  <div style="font-size:12.5px;font-weight:700">{{ oa.title }}</div>
+                  <div style="font-size:11px;color:#6B7280;margin-top:2px">{{ oa.body }}</div>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <sc-for list="{{ econSummary }}" as="ec" hint-placeholder-count="4">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:13px;padding:16px 18px">
+              <div style="font-size:10.5px;color:#6B7280;font-weight:800;letter-spacing:.06em;margin-bottom:8px">{{ ec.label }}</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <sc-for list="{{ ec.rows }}" as="er" hint-placeholder-count="3">
+                  <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#9CA3AF">{{ er.k }}</span><span style="font-family:'JetBrains Mono',monospace;color:{{ er.c }}">{{ er.v }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== USERS ===== -->
+      <sc-if value="{{ scrUsers }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <sc-if value="{{ noUserSelected }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+            <input type="search" placeholder="{{ searchUsersPh }}" style="flex:1;min-width:220px;box-sizing:border-box;background:#111827;border:1px solid rgba(229,231,235,.1);border-radius:10px;padding:11px 16px;color:#E5E7EB;font-size:13.5px;outline:none" style-focus="border-color:#22D3EE">
+            <select style="background:#111827;border:1px solid rgba(229,231,235,.1);border-radius:10px;padding:11px 12px;color:#9CA3AF;font-size:13px;outline:none">
+              <option>{{ allStatusesLabel }}</option><option>Active</option><option>Frozen</option><option>Suspended</option><option>Under review</option>
+            </select>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;overflow-x:auto">
+            <div style="min-width:820px">
+              <div style="display:grid;grid-template-columns:1.4fr 1fr .8fr .8fr .7fr .7fr .8fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(229,231,235,.07);font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#6B7280">
+                <span>{{ colUser }}</span><span>{{ colCountry }}</span><span>{{ colBalance }}</span><span>{{ colEligible }}</span><span>{{ colRisk }}</span><span>{{ colStatus }}</span><span></span>
+              </div>
+              <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="7">
+                <div style="display:grid;grid-template-columns:1.4fr 1fr .8fr .8fr .7fr .7fr .8fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px;align-items:center">
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                    <span style="width:28px;height:28px;flex:none;border-radius:50%;background:linear-gradient(135deg,#22D3EE,#7C3AED);display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff">{{ u.initial }}</span>
+                    <div style="min-width:0"><div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.name }}</div><div style="font-size:10.5px;color:#6B7280">{{ u.joined }}</div></div>
+                  </div>
+                  <span style="color:#9CA3AF">{{ u.country }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace">{{ u.balance }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">{{ u.eligible }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;color:{{ u.riskColor }}">{{ u.risk }}</span>
+                  <span style="font-size:10px;font-weight:800;color:{{ u.stColor }}">{{ u.status }}</span>
+                  <button onClick="{{ u.open }}" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#22D3EE;font-size:11px;font-weight:800;padding:6px 14px;border-radius:8px;cursor:pointer;justify-self:end">{{ viewLabel }}</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ userSelected }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ closeUser }}" style="background:none;border:none;color:#22D3EE;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px">← {{ backToUsersLabel }}</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+                <span style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#22D3EE,#7C3AED);display:grid;place-items:center;font-size:18px;font-weight:800;color:#fff">K</span>
+                <div>
+                  <div style="font-size:16px;font-weight:800">kripto_kai <span style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.1);padding:2px 8px;border-radius:5px;margin-left:6px">RISK 72</span></div>
+                  <div style="font-size:11.5px;color:#6B7280;font-family:'JetBrains Mono',monospace">UID-100482 · kai@mail.com · MX · joined May 12</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+                <div style="background:#0A0E17;border-radius:9px;padding:10px 12px"><div style="font-size:10px;color:#6B7280">{{ colBalance }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px">8,412</div></div>
+                <div style="background:#0A0E17;border-radius:9px;padding:10px 12px"><div style="font-size:10px;color:#6B7280">{{ colEligible }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px">3,100</div></div>
+                <div style="background:#0A0E17;border-radius:9px;padding:10px 12px"><div style="font-size:10px;color:#6B7280">Crew</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px">31 (L1-4)</div></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onClick="{{ toastAction }}" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">{{ freezeLabel }}</button>
+                <button onClick="{{ toastAction }}" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">{{ requireVerifLabel }}</button>
+                <button onClick="{{ toastAction }}" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#22D3EE;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">{{ resetSecLabel }}</button>
+                <button onClick="{{ openAdjust }}" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);color:#c4a5f5;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">{{ adjustLabel }}</button>
+              </div>
+            </div>
+            <div style="background:#111827;border:1px solid rgba(245,158,11,.25);border-radius:16px;padding:22px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#f59e0b;margin-bottom:12px">⚠ {{ riskSignalsLabel }}</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ userRiskSignals }}" as="rs" hint-placeholder-count="4">
+                  <div style="display:flex;justify-content:space-between;background:#0A0E17;border-radius:9px;padding:9px 13px;font-size:12px;gap:10px">
+                    <span style="color:#9CA3AF">{{ rs.rule }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:{{ rs.color }};flex:none">{{ rs.evidence }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ deviceIpLabel }}</div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ userDevices }}" as="ud" hint-placeholder-count="3">
+                <div style="display:flex;gap:14px;padding:8px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:12.5px;flex-wrap:wrap;align-items:center">
+                  <span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF;min-width:110px">{{ ud.ip }}</span>
+                  <span style="flex:1">{{ ud.device }}</span>
+                  <span style="font-size:10.5px;color:{{ ud.flagColor }};font-weight:800">{{ ud.flag }}</span>
+                  <span style="color:#4B5563;font-size:11px">{{ ud.when }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- ===== ECONOMY ===== -->
+      <sc-if value="{{ scrEconomy }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.18);border-radius:11px;padding:11px 16px;margin-bottom:18px;font-size:12px;color:#9CA3AF">{{ econNote }}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+          <sc-for list="{{ econGroups }}" as="eg" hint-placeholder-count="4">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ eg.title }}</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ eg.params }}" as="ep" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="flex:1;font-size:12.5px;color:#9CA3AF">{{ ep.name }}</span>
+                    <input type="text" value="{{ ep.value }}" readOnly style="width:110px;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.1);border-radius:8px;padding:7px 10px;color:#E5E7EB;font-size:12.5px;font-family:'JetBrains Mono',monospace;text-align:right;outline:none">
+                  </div>
+                </sc-for>
+              </div>
+              <button onClick="{{ openEconConfirm }}" style="margin-top:14px;width:100%;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#22D3EE;font-size:12px;font-weight:800;padding:9px;border-radius:9px;cursor:pointer">{{ saveChangesLabel }}</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== WITHDRAWALS ===== -->
+      <sc-if value="{{ scrWithdrawals }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ wdKpis }}" as="wk" hint-placeholder-count="4">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:13px;padding:14px 18px">
+              <div style="font-size:10.5px;color:#6B7280;font-weight:800;margin-bottom:5px">{{ wk.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:{{ wk.color }}">{{ wk.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ wdQueue }}" as="wq" hint-placeholder-count="4">
+            <div style="background:#111827;border:1px solid {{ wq.border }};border-radius:14px;padding:16px 20px">
+              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+                <div style="min-width:150px">
+                  <div style="font-weight:800;font-size:13.5px">{{ wq.user }}</div>
+                  <div style="font-size:10.5px;color:#6B7280;font-family:'JetBrains Mono',monospace">{{ wq.id }} · {{ wq.when }}</div>
+                </div>
+                <div style="min-width:110px"><div style="font-size:10px;color:#6B7280">{{ amountColLabel }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px">{{ wq.amount }}</div></div>
+                <div style="min-width:150px"><div style="font-size:10px;color:#6B7280">{{ destColLabel }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9CA3AF">{{ wq.dest }}</div></div>
+                <div style="min-width:70px"><div style="font-size:10px;color:#6B7280">{{ colRisk }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:{{ wq.riskColor }}">{{ wq.risk }}</div></div>
+                <div style="min-width:100px"><div style="font-size:10px;color:#6B7280">{{ accountAgeLabel }}</div><div style="font-size:12px">{{ wq.age }}</div></div>
+                <div style="flex:1"></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button onClick="{{ wq.approve }}" style="background:rgba(57,255,136,.12);border:1px solid rgba(57,255,136,.35);color:#2EE6A6;font-size:11.5px;font-weight:800;padding:8px 16px;border-radius:8px;cursor:pointer">{{ approveLabel }}</button>
+                  <button onClick="{{ wq.reject }}" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11.5px;font-weight:800;padding:8px 16px;border-radius:8px;cursor:pointer">{{ rejectLabel }}</button>
+                  <button onClick="{{ wq.escalate }}" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11.5px;font-weight:800;padding:8px 16px;border-radius:8px;cursor:pointer">{{ escalateLabel }}</button>
+                </div>
+              </div>
+              <sc-if value="{{ wq.flagged }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:10px;font-size:11.5px;color:#f59e0b;background:rgba(245,158,11,.06);border-radius:8px;padding:8px 12px">⚠ {{ wq.flagNote }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== TREASURY ===== -->
+      <sc-if value="{{ scrTreasury }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ treasuryBuckets }}" as="tb" hint-placeholder-count="8">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-top:2px solid {{ tb.accent }};border-radius:13px;padding:16px 18px">
+              <div style="font-size:10.5px;color:#6B7280;font-weight:800;letter-spacing:.05em;margin-bottom:5px">{{ tb.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px">{{ tb.value }}</div>
+              <div style="font-size:10.5px;color:#4B5563;margin-top:3px">{{ tb.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ coverageLabel }}</div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <sc-for list="{{ coverageRows }}" as="cr" hint-placeholder-count="3">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:#9CA3AF">{{ cr.label }}</span><span style="font-family:'JetBrains Mono',monospace;color:{{ cr.color }}">{{ cr.value }}</span></div>
+                  <div style="height:7px;background:rgba(229,231,235,.07);border-radius:4px;overflow:hidden"><div style="width:{{ cr.pct }};height:100%;background:{{ cr.color }};border-radius:4px"></div></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:16px;font-size:11.5px;color:#6B7280;line-height:1.6">{{ runwayNote }}</div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ cashflowLabel }}</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ cashflowRows }}" as="cf" hint-placeholder-count="6">
+                <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(229,231,235,.05)">
+                  <span style="color:#9CA3AF">{{ cf.label }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;color:{{ cf.color }}">{{ cf.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== FRAUD ===== -->
+      <sc-if value="{{ scrFraud }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ fraudKpis }}" as="fk" hint-placeholder-count="4">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:13px;padding:14px 18px">
+              <div style="font-size:10.5px;color:#6B7280;font-weight:800;margin-bottom:5px">{{ fk.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:{{ fk.color }}">{{ fk.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ fraudCases }}" as="fc" hint-placeholder-count="4">
+            <div style="background:#111827;border:1px solid rgba(248,113,113,.18);border-radius:14px;padding:16px 20px">
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+                <span style="width:40px;height:40px;flex:none;border-radius:10px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;background:{{ fc.scoreBg }};color:{{ fc.scoreColor }}">{{ fc.score }}</span>
+                <div style="flex:1;min-width:160px">
+                  <div style="font-weight:800;font-size:13.5px">{{ fc.user }} <span style="font-size:10px;color:#6B7280;font-family:'JetBrains Mono',monospace;margin-left:6px">{{ fc.id }}</span></div>
+                  <div style="font-size:11.5px;color:#9CA3AF">{{ fc.summary }}</div>
+                </div>
+                <span style="font-size:10.5px;font-weight:800;color:{{ fc.recColor }};background:{{ fc.recBg }};padding:4px 10px;border-radius:6px">{{ fc.recommended }}</span>
+                <div style="display:flex;gap:8px">
+                  <button onClick="{{ toastAction }}" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer">{{ suspendLabel }}</button>
+                  <button onClick="{{ toastAction }}" style="background:rgba(229,231,235,.05);border:1px solid rgba(229,231,235,.12);color:#9CA3AF;font-size:11px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer">{{ dismissLabel }}</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ fc.rules }}" as="fr" hint-placeholder-count="3">
+                  <span style="font-size:10.5px;font-family:'JetBrains Mono',monospace;color:#f59e0b;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);padding:3px 9px;border-radius:6px">{{ fr.r }}</span>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== LEDGER ===== -->
+      <sc-if value="{{ scrLedger }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.18);border-radius:11px;padding:11px 16px;margin-bottom:16px;font-size:12px;color:#9CA3AF">{{ ledgerNote }}</div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;overflow-x:auto">
+          <div style="min-width:900px">
+            <div style="display:grid;grid-template-columns:.9fr 1fr .9fr .7fr .8fr .8fr .7fr 1fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(229,231,235,.07);font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#6B7280">
+              <span>TX ID</span><span>{{ colUser }}</span><span>{{ colType }}</span><span>{{ amountColLabel }}</span><span>{{ prevBalLabel }}</span><span>{{ newBalLabel }}</span><span>{{ colStatus }}</span><span>{{ timestampLabel }}</span>
+            </div>
+            <sc-for list="{{ ledgerRows }}" as="lr" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:.9fr 1fr .9fr .7fr .8fr .8fr .7fr 1fr;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(229,231,235,.05);font-size:12px;align-items:center">
+                <span style="font-family:'JetBrains Mono',monospace;color:#22D3EE">{{ lr.id }}</span>
+                <span style="font-weight:700">{{ lr.user }}</span>
+                <span style="color:#9CA3AF">{{ lr.type }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;color:{{ lr.amtColor }}">{{ lr.amount }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;color:#6B7280">{{ lr.prev }}</span>
+                <span style="font-family:'JetBrains Mono',monospace">{{ lr.next }}</span>
+                <span style="font-size:10px;font-weight:800;color:{{ lr.stColor }}">{{ lr.status }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;color:#4B5563;font-size:11px">{{ lr.ts }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="margin-top:16px;background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 22px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ auditLogLabel }}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ auditRows }}" as="ar" hint-placeholder-count="5">
+              <div style="display:flex;gap:14px;padding:8px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:12px;flex-wrap:wrap;align-items:center">
+                <span style="font-family:'JetBrains Mono',monospace;color:#4B5563;min-width:120px">{{ ar.ts }}</span>
+                <span style="font-weight:700;color:#c4a5f5;min-width:100px">{{ ar.admin }}</span>
+                <span style="flex:1;color:#9CA3AF">{{ ar.action }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;color:#6B7280;font-size:11px">{{ ar.ref }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== OWNER ===== -->
+      <sc-if value="{{ scrOwner }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.25);border-radius:11px;padding:11px 16px;margin-bottom:18px;font-size:12px;color:#9CA3AF;display:flex;gap:10px;align-items:center">
+          <span>🔒</span> {{ ownerNote }}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ ownerKpis }}" as="ok" hint-placeholder-count="6">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:13px;padding:16px 18px">
+              <div style="font-size:10.5px;color:#6B7280;font-weight:800;margin-bottom:5px">{{ ok.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:19px;color:{{ ok.color }}">{{ ok.value }}</div>
+              <div style="font-size:10.5px;color:#4B5563;margin-top:3px">{{ ok.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ profitBySourceLabel }}</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <sc-for list="{{ revenueSources }}" as="rv" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="flex:1;font-size:12.5px;color:#9CA3AF;min-width:130px">{{ rv.label }}</span>
+                  <div style="flex:2;height:8px;background:rgba(229,231,235,.06);border-radius:4px;overflow:hidden"><div style="width:{{ rv.pct }};height:100%;background:{{ rv.color }};border-radius:4px"></div></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;min-width:70px;text-align:right">{{ rv.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(245,158,11,.08),#111827);border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#f59e0b;margin-bottom:14px">{{ ownerWithdrawLabel }}</div>
+            <div style="font-size:11px;color:#6B7280;margin-bottom:4px">{{ ownerAvailLabel }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:28px;margin-bottom:14px">$4,120 <span style="font-size:13px;color:#6B7280">USD eq.</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ retainedLabel }}</span><span style="font-family:'JetBrains Mono',monospace">$1,030 (20%)</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ destColLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">ltc1qow…9k2 ✓</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ waitPeriodLabel }}</span><span>24h</span></div>
+            </div>
+            <button onClick="{{ openOwnerWd }}" style="width:100%;background:#f59e0b;color:#1a1002;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px)">{{ ownerWdCta }}</button>
+            <div style="margin-top:12px;font-size:10.5px;color:#6B7280;line-height:1.6">{{ ownerGuard }}</div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- Placeholder for other admin modules -->
+      <sc-if value="{{ scrPlaceholder }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:80px 20px;color:#6B7280">
+          <div style="font-size:36px;margin-bottom:12px">🛠️</div>
+          <div style="font-size:14px">{{ placeholderNote }}</div>
+        </div>
+      </sc-if>
+
+    </main>
+  </div>
+</div>
+
+<!-- Adjustment modal -->
+<sc-if value="{{ adjustOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeAdjust }}" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(400px,94vw);background:#0D1220;border:1px solid rgba(124,58,237,.3);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px">{{ adjustTitle }}</div>
+    <div style="font-size:12px;color:#6B7280;margin-bottom:16px">{{ adjustSub }}</div>
+    <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">{{ amountColLabel }} (± ZYXE)</label>
+    <input type="number" placeholder="-500" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:11px 14px;color:#E5E7EB;font-size:14px;font-family:'JetBrains Mono',monospace;margin-bottom:12px;outline:none" style-focus="border-color:#7C3AED">
+    <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">{{ reasonLabel }} *</label>
+    <input type="text" placeholder="{{ reasonPh }}" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:11px 14px;color:#E5E7EB;font-size:13px;margin-bottom:14px;outline:none" style-focus="border-color:#7C3AED">
+    <div style="font-size:11px;color:#6B7280;margin-bottom:16px;line-height:1.6">{{ adjustAudit }}</div>
+    <div style="display:flex;gap:10px">
+      <button onClick="{{ closeAdjust }}" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">{{ cancelLabel }}</button>
+      <button onClick="{{ confirmAdjust }}" style="flex:1;background:#7C3AED;color:#fff;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">{{ applyLabel }}</button>
+    </div>
+  </div>
+</sc-if>
+
+<!-- Econ confirm modal -->
+<sc-if value="{{ econConfirmOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeEconConfirm }}" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(420px,94vw);background:#0D1220;border:1px solid rgba(245,158,11,.35);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px">⚠ {{ econConfirmTitle }}</div>
+    <div style="font-size:12.5px;color:#9CA3AF;margin-bottom:16px;line-height:1.6">{{ econConfirmBody }}</div>
+    <div style="background:#111827;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+      <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ impactIssuanceLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#f59e0b">+4.2% / {{ dayShort }}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ impactRunwayLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#f59e0b">41d → 37d</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ impactCoverageLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">168% → 161%</span></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onClick="{{ closeEconConfirm }}" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">{{ cancelLabel }}</button>
+      <button onClick="{{ confirmEcon }}" style="flex:1;background:#f59e0b;color:#1a1002;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">{{ applyLabel }}</button>
+    </div>
+  </div>
+</sc-if>
+
+<!-- Owner withdraw modal -->
+<sc-if value="{{ ownerWdOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeOwnerWd }}" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(400px,94vw);background:#0D1220;border:1px solid rgba(245,158,11,.35);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:14px">🔒 {{ ownerWdModalTitle }}</div>
+    <div style="background:#111827;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+      <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ amountColLabel }}</span><span style="font-family:'JetBrains Mono',monospace">$4,120 USD eq. (LTC)</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ destColLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">ltc1qow…9k2</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ waitPeriodLabel }}</span><span>24h</span></div>
+    </div>
+    <div style="font-size:11.5px;color:#f59e0b;background:rgba(245,158,11,.06);border-radius:9px;padding:10px 13px;margin-bottom:16px;line-height:1.6">{{ ownerWdCheck }}</div>
+    <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">2FA</label>
+    <input type="text" inputMode="numeric" maxLength="6" placeholder="000000" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:12px;color:#E5E7EB;font-size:17px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:.25em;margin-bottom:16px;outline:none" style-focus="border-color:#f59e0b">
+    <div style="display:flex;gap:10px">
+      <button onClick="{{ closeOwnerWd }}" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">{{ cancelLabel }}</button>
+      <button onClick="{{ confirmOwnerWd }}" style="flex:1;background:#f59e0b;color:#1a1002;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</sc-if>
+
+<!-- Toast -->
+<sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:80;background:#111827;border:1px solid rgba(34,211,238,.35);border-radius:12px;padding:12px 22px;font-size:13px;font-weight:700;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:popIn .25s ease both;display:flex;align-items:center;gap:10px">
+    <span style="color:#22D3EE">✓</span> {{ toastMsg }}
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'overview',
+    userOpen: false,
+    adjustOpen: false, econConfirmOpen: false, ownerWdOpen: false,
+    toast: null,
+  };
+
+  toast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: null }), 2400);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const nav = [
+      { h: 'PLATFORM' },
+      { id: 'overview', icon: '⬒', label: 'Overview' },
+      { id: 'users', icon: '👤', label: 'Users' },
+      { id: 'economy', icon: '⚖️', label: 'Economy' },
+      { id: 'faucetadm', icon: '💧', label: 'Faucet' },
+      { id: 'gamesadm', icon: '🎮', label: 'Games' },
+      { id: 'miningadm', icon: '⛏️', label: 'Mining' },
+      { id: 'referraladm', icon: '👥', label: 'Referrals' },
+      { id: 'vaultadm', icon: '🏦', label: 'Vault' },
+      { id: 'tradingadm', icon: '📈', label: 'Trading' },
+      { h: 'FINANCE' },
+      { id: 'withdrawals', icon: '📤', label: 'Withdrawals', badge: '7' },
+      { id: 'treasury', icon: '🏛️', label: 'Treasury' },
+      { id: 'ledger', icon: '📒', label: 'Ledger & Audit' },
+      { h: 'RISK' },
+      { id: 'fraud', icon: '🚨', label: 'Fraud & Risk', badge: '4' },
+      { h: 'OWNER' },
+      { id: 'owner', icon: '🔒', label: 'Owner Dashboard' },
+      { h: 'SYSTEM' },
+      { id: 'config', icon: '⚙️', label: 'Configuration' },
+      { id: 'roles', icon: '🛡️', label: 'Roles & Permissions' },
+    ];
+    const titles = {
+      overview: 'Platform Overview', users: 'User Management', economy: 'Economy Controls',
+      withdrawals: 'Withdrawal Review Queue', treasury: 'Treasury', fraud: 'Fraud & Risk',
+      ledger: 'Ledger & Audit', owner: 'Owner Dashboard', faucetadm: 'Faucet Admin', gamesadm: 'Games Admin',
+      miningadm: 'Mining Admin', referraladm: 'Referral Admin', vaultadm: 'Vault Admin', tradingadm: 'Trading Admin',
+      config: 'System Configuration', roles: 'Roles & Permissions',
+    };
+    const built = ['overview', 'users', 'economy', 'withdrawals', 'treasury', 'fraud', 'ledger', 'owner'];
+    return {
+      navItems: nav.map(n => n.h ? { isHeading: true, isItem: false, label: n.h } : {
+        isHeading: false, isItem: true, ...n,
+        bg: s.screen === n.id ? 'rgba(34,211,238,.1)' : 'transparent',
+        color: s.screen === n.id ? '#22D3EE' : '#9CA3AF',
+        go: () => this.setState({ screen: n.id, userOpen: false }),
+      }),
+      screenTitle: titles[s.screen] || 'Admin',
+      nowLabel: 'Jul 11, 2026 14:32 UTC',
+      healthLabel: 'All systems healthy',
+      scrOverview: s.screen === 'overview',
+      scrUsers: s.screen === 'users',
+      scrEconomy: s.screen === 'economy',
+      scrWithdrawals: s.screen === 'withdrawals',
+      scrTreasury: s.screen === 'treasury',
+      scrFraud: s.screen === 'fraud',
+      scrLedger: s.screen === 'ledger',
+      scrOwner: s.screen === 'owner',
+      scrPlaceholder: !built.includes(s.screen),
+      placeholderNote: 'This admin module shares the same table/control patterns — parameters are configurable here in the full build.',
+      vsLabel: 'vs 7d',
+      // overview
+      kpis: [
+        { label: 'REGISTERED USERS', value: '48,210', delta: '+3.1%', deltaColor: '#2EE6A6', color: '#E5E7EB' },
+        { label: 'DAU / MAU', value: '9.2K / 31K', delta: '+1.8%', deltaColor: '#2EE6A6', color: '#E5E7EB' },
+        { label: 'ZYXE ISSUED (24H)', value: '1.24M', delta: '+0.6%', deltaColor: '#f59e0b', color: '#2EE6A6' },
+        { label: 'ZYXE BURNED (24H)', value: '410K', delta: '+4.2%', deltaColor: '#2EE6A6', color: '#f87171' },
+        { label: 'PENDING WITHDRAWALS', value: '7', delta: '-2', deltaColor: '#2EE6A6', color: '#f59e0b' },
+        { label: 'GROSS REVENUE (30D)', value: '$18.4K', delta: '+9.4%', deltaColor: '#2EE6A6', color: '#E5E7EB' },
+        { label: 'TREASURY BALANCE', value: '$52.1K', delta: '+2.2%', deltaColor: '#2EE6A6', color: '#22D3EE' },
+        { label: 'FRAUD ALERTS', value: '4', delta: '+1', deltaColor: '#f87171', color: '#f87171' },
+      ],
+      issuanceChartLabel: 'ISSUANCE VS BURN · 14 DAYS',
+      issuedLabel: 'issued', burnedLabel: 'burned',
+      issuanceBars: [...Array(14)].map((_, i) => {
+        const h1 = 60 + Math.round(Math.sin(i * 1.3) * 20 + 40);
+        const h2 = 20 + Math.round(Math.sin(i * 1.7 + 2) * 12 + 18);
+        return { x: 20 + i * 41, x2: 38 + i * 41, y1: 170 - h1, h1, y2: 170 - h2, h2 };
+      }),
+      alertsLabel: 'NEEDS ATTENTION',
+      overviewAlerts: [
+        { accent: '#f87171', title: '4 fraud cases pending review', body: 'Multi-account cluster detected on 2 devices', go: () => this.setState({ screen: 'fraud' }) },
+        { accent: '#f59e0b', title: '7 withdrawals in manual queue', body: 'Oldest waiting 3h 12m', go: () => this.setState({ screen: 'withdrawals' }) },
+        { accent: '#22D3EE', title: 'Vault period ends in 2 days', body: '120K ZYXE pool · 8.4M locked', go: () => this.setState({ screen: 'economy' }) },
+        { accent: '#2EE6A6', title: 'Hash Season 02 starts Jul 14', body: 'Event pool budgeted: 500K ZYXE', go: () => this.setState({ screen: 'economy' }) },
+      ],
+      econSummary: [
+        { label: 'REWARD COSTS (24H)', rows: [ { k: 'Faucet', v: '182K', c: '#E5E7EB' }, { k: 'Mining pool', v: '250K', c: '#E5E7EB' }, { k: 'Games + missions', v: '198K', c: '#E5E7EB' } ] },
+        { label: 'REVENUE (24H)', rows: [ { k: 'Rewarded ads', v: '$310', c: '#2EE6A6' }, { k: 'Boost sales', v: '$204', c: '#2EE6A6' }, { k: 'Fees', v: '$88', c: '#2EE6A6' } ] },
+        { label: 'REFERRAL COSTS', rows: [ { k: 'L1 (5%)', v: '31K', c: '#E5E7EB' }, { k: 'L2-L4', v: '12K', c: '#E5E7EB' }, { k: 'Capped/blocked', v: '2.1K', c: '#f59e0b' } ] },
+        { label: 'ZYXE SUPPLY', rows: [ { k: 'Circulating', v: '94.2M', c: '#E5E7EB' }, { k: 'Locked (Vault)', v: '8.4M', c: '#c4a5f5' }, { k: 'Eligible', v: '21.7M', c: '#22D3EE' } ] },
+      ],
+      // users
+      noUserSelected: !s.userOpen, userSelected: s.userOpen,
+      searchUsersPh: 'Search by username, email, UID, IP or wallet…',
+      allStatusesLabel: 'All statuses',
+      colUser: 'USER', colCountry: 'COUNTRY', colBalance: 'BALANCE', colEligible: 'ELIGIBLE', colRisk: 'RISK', colStatus: 'STATUS', colType: 'TYPE',
+      viewLabel: 'View',
+      userRows: [
+        { initial: 'M', name: 'mateo_dr', joined: 'Mar 2026', country: 'Colombia', balance: '3,520', eligible: '1,450', risk: '12', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+        { initial: 'A', name: 'satoshi_ana', joined: 'Apr 2026', country: 'México', balance: '9,104', eligible: '4,890', risk: '8', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+        { initial: 'K', name: 'kripto_kai', joined: 'May 2026', country: 'México', balance: '8,412', eligible: '3,100', risk: '72', riskColor: '#f59e0b', status: 'REVIEW', stColor: '#f59e0b' },
+        { initial: 'L', name: 'block_leo', joined: 'May 2026', country: 'España', balance: '1,220', eligible: '540', risk: '22', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+        { initial: 'D', name: 'doge_dan', joined: 'Jun 2026', country: 'Argentina', balance: '140', eligible: '0', risk: '31', riskColor: '#22D3EE', status: 'ACTIVE', stColor: '#2EE6A6' },
+        { initial: 'F', name: 'farm_x22', joined: 'Jul 2026', country: 'Unknown (VPN)', balance: '4,880', eligible: '2,900', risk: '91', riskColor: '#f87171', status: 'FROZEN', stColor: '#f87171' },
+        { initial: 'H', name: 'hashqueen', joined: 'Feb 2026', country: 'Chile', balance: '22,410', eligible: '12,300', risk: '5', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+      ].map(u => ({ ...u, open: () => this.setState({ userOpen: true }) })),
+      closeUser: () => this.setState({ userOpen: false }),
+      backToUsersLabel: 'Back to users',
+      freezeLabel: 'Freeze', requireVerifLabel: 'Require verification', resetSecLabel: 'Reset security', adjustLabel: '± Adjust balance',
+      toastAction: () => this.toast('Action recorded — reason + admin identity + ledger entry required'),
+      riskSignalsLabel: 'RISK SIGNALS',
+      userRiskSignals: [
+        { rule: 'Multiple accounts / device', evidence: '3 accts · FP a81f', color: '#f87171' },
+        { rule: 'VPN / datacenter IP', evidence: 'AS14061 · 12 logins', color: '#f59e0b' },
+        { rule: 'Referral loop suspicion', evidence: 'L1 ↔ L3 overlap', color: '#f59e0b' },
+        { rule: 'Game score outliers', evidence: 'p99.8 · Tap Miner', color: '#22D3EE' },
+      ],
+      deviceIpLabel: 'DEVICE & IP HISTORY',
+      userDevices: [
+        { ip: '189.203.44.x', device: 'Chrome · Android 15 · FP a81f', flag: 'SHARED DEVICE ×3', flagColor: '#f87171', when: 'Jul 11' },
+        { ip: '45.133.18.x', device: 'Firefox · Windows · FP c202', flag: 'DATACENTER', flagColor: '#f59e0b', when: 'Jul 09' },
+        { ip: '189.203.44.x', device: 'Fauzet App · Android', flag: 'OK', flagColor: '#2EE6A6', when: 'Jul 05' },
+      ],
+      // economy
+      econNote: 'Every parameter is configurable and versioned. Dangerous changes require confirmation and show an economic impact preview before saving.',
+      econGroups: [
+        { title: 'DAILY ISSUANCE & POOLS', params: [ { name: 'Daily issuance cap', value: '1,400,000' }, { name: 'Faucet budget / day', value: '200,000' }, { name: 'Mining pool / day', value: '250,000' }, { name: 'Games + missions pools', value: '220,000' }, { name: 'Vault pool / period', value: '120,000' }, { name: 'Event pool', value: '500,000' } ] },
+        { title: 'FAUCET', params: [ { name: 'Claim cooldown (min)', value: '15' }, { name: 'Reward range', value: '5 – 25' }, { name: 'Daily claim limit', value: '8' }, { name: 'Captcha after N claims', value: '3' }, { name: 'Streak bonus @7d', value: '+20%' } ] },
+        { title: 'REFERRALS (MINING CREW)', params: [ { name: 'Level 1 %', value: '5.0' }, { name: 'Level 2 %', value: '2.0' }, { name: 'Level 3 %', value: '1.0' }, { name: 'Level 4 %', value: '0.5' }, { name: 'Monthly cap / referrer', value: '50,000' } ] },
+        { title: 'CONVERSION & WITHDRAWALS', params: [ { name: 'Min conversion (ZYXE)', value: '500' }, { name: 'Min withdrawal (ZYXE)', value: '1,000' }, { name: 'Daily withdrawal cap', value: '50,000' }, { name: 'Spread %', value: '1.0' }, { name: 'Processing fee %', value: '1.0' }, { name: 'Burn / recycle / treasury', value: '40 / 40 / 20' } ] },
+      ],
+      saveChangesLabel: 'Save changes…',
+      openEconConfirm: () => this.setState({ econConfirmOpen: true }),
+      econConfirmOpen: s.econConfirmOpen,
+      closeEconConfirm: () => this.setState({ econConfirmOpen: false }),
+      econConfirmTitle: 'Confirm economic change',
+      econConfirmBody: 'You are changing live economy parameters. Review the projected impact before applying. This action is logged with your identity and requires 2FA.',
+      impactIssuanceLabel: 'Projected issuance', impactRunwayLabel: 'Withdrawal runway', impactCoverageLabel: 'Coverage ratio',
+      dayShort: 'day',
+      confirmEcon: () => { this.setState({ econConfirmOpen: false }); this.toast('Parameters saved — audit log entry created'); },
+      // withdrawals
+      amountColLabel: 'AMOUNT', destColLabel: 'DESTINATION', accountAgeLabel: 'ACCOUNT AGE',
+      approveLabel: 'Approve', rejectLabel: 'Reject', escalateLabel: 'Escalate',
+      wdKpis: [
+        { label: 'IN QUEUE', value: '7', color: '#f59e0b' },
+        { label: 'AUTO-APPROVED (24H)', value: '132', color: '#2EE6A6' },
+        { label: 'REJECTED (24H)', value: '3', color: '#f87171' },
+        { label: 'AVG REVIEW TIME', value: '38 min', color: '#22D3EE' },
+      ],
+      wdQueue: [
+        { user: 'satoshi_ana', id: 'WD-2201', when: '12 min ago', amount: '0.21 LTC', dest: 'ltc1qa4…88x ✓', risk: '8', riskColor: '#2EE6A6', age: '3 months', border: 'rgba(229,231,235,.08)', flagged: false },
+        { user: 'kripto_kai', id: 'WD-2199', when: '44 min ago', amount: '940 DOGE', dest: 'D8kk1…2mq ⚠', risk: '72', riskColor: '#f59e0b', age: '2 months', border: 'rgba(245,158,11,.3)', flagged: true, flagNote: 'Destination wallet shared with 2 other accounts · VPN sessions detected' },
+        { user: 'hashqueen', id: 'WD-2195', when: '1h 20m ago', amount: '1.02 LTC', dest: 'ltc1qh9…z2p ✓', risk: '5', riskColor: '#2EE6A6', age: '5 months', border: 'rgba(229,231,235,.08)', flagged: false },
+        { user: 'farm_x22', id: 'WD-2188', when: '3h 12m ago', amount: '0.48 LTC', dest: 'ltc1qf0…31c ⚠', risk: '91', riskColor: '#f87171', age: '9 days', border: 'rgba(248,113,113,.35)', flagged: true, flagNote: 'Fast account-to-withdrawal pattern · device cluster ×3 · recommend reject + freeze' },
+      ].map(w => ({
+        ...w,
+        approve: () => this.toast(w.id + ' approved — treasury liquidity check queued'),
+        reject: () => this.toast(w.id + ' rejected — user notified, funds returned to eligible balance'),
+        escalate: () => this.toast(w.id + ' escalated to fraud review'),
+      })),
+      // treasury
+      treasuryBuckets: [
+        { label: 'USER REWARDS', value: '$14.2K', accent: '#2EE6A6', note: 'reserved · not owner funds' },
+        { label: 'WITHDRAWAL RESERVE', value: '$18.6K', accent: '#22D3EE', note: 'hot + cold wallets' },
+        { label: 'LIQUIDITY', value: '$8.3K', accent: '#22D3EE', note: 'conversion buffer' },
+        { label: 'OPERATIONS', value: '$4.1K', accent: '#E5E7EB', note: 'infra + providers' },
+        { label: 'VAULT OBLIGATIONS', value: '$2.9K', accent: '#7C3AED', note: 'current period' },
+        { label: 'EVENTS', value: '$1.2K', accent: '#7C3AED', note: 'Hash Season 02' },
+        { label: 'FRAUD RESERVE', value: '$0.8K', accent: '#f59e0b', note: 'chargebacks / reversals' },
+        { label: 'OWNER PROFIT', value: '$5.2K', accent: '#f59e0b', note: 'withdrawable by owner only' },
+      ],
+      coverageLabel: 'COVERAGE & RUNWAY',
+      coverageRows: [
+        { label: 'Coverage ratio (reserves ÷ obligations)', value: '168%', pct: '84%', color: '#2EE6A6' },
+        { label: 'Withdrawal runway at current pace', value: '41 days', pct: '68%', color: '#22D3EE' },
+        { label: 'Pending obligations vs liquid funds', value: '31%', pct: '31%', color: '#7C3AED' },
+      ],
+      runwayNote: 'Owner profit is strictly separated from user balances, reward reserves, withdrawal reserves, Vault obligations and liquidity. Owner withdrawals can never draw from these buckets.',
+      cashflowLabel: 'MONTHLY CASH FLOW',
+      cashflowRows: [
+        { label: 'Rewarded ads + offerwalls', value: '+$9,300', color: '#2EE6A6' },
+        { label: 'Boost & miner sales', value: '+$6,100', color: '#2EE6A6' },
+        { label: 'Fees (trading/conversion/withdrawal)', value: '+$3,000', color: '#2EE6A6' },
+        { label: 'Crypto payouts to users', value: '-$8,900', color: '#f87171' },
+        { label: 'Infrastructure & providers', value: '-$2,400', color: '#f87171' },
+        { label: 'Net', value: '+$7,100', color: '#22D3EE' },
+      ],
+      // fraud
+      fraudKpis: [
+        { label: 'OPEN CASES', value: '4', color: '#f87171' },
+        { label: 'AUTO-BLOCKED (7D)', value: '61', color: '#f59e0b' },
+        { label: 'REVERSED REWARDS (7D)', value: '84K ZYXE', color: '#22D3EE' },
+        { label: 'FALSE POSITIVE RATE', value: '3.8%', color: '#2EE6A6' },
+      ],
+      suspendLabel: 'Suspend', dismissLabel: 'Dismiss',
+      fraudCases: [
+        { score: '91', scoreBg: 'rgba(248,113,113,.15)', scoreColor: '#f87171', user: 'farm_x22', id: 'CASE-118', summary: 'Account farming cluster: 3 accounts, one device fingerprint, sequential referral chain', recommended: 'SUSPEND + REVERSE', recColor: '#f87171', recBg: 'rgba(248,113,113,.1)', rules: [ { r: 'device_cluster×3' }, { r: 'self_referral' }, { r: 'fast_withdrawal' } ] },
+        { score: '72', scoreBg: 'rgba(245,158,11,.15)', scoreColor: '#f59e0b', user: 'kripto_kai', id: 'CASE-117', summary: 'Shared withdrawal wallet across accounts + datacenter IP sessions', recommended: 'REQUEST VERIFICATION', recColor: '#f59e0b', recBg: 'rgba(245,158,11,.1)', rules: [ { r: 'wallet_reuse×3' }, { r: 'datacenter_ip' } ] },
+        { score: '64', scoreBg: 'rgba(245,158,11,.15)', scoreColor: '#f59e0b', user: 'tap_bot99', id: 'CASE-116', summary: 'Impossible Tap Miner scores (p99.9+) with uniform inter-tap intervals', recommended: 'INVALIDATE SCORES', recColor: '#f59e0b', recBg: 'rgba(245,158,11,.1)', rules: [ { r: 'score_outlier' }, { r: 'bot_cadence' } ] },
+        { score: '48', scoreBg: 'rgba(34,211,238,.12)', scoreColor: '#22D3EE', user: 'vpn_vera', id: 'CASE-114', summary: 'VPN use with otherwise normal behavior — monitor only', recommended: 'MONITOR', recColor: '#22D3EE', recBg: 'rgba(34,211,238,.1)', rules: [ { r: 'vpn_proxy' } ] },
+      ],
+      // ledger
+      ledgerNote: 'Balances are never a mutable field — every change is a ledger entry with previous/new balance, source, status and metadata. Admin adjustments always carry reason + identity.',
+      prevBalLabel: 'PREV', newBalLabel: 'NEW', timestampLabel: 'TIMESTAMP',
+      ledgerRows: [
+        { id: 'TX-88500', user: 'mateo_dr', type: 'withdrawal_request', amount: '-1,500', amtColor: '#f87171', prev: '2,950', next: '1,450', status: 'REVIEW', stColor: '#f59e0b', ts: 'Jul 11 14:28' },
+        { id: 'TX-88412', user: 'mateo_dr', type: 'faucet_claim', amount: '+18', amtColor: '#2EE6A6', prev: '2,932', next: '2,950', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 11 10:12' },
+        { id: 'TX-88399', user: 'mateo_dr', type: 'game_reward', amount: '+24', amtColor: '#2EE6A6', prev: '2,908', next: '2,932', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 11 09:58' },
+        { id: 'TX-88102', user: 'satoshi_ana', type: 'mining_payout', amount: '+412', amtColor: '#2EE6A6', prev: '8,692', next: '9,104', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 11 00:00' },
+        { id: 'TX-88016', user: 'farm_x22', type: 'reward_reversal', amount: '-2,140', amtColor: '#f87171', prev: '7,020', next: '4,880', status: 'REVERSED', stColor: '#f87171', ts: 'Jul 10 22:41' },
+        { id: 'TX-87981', user: 'kripto_kai', type: 'admin_adjustment', amount: '-500', amtColor: '#f87171', prev: '8,912', next: '8,412', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 10 19:02' },
+        { id: 'TX-87721', user: 'mateo_dr', type: 'boost_purchase', amount: '-150', amtColor: '#f87171', prev: '3,058', next: '2,908', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 10 14:02' },
+        { id: 'TX-87680', user: 'hashqueen', type: 'vault_lock', amount: '-5,000', amtColor: '#c4a5f5', prev: '27,410', next: '22,410', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 10 11:11' },
+      ],
+      auditLogLabel: 'ADMIN AUDIT LOG',
+      auditRows: [
+        { ts: 'Jul 11 14:02', admin: 'owner', action: 'Approved withdrawal WD-2190 after manual review', ref: 'WD-2190' },
+        { ts: 'Jul 10 19:02', admin: 'admin.rosa', action: 'Balance adjustment -500 ZYXE · reason: "duplicate mission reward"', ref: 'TX-87981' },
+        { ts: 'Jul 10 16:44', admin: 'fraud.luis', action: 'Suspended referral network of farm_x22 (11 accounts)', ref: 'CASE-118' },
+        { ts: 'Jul 09 09:15', admin: 'owner', action: 'Changed faucet reward range 5–20 → 5–25 (impact preview accepted)', ref: 'CFG-441' },
+        { ts: 'Jul 08 21:30', admin: 'admin.rosa', action: 'Security reset for user block_leo (support ticket #4801)', ref: 'SEC-902' },
+      ],
+      // owner
+      ownerNote: 'Owner-only area. Re-authentication + 2FA required. Owner withdrawals draw exclusively from the Owner Profit bucket — never from user balances, reward reserves, withdrawal reserves, Vault obligations or liquidity.',
+      ownerKpis: [
+        { label: 'GROSS REVENUE (30D)', value: '$18.4K', color: '#E5E7EB', note: 'all sources' },
+        { label: 'NET REVENUE (30D)', value: '$7.1K', color: '#2EE6A6', note: 'after costs' },
+        { label: 'REWARD + REFERRAL COSTS', value: '$8.9K', color: '#f87171', note: 'paid to users' },
+        { label: 'OPERATING COSTS', value: '$2.4K', color: '#f87171', note: 'infra + services' },
+        { label: 'OWNER AVAILABLE', value: '$4.1K', color: '#f59e0b', note: 'after 20% retained' },
+        { label: 'RETAINED EARNINGS', value: '$12.3K', color: '#22D3EE', note: 'cumulative' },
+      ],
+      profitBySourceLabel: 'PROFIT BY SOURCE · 30 DAYS',
+      revenueSources: [
+        { label: 'Rewarded ads', value: '$5,020', pct: '100%', color: '#2EE6A6' },
+        { label: 'Offerwalls', value: '$4,280', pct: '85%', color: '#2EE6A6' },
+        { label: 'Boost sales', value: '$3,400', pct: '68%', color: '#7C3AED' },
+        { label: 'Miner sales', value: '$2,700', pct: '54%', color: '#7C3AED' },
+        { label: 'Conversion fees', value: '$1,180', pct: '24%', color: '#22D3EE' },
+        { label: 'Withdrawal fees', value: '$860', pct: '17%', color: '#22D3EE' },
+        { label: 'Trading fees', value: '$540', pct: '11%', color: '#22D3EE' },
+        { label: 'Sponsored missions', value: '$420', pct: '8%', color: '#f59e0b' },
+      ],
+      ownerWithdrawLabel: 'OWNER PROFIT WITHDRAWAL',
+      ownerAvailLabel: 'Available owner balance',
+      retainedLabel: 'Retained reserve', waitPeriodLabel: 'Security waiting period',
+      ownerWdCta: 'Withdraw owner profit…',
+      ownerGuard: 'Blocked sources: user balances, reward reserves, withdrawal reserves, Vault obligations, liquidity reserves. This rule is enforced at ledger level.',
+      openOwnerWd: () => this.setState({ ownerWdOpen: true }),
+      ownerWdOpen: s.ownerWdOpen,
+      closeOwnerWd: () => this.setState({ ownerWdOpen: false }),
+      ownerWdModalTitle: 'Confirm owner withdrawal',
+      ownerWdCheck: 'Liability check passed: coverage ratio remains 168% → 154% after this withdrawal. A 24h security waiting period applies before broadcast.',
+      confirmOwnerWd: () => { this.setState({ ownerWdOpen: false }); this.toast('Owner withdrawal scheduled — 24h waiting period started, audit entry created'); },
+      // adjust modal
+      adjustOpen: s.adjustOpen,
+      openAdjust: () => this.setState({ adjustOpen: true }),
+      closeAdjust: () => this.setState({ adjustOpen: false }),
+      adjustTitle: 'Audited balance adjustment',
+      adjustSub: 'kripto_kai · UID-100482',
+      reasonLabel: 'Reason', reasonPh: 'e.g. duplicate mission reward',
+      adjustAudit: 'This adjustment creates a ledger entry with your admin identity, timestamp, reason and previous/new balances. It cannot be deleted.',
+      cancelLabel: 'Cancel', applyLabel: 'Apply', confirmLabel: 'Confirm',
+      confirmAdjust: () => { this.setState({ adjustOpen: false }); this.toast('Adjustment applied — ledger TX + audit record created'); },
+      // toast
+      toastVisible: !!s.toast, toastMsg: s.toast || '',
+    };
+  }
+}
+</script>
+</body>
+</html>

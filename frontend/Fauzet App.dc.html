@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Fauzet — App</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#080B12;color:#E5E7EB;font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#22D3EE;text-decoration:none}
+a:hover{color:#7ee6f5}
+input,select,button,textarea{font-family:'Manrope',sans-serif}
+input::placeholder,textarea::placeholder{color:#4B5563}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(240deg);opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+::selection{background:#2EE6A6;color:#080B12}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-direction:column">
+
+<!-- ============ AUTH ============ -->
+<sc-if value="{{ showAuth }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;background:radial-gradient(ellipse 60% 45% at 50% 0%,rgba(34,211,238,.06),transparent),#080B12">
+  <div style="width:100%;max-width:420px;animation:fadeUp .4s ease both">
+    <div style="text-align:center;margin-bottom:28px">
+      <a href="Fauzet Landing.dc.html"><img src="assets/logo-white.png" alt="Fauzet" style="height:52px"></a>
+    </div>
+    <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:18px;padding:30px 28px;box-shadow:0 24px 70px rgba(0,0,0,.5)">
+
+      <sc-if value="{{ authLogin }}" hint-placeholder-val="{{ true }}">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">{{ t.welcomeBack }}</div>
+        <div style="font-size:13.5px;color:#9CA3AF;margin-bottom:22px">{{ t.loginSub }}</div>
+        <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="li-email">Email</label>
+        <input id="li-email" type="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;margin-bottom:14px;outline:none;transition:border-color .18s ease" style-focus="border-color:#22D3EE">
+        <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="li-pass">{{ t.password }}</label>
+        <input id="li-pass" type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;margin-bottom:8px;outline:none;transition:border-color .18s ease" style-focus="border-color:#22D3EE">
+        <div style="text-align:right;margin-bottom:18px"><button onClick="{{ goForgot }}" style="background:none;border:none;color:#22D3EE;font-size:12.5px;cursor:pointer;padding:0">{{ t.forgot }}</button></div>
+        <button onClick="{{ doLogin }}" style="width:100%;background:#2EE6A6;color:#04140A;border:none;font-size:15px;font-weight:800;padding:13px;border-radius:11px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-1px);box-shadow:0 6px 22px rgba(57,255,136,.28)">{{ t.login }}</button>
+        <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
+          <span style="flex:1;height:1px;background:rgba(229,231,235,.1)"></span>
+          <span style="font-size:11px;color:#6B7280;font-weight:700">{{ t.orLabel }}</span>
+          <span style="flex:1;height:1px;background:rgba(229,231,235,.1)"></span>
+        </div>
+        <button onClick="{{ doGoogle }}" style="width:100%;background:#fff;color:#1f2937;border:none;font-size:14px;font-weight:700;padding:12px;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.35)"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.4 17.7 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"></path><path fill="#FBBC05" d="M10.4 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.8-6.1z"></path><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.4-5.5l-7.5-5.8c-2.1 1.4-4.8 2.3-7.9 2.3-6.3 0-11.7-3.9-13.6-9.3l-7.8 6.1C6.5 42.6 14.6 48 24 48z"></path></svg>{{ t.googleCta }}</button>
+        <div style="text-align:center;margin-top:18px;font-size:13.5px;color:#9CA3AF">{{ t.noAccount }} <button onClick="{{ goSignup }}" style="background:none;border:none;color:#2EE6A6;font-weight:700;cursor:pointer;font-size:13.5px;padding:0">{{ t.signup }}</button></div>
+      </sc-if>
+
+      <sc-if value="{{ authSignup }}" hint-placeholder-val="{{ false }}">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">{{ t.createAccount }}</div>
+        <div style="font-size:13.5px;color:#9CA3AF;margin-bottom:22px">{{ t.signupSub }}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="su-user">{{ t.username }}</label>
+            <input id="su-user" type="text" placeholder="satsdripper" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;outline:none" style-focus="border-color:#22D3EE">
+          </div>
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="su-country">{{ t.country }}</label>
+            <select id="su-country" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 10px;color:#E5E7EB;font-size:14px;outline:none">
+              <option>Colombia</option><option>México</option><option>España</option><option>United States</option><option>Argentina</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="su-email">Email</label>
+        <input id="su-email" type="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;margin-bottom:14px;outline:none" style-focus="border-color:#22D3EE">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="su-pass">{{ t.password }}</label>
+            <input id="su-pass" type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;outline:none" style-focus="border-color:#22D3EE">
+          </div>
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="su-pass2">{{ t.confirmPassword }}</label>
+            <input id="su-pass2" type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;outline:none" style-focus="border-color:#22D3EE">
+          </div>
+        </div>
+        <label style="display:block;font-size:12.5px;font-weight:700;color:#9CA3AF;margin-bottom:6px" for="su-ref">{{ t.referralCode }} <span style="color:#4B5563;font-weight:500">({{ t.optional }})</span></label>
+        <input id="su-ref" type="text" placeholder="FZ-XXXXXX" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(124,58,237,.25);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;font-family:'JetBrains Mono',monospace;margin-bottom:16px;outline:none" style-focus="border-color:#7C3AED">
+        <label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:#9CA3AF;margin-bottom:10px;cursor:pointer"><input type="checkbox" style="margin-top:2px;accent-color:#2EE6A6"> <span>{{ t.acceptTerms }}</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:#9CA3AF;margin-bottom:20px;cursor:pointer"><input type="checkbox" style="margin-top:2px;accent-color:#2EE6A6"> <span>{{ t.acceptAge }}</span></label>
+        <button onClick="{{ doSignup }}" style="width:100%;background:#2EE6A6;color:#04140A;border:none;font-size:15px;font-weight:800;padding:13px;border-radius:11px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-1px);box-shadow:0 6px 22px rgba(57,255,136,.28)">{{ t.createAccount }}</button>
+        <div style="text-align:center;margin-top:18px;font-size:13.5px;color:#9CA3AF">{{ t.haveAccount }} <button onClick="{{ goLogin }}" style="background:none;border:none;color:#2EE6A6;font-weight:700;cursor:pointer;font-size:13.5px;padding:0">{{ t.login }}</button></div>
+      </sc-if>
+
+      <sc-if value="{{ authForgot }}" hint-placeholder-val="{{ false }}">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">{{ t.resetPassword }}</div>
+        <div style="font-size:13.5px;color:#9CA3AF;margin-bottom:22px">{{ t.resetSub }}</div>
+        <input type="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14.5px;margin-bottom:16px;outline:none" style-focus="border-color:#22D3EE">
+        <button onClick="{{ goLogin }}" style="width:100%;background:#22D3EE;color:#04252b;border:none;font-size:15px;font-weight:800;padding:13px;border-radius:11px;cursor:pointer">{{ t.sendResetLink }}</button>
+        <div style="text-align:center;margin-top:18px"><button onClick="{{ goLogin }}" style="background:none;border:none;color:#9CA3AF;font-size:13px;cursor:pointer;padding:0">← {{ t.backToLogin }}</button></div>
+      </sc-if>
+
+      <sc-if value="{{ authVerify }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(34,211,238,.12);display:grid;place-items:center;font-size:28px;margin:0 auto 18px">✉️</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-bottom:8px">{{ t.verifyEmail }}</div>
+          <div style="font-size:13.5px;color:#9CA3AF;margin-bottom:22px;line-height:1.6">{{ t.verifySub }}</div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-bottom:22px">
+            <sc-for list="{{ otpDigits }}" as="d" hint-placeholder-count="6">
+              <div style="width:44px;height:52px;background:#0A0E17;border:1px solid rgba(57,255,136,.3);border-radius:10px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:22px;color:#2EE6A6">{{ d.v }}</div>
+            </sc-for>
+          </div>
+          <button onClick="{{ doVerify }}" style="width:100%;background:#2EE6A6;color:#04140A;border:none;font-size:15px;font-weight:800;padding:13px;border-radius:11px;cursor:pointer">{{ t.confirmCode }}</button>
+          <div style="margin-top:14px;font-size:12.5px;color:#6B7280">{{ t.resendHint }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ auth2fa }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(124,58,237,.14);display:grid;place-items:center;font-size:28px;margin:0 auto 18px">🔐</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-bottom:8px">{{ t.twoFactor }}</div>
+          <div style="font-size:13.5px;color:#9CA3AF;margin-bottom:22px;line-height:1.6">{{ t.twoFactorSub }}</div>
+          <input type="text" inputMode="numeric" maxLength="6" placeholder="000000" style="width:200px;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(124,58,237,.4);border-radius:10px;padding:14px;color:#E5E7EB;font-size:22px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:.3em;margin-bottom:18px;outline:none" style-focus="border-color:#7C3AED">
+          <button onClick="{{ do2fa }}" style="width:100%;background:#7C3AED;color:#fff;border:none;font-size:15px;font-weight:800;padding:13px;border-radius:11px;cursor:pointer">{{ t.verify }}</button>
+          <div style="margin-top:14px;font-size:12.5px;color:#6B7280">{{ t.recoveryHint }}</div>
+        </div>
+      </sc-if>
+
+    </div>
+    <p style="text-align:center;font-size:11.5px;color:#4B5563;margin-top:18px;line-height:1.6">{{ t.authFooter }}</p>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ONBOARDING ============ -->
+<sc-if value="{{ showOnboarding }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px">
+  <div style="width:100%;max-width:520px;animation:popIn .3s ease both">
+    <div style="display:flex;gap:8px;margin-bottom:28px" aria-label="Progress">
+      <sc-for list="{{ obDots }}" as="dot" hint-placeholder-count="5">
+        <div style="flex:1;height:4px;border-radius:2px;background:{{ dot.color }};transition:background .3s ease"></div>
+      </sc-for>
+    </div>
+    <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:18px;padding:38px 34px;text-align:center;min-height:340px;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:52px;margin-bottom:18px">{{ obIcon }}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:12px">{{ obTitle }}</div>
+      <div style="font-size:14.5px;color:#9CA3AF;line-height:1.65;margin-bottom:26px;max-width:400px;margin-left:auto;margin-right:auto">{{ obDesc }}</div>
+      <sc-if value="{{ obShowEarnGrid }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px">
+          <sc-for list="{{ obEarnOptions }}" as="o" hint-placeholder-count="4">
+            <button onClick="{{ o.toggle }}" style="background:{{ o.bg }};border:1px solid {{ o.border }};border-radius:12px;padding:14px;color:#E5E7EB;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;transition:border-color .18s ease">
+              <span style="font-size:18px">{{ o.icon }}</span> {{ o.label }}
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ obShowWelcomeReward }}" hint-placeholder-val="{{ false }}">
+        <div style="background:rgba(57,255,136,.08);border:1px solid rgba(57,255,136,.3);border-radius:14px;padding:20px;margin-bottom:26px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:30px;color:#2EE6A6;font-weight:600">+100 ZYXE</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:6px">{{ t.promoTag }}</div>
+        </div>
+      </sc-if>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <sc-if value="{{ obNotLast }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ obSkip }}" style="background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:14px;font-weight:700;padding:12px 24px;border-radius:11px;cursor:pointer">{{ t.skip }}</button>
+        </sc-if>
+        <button onClick="{{ obNext }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:14px;font-weight:800;padding:12px 32px;border-radius:11px;cursor:pointer;transition:transform .18s ease" style-hover="transform:translateY(-1px)">{{ obNextLabel }}</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:#4B5563">{{ obStepLabel }}</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ APP SHELL ============ -->
+<sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;min-height:100vh">
+
+  <!-- Sidebar (desktop) -->
+  <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+  <aside style="width:232px;flex:none;background:#0A0E17;border-right:1px solid rgba(229,231,235,.06);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto">
+    <div style="padding:20px 20px 14px">
+      <img src="assets/logo-white.png" alt="Fauzet" style="height:34px">
+    </div>
+    <nav style="flex:1;padding:6px 12px;display:flex;flex-direction:column;gap:2px" aria-label="Main">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="10">
+        <button onClick="{{ n.go }}" style="display:flex;align-items:center;gap:12px;background:{{ n.bg }};border:none;border-radius:10px;padding:10px 12px;color:{{ n.color }};font-size:13.5px;font-weight:700;cursor:pointer;text-align:left;transition:background .15s ease;width:100%" style-hover="background:rgba(229,231,235,.05)">
+          <span style="font-size:16px;width:20px;text-align:center">{{ n.icon }}</span> {{ n.label }}
+          <sc-if value="{{ n.badge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;background:rgba(57,255,136,.15);color:#2EE6A6;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:6px">{{ n.badge }}</span></sc-if>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 12px;border-top:1px solid rgba(229,231,235,.06)">
+      <div style="background:#111827;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#22D3EE,#7C3AED);display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff">M</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800">Mateo</div>
+          <div style="font-size:11px;color:#2EE6A6">{{ t.verified }} · Lv 3</div>
+        </div>
+        <button onClick="{{ doLogout }}" title="Log out" style="background:none;border:none;color:#6B7280;cursor:pointer;font-size:15px;padding:4px" style-hover="color:#E5E7EB">⏻</button>
+      </div>
+      <a href="Fauzet Admin.dc.html" style="display:block;text-align:center;margin-top:10px;font-size:11px;color:#4B5563;font-weight:700" style-hover="color:#22D3EE">Admin console (demo) →</a>
+    </div>
+  </aside>
+  </sc-if>
+
+  <!-- Main column -->
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <!-- Top bar -->
+    <header style="position:sticky;top:0;z-index:40;background:rgba(8,11,18,.9);backdrop-filter:blur(12px);border-bottom:1px solid rgba(229,231,235,.06);padding:0 20px;height:60px;display:flex;align-items:center;gap:14px">
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <img src="assets/logo-white.png" alt="Fauzet" style="height:28px">
+      </sc-if>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:999px;padding:6px 14px">
+        <img src="assets/coin-zyxe.png" alt="ZYXE" style="width:16px;height:16px;border-radius:50%;display:block">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ availableFmt }}</span>
+        <span style="font-size:11px;color:#2EE6A6;font-weight:800">ZYXE</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:999px;padding:6px 12px" title="Energy">
+        <span style="font-size:12px">⚡</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#22D3EE">{{ energy }}/100</span>
+      </div>
+      <button onClick="{{ toggleLang }}" style="background:none;border:1px solid rgba(229,231,235,.12);color:#9CA3AF;border-radius:8px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11.5px;cursor:pointer" style-hover="border-color:#22D3EE;color:#22D3EE">{{ langLabel }}</button>
+      <button onClick="{{ toggleNotif }}" aria-label="Notifications" style="position:relative;background:none;border:1px solid rgba(229,231,235,.12);color:#E5E7EB;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px" style-hover="border-color:#22D3EE">
+        🔔<span style="position:absolute;top:-4px;right:-4px;background:#7C3AED;color:#fff;font-size:9.5px;font-weight:800;border-radius:8px;padding:1px 5px">3</span>
+      </button>
+    </header>
+
+    <!-- Screen content -->
+    <main style="flex:1;padding:{{ mainPad }};max-width:1160px;width:100%;margin:0 auto;box-sizing:border-box">
+      <!-- SCREENS-START -->
+
+      <!-- ============ DASHBOARD ============ -->
+      <sc-if value="{{ scrDashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+          <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0;letter-spacing:-.01em">{{ t.hiMateo }}</h1>
+          <span style="font-size:12.5px;color:#6B7280">{{ t.demoNote }}</span>
+        </div>
+
+        <!-- Balance -->
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px 24px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+            <div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:6px">{{ t.totalBalance }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:34px;font-weight:600">{{ totalFmt }} <span style="font-size:15px;color:#2EE6A6">ZYXE</span></div>
+              <div style="font-size:12px;color:#6B7280;margin-top:4px">{{ t.estRef }}: ≈ {{ estValue }} <span style="color:#4B5563">· {{ t.notGuaranteed }}</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:8px">
+              <sc-for list="{{ bucketList }}" as="b" hint-placeholder-count="4">
+                <div style="background:#0A0E17;border-radius:10px;padding:10px 14px">
+                  <div style="font-size:11px;color:#6B7280;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:{{ b.dot }}"></span>{{ b.label }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:15px;margin-top:3px">{{ b.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- Faucet + Mining status row -->
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px;margin-bottom:16px">
+          <div style="background:#111827;border:1px solid rgba(57,255,136,.2);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">💧 FAUCET</span>
+              <span style="font-size:11.5px;color:#22D3EE;font-family:'JetBrains Mono',monospace">{{ t.streak }} {{ faucetStreak }}🔥</span>
+            </div>
+            <sc-if value="{{ faucetReady }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:15px;font-weight:700;color:#2EE6A6">{{ t.faucetReady }}</div>
+            </sc-if>
+            <sc-if value="{{ faucetCooling }}" hint-placeholder-val="{{ false }}">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:24px">{{ t.nextClaim }} {{ faucetCountdown }}</div>
+            </sc-if>
+            <button onClick="{{ goFaucet }}" style="background:{{ faucetBtnBg }};color:{{ faucetBtnFg }};border:none;font-size:14px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer;transition:transform .18s ease" style-hover="transform:translateY(-1px)">{{ faucetBtnLabel }}</button>
+            <div style="font-size:11.5px;color:#6B7280">{{ t.rewardRange }}: 5–25 ZYXE · {{ faucetClaimsToday }}/8 {{ t.claimsToday }}</div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">⛏️ {{ t.mining }}</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#2EE6A6;font-weight:700"><span style="width:6px;height:6px;border-radius:50%;background:#2EE6A6;animation:pulseDot 2s ease infinite"></span>{{ t.active }}</span>
+            </div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap">
+              <div><div style="font-size:11px;color:#6B7280">{{ t.hashpower }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:19px">{{ totalHash }} GH/s</div></div>
+              <div><div style="font-size:11px;color:#6B7280">{{ t.estDaily }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:19px;color:#2EE6A6">~{{ estMiningDaily }}</div></div>
+              <div><div style="font-size:11px;color:#6B7280">{{ t.poolShare }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:19px">{{ poolShare }}%</div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#6B7280;margin-bottom:5px"><span>{{ t.energy }}</span><span>{{ energy }}/100</span></div>
+              <div style="height:6px;background:rgba(229,231,235,.08);border-radius:3px;overflow:hidden"><div style="width:{{ energyPct }};height:100%;background:linear-gradient(90deg,#22D3EE,#2EE6A6);border-radius:3px;transition:width .4s ease"></div></div>
+            </div>
+            <button onClick="{{ goMining }}" style="background:rgba(57,255,136,.1);border:1px solid rgba(57,255,136,.3);color:#2EE6A6;font-size:13px;font-weight:800;padding:10px;border-radius:10px;cursor:pointer" style-hover="background:rgba(57,255,136,.18)">{{ t.openMining }}</button>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px">
+          <sc-for list="{{ quickActions }}" as="q" hint-placeholder-count="8">
+            <button onClick="{{ q.go }}" style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:12px;padding:14px 8px;color:#E5E7EB;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;transition:transform .18s ease,border-color .18s ease" style-hover="transform:translateY(-2px);border-color:rgba(34,211,238,.35)">
+              <span style="font-size:20px">{{ q.icon }}</span>
+              <span style="font-size:12px;font-weight:700">{{ q.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <!-- Daily progress + missions + activity -->
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px;margin-bottom:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ t.dailyProgress }}</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ dailyProgress }}" as="dp" hint-placeholder-count="4">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:#9CA3AF">{{ dp.label }}</span><span style="font-family:'JetBrains Mono',monospace">{{ dp.value }}</span></div>
+                  <div style="height:5px;background:rgba(229,231,235,.07);border-radius:3px;overflow:hidden"><div style="width:{{ dp.pct }};height:100%;background:{{ dp.color }};border-radius:3px;transition:width .4s ease"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ t.activeMissions }}</span>
+              <button onClick="{{ goMissions }}" style="background:none;border:none;color:#22D3EE;font-size:12px;font-weight:700;cursor:pointer;padding:0">{{ t.viewAll }} →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ dashMissions }}" as="m" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:12px;background:#0A0E17;border-radius:10px;padding:10px 14px">
+                  <span style="font-size:17px">{{ m.icon }}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.title }}</div>
+                    <div style="height:4px;background:rgba(229,231,235,.07);border-radius:2px;margin-top:5px;overflow:hidden"><div style="width:{{ m.pct }};height:100%;background:#22D3EE;border-radius:2px"></div></div>
+                  </div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#2EE6A6;flex:none">+{{ m.reward }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent activity + crew snapshot -->
+        <div style="display:grid;grid-template-columns:{{ dashBottomGrid }};gap:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ t.recentActivity }}</span>
+              <button onClick="{{ goWallet }}" style="background:none;border:none;color:#22D3EE;font-size:12px;font-weight:700;cursor:pointer;padding:0">{{ t.viewAll }} →</button>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ recentTxs }}" as="tx" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(229,231,235,.05)">
+                  <span style="width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;font-size:14px;background:rgba(34,211,238,.08)">{{ tx.icon }}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:700">{{ tx.label }}</div>
+                    <div style="font-size:11px;color:#6B7280">{{ tx.time }} · <span style="color:{{ tx.statusColor }}">{{ tx.status }}</span></div>
+                  </div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:{{ tx.amtColor }}">{{ tx.amount }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#111827;border:1px solid rgba(124,58,237,.22);border-radius:16px;padding:20px 22px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">👥 MINING CREW</span>
+                <button onClick="{{ goCrew }}" style="background:none;border:none;color:#7C3AED;font-size:12px;font-weight:700;cursor:pointer;padding:0">{{ t.viewAll }} →</button>
+              </div>
+              <div style="display:flex;gap:18px">
+                <div><div style="font-family:'JetBrains Mono',monospace;font-size:20px">12</div><div style="font-size:11px;color:#6B7280">{{ t.totalCrew }}</div></div>
+                <div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:#2EE6A6">7</div><div style="font-size:11px;color:#6B7280">{{ t.activeCrew }}</div></div>
+                <div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:#7C3AED">+86</div><div style="font-size:11px;color:#6B7280">{{ t.thisWeek }}</div></div>
+              </div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(124,58,237,.14),rgba(34,211,238,.06));border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:20px 22px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#c4a5f5;margin-bottom:6px">⚡ {{ t.seasonEvent }}</div>
+              <div style="font-size:14.5px;font-weight:800;margin-bottom:4px">Hash Season 02</div>
+              <div style="font-size:12px;color:#9CA3AF;margin-bottom:12px">{{ t.seasonDesc }}</div>
+              <button onClick="{{ goMissions }}" style="background:#7C3AED;color:#fff;border:none;font-size:12.5px;font-weight:800;padding:9px 18px;border-radius:9px;cursor:pointer" style-hover="background:#8d52f0">{{ t.joinEvent }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ FAUCET ============ -->
+      <sc-if value="{{ scrFaucet }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both;max-width:760px;margin:0 auto">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 20px;letter-spacing:-.01em">💧 Faucet</h1>
+        <div style="background:#111827;border:1px solid rgba(57,255,136,.22);border-radius:18px;padding:34px;text-align:center;margin-bottom:16px">
+          <sc-if value="{{ faucetReady }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:15px;font-weight:800;color:#2EE6A6;margin-bottom:6px">{{ t.faucetReadyLong }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:600;margin-bottom:8px">5–25 <span style="font-size:18px;color:#2EE6A6">ZYXE</span></div>
+            <div style="font-size:12.5px;color:#6B7280;margin-bottom:22px">{{ t.rewardRange }} · {{ t.bonusMult }}: <span style="color:#22D3EE">×1.2</span> ({{ t.streak }} {{ faucetStreak }})</div>
+            <sc-if value="{{ faucetNeedsCaptcha }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:340px;margin:0 auto 18px;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer" onClick="{{ solveCaptcha }}">
+                <span style="width:22px;height:22px;border:2px solid #22D3EE;border-radius:5px;display:inline-block"></span>
+                <span style="font-size:13.5px;color:#9CA3AF">{{ t.captchaLabel }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ faucetCaptchaOk }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ doClaim }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:17px;font-weight:800;padding:16px 52px;border-radius:13px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 28px rgba(57,255,136,.3)">{{ t.claimZyxes }}</button>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ faucetClaiming }}" hint-placeholder-val="{{ false }}">
+            <div style="width:56px;height:56px;margin:0 auto 16px;border:3px solid rgba(57,255,136,.2);border-top-color:#2EE6A6;border-radius:50%;animation:spin 1s linear infinite"></div>
+            <div style="font-size:14px;color:#9CA3AF">{{ t.claimValidating }}</div>
+          </sc-if>
+          <sc-if value="{{ faucetClaimed }}" hint-placeholder-val="{{ false }}">
+            <div style="position:relative;overflow:visible">
+              <div style="font-size:42px;margin-bottom:8px">💧</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:600;color:#2EE6A6;margin-bottom:6px">+{{ lastClaimAmount }} ZYXE</div>
+              <div style="font-size:13px;color:#9CA3AF;margin-bottom:6px">{{ t.claimApproved }}</div>
+              <div style="font-size:12px;color:#6B7280;margin-bottom:20px">{{ t.nextClaim }} <span style="font-family:'JetBrains Mono',monospace;color:#22D3EE">{{ faucetCountdown }}</span></div>
+              <button onClick="{{ goDashboard }}" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);color:#22D3EE;font-size:13.5px;font-weight:800;padding:11px 26px;border-radius:11px;cursor:pointer">{{ t.backToDashboard }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ faucetCooling }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;font-weight:800;color:#6B7280;letter-spacing:.08em;margin-bottom:10px">{{ t.faucetCooling }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:600;color:#22D3EE;margin-bottom:14px">{{ faucetCountdown }}</div>
+            <div style="font-size:12.5px;color:#6B7280">{{ t.nextClaimHint }}</div>
+          </sc-if>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px;margin-bottom:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ t.dailyClaims }}</div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <sc-for list="{{ claimSlots }}" as="cs" hint-placeholder-count="8">
+                <div style="flex:1;height:8px;border-radius:4px;background:{{ cs.color }}"></div>
+              </sc-for>
+            </div>
+            <div style="font-size:12.5px;color:#9CA3AF">{{ faucetClaimsToday }}/8 {{ t.claimsToday }} · {{ t.limitResets }}</div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ t.streakBonus }}</div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="font-size:30px">🔥</span>
+              <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:20px">{{ faucetStreak }} {{ t.days }}</div>
+                <div style="font-size:12px;color:#6B7280">{{ t.streakHint }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ t.claimHistory }}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ claimHistory }}" as="ch" hint-placeholder-count="5">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px">
+                <span style="color:#9CA3AF">{{ ch.time }}</span>
+                <span style="font-size:11.5px;font-weight:700;color:{{ ch.statusColor }}">{{ ch.status }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">+{{ ch.amount }} ZYXE</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ GAMES ============ -->
+      <sc-if value="{{ scrGames }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+          <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0;letter-spacing:-.01em">🎮 {{ gamesTitle }}</h1>
+          <span style="font-size:12.5px;color:#6B7280">⚡ {{ energy }}/100 · {{ gamesSubNote }}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+          <sc-for list="{{ gameCats }}" as="gc" hint-placeholder-count="5">
+            <button onClick="{{ gc.pick }}" style="background:{{ gc.bg }};border:1px solid {{ gc.border }};color:{{ gc.color }};font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:999px;cursor:pointer;transition:border-color .15s ease">{{ gc.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+          <sc-for list="{{ gameCards }}" as="g" hint-placeholder-count="5">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;overflow:hidden;transition:transform .2s ease,border-color .2s ease;display:flex;flex-direction:column" style-hover="transform:scale(1.02);border-color:rgba(57,255,136,.35)">
+              <div style="height:96px;display:grid;place-items:center;font-size:38px;background:{{ g.bg }}">{{ g.icon }}</div>
+              <div style="padding:16px 18px;flex:1;display:flex;flex-direction:column">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                  <span style="font-weight:800;font-size:15px">{{ g.name }}</span>
+                  <span style="font-size:10px;font-weight:800;letter-spacing:.05em;color:{{ g.diffColor }};border:1px solid {{ g.diffColor }};border-radius:6px;padding:2px 7px">{{ g.diff }}</span>
+                </div>
+                <div style="color:#9CA3AF;font-size:12.5px;line-height:1.5;margin-bottom:10px;flex:1">{{ g.desc }}</div>
+                <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#6B7280;margin-bottom:6px">
+                  <span>⚡ {{ g.energy }}</span><span>⏱ {{ g.duration }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ g.reward }}</span>
+                </div>
+                <div style="font-size:11px;color:#4B5563;margin-bottom:12px">{{ g.bestLabel }}: <span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">{{ g.best }}</span></div>
+                <sc-if value="{{ g.playable }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ g.play }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:13px;font-weight:800;padding:10px;border-radius:9px;cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px)">{{ g.cta }}</button>
+                </sc-if>
+                <sc-if value="{{ g.blocked }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:rgba(229,231,235,.05);border:1px solid rgba(229,231,235,.1);color:#6B7280;font-size:12px;font-weight:700;padding:10px;border-radius:9px;text-align:center">{{ g.cta }}</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ MISSIONS ============ -->
+      <sc-if value="{{ scrMissions }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 18px;letter-spacing:-.01em">🎯 {{ missionsTitle }}</h1>
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px;margin-bottom:18px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:16px">
+            <span style="font-size:30px">🔥</span>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ msStreakLabel }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:20px">6 {{ msDays }}</div>
+            </div>
+            <div style="display:flex;gap:5px">
+              <sc-for list="{{ streakDots }}" as="sd" hint-placeholder-count="7">
+                <div style="width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:10px;background:{{ sd.bg }};color:{{ sd.fg }};font-weight:800">{{ sd.d }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:16px">
+            <span style="font-size:30px">🏅</span>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ msBadgesLabel }}</div>
+              <div style="font-size:14px;font-weight:700">First Claim · Crew Starter · Miner I</div>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;color:#7C3AED;font-size:18px">3/24</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+          <sc-for list="{{ missionTabs }}" as="mt" hint-placeholder-count="6">
+            <button onClick="{{ mt.pick }}" style="background:{{ mt.bg }};border:1px solid {{ mt.border }};color:{{ mt.color }};font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:999px;cursor:pointer">{{ mt.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ missionList }}" as="ms" hint-placeholder-count="6">
+            <div style="background:#111827;border:1px solid {{ ms.border }};border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;transition:border-color .2s ease">
+              <span style="width:42px;height:42px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:19px;background:{{ ms.iconBg }}">{{ ms.icon }}</span>
+              <div style="flex:1;min-width:200px">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:3px">
+                  <span style="font-size:14px;font-weight:800">{{ ms.title }}</span>
+                  <span style="font-size:9.5px;font-weight:800;letter-spacing:.06em;color:{{ ms.tagColor }};background:{{ ms.tagBg }};padding:2px 7px;border-radius:5px">{{ ms.tag }}</span>
+                </div>
+                <div style="font-size:12px;color:#6B7280;margin-bottom:7px">{{ ms.req }} · {{ ms.expires }}</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="flex:1;max-width:260px;height:5px;background:rgba(229,231,235,.07);border-radius:3px;overflow:hidden"><div style="width:{{ ms.pct }};height:100%;background:{{ ms.barColor }};border-radius:3px;transition:width .4s ease"></div></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#9CA3AF">{{ ms.progress }}</span>
+                </div>
+              </div>
+              <div style="text-align:right;flex:none">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#2EE6A6;margin-bottom:8px">+{{ ms.reward }} ZYXE</div>
+                <sc-if value="{{ ms.claimable }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ ms.claim }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:12px;font-weight:800;padding:8px 18px;border-radius:8px;cursor:pointer" style-hover="transform:translateY(-1px)">{{ msClaimLabel }}</button>
+                </sc-if>
+                <sc-if value="{{ ms.inProgress }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-size:11.5px;color:#6B7280;font-weight:700">{{ msInProgressLabel }}</span>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ MINING ============ -->
+      <sc-if value="{{ scrMining }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+          <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0;letter-spacing:-.01em">⛏️ {{ miningTitle }}</h1>
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#2EE6A6;font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:#2EE6A6;animation:pulseDot 2s ease infinite"></span>{{ miningStatusLabel }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ miningStats }}" as="st" hint-placeholder-count="5">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:13px;padding:16px 18px">
+              <div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:5px">{{ st.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:19px;color:{{ st.color }}">{{ st.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.18);border-radius:13px;padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:16px">ℹ️</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#9CA3AF">{{ miningFormula }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2 style="font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0">{{ minersHeading }}</h2>
+          <button onClick="{{ goStore }}" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);color:#c4a5f5;font-size:12.5px;font-weight:800;padding:8px 16px;border-radius:9px;cursor:pointer" style-hover="background:rgba(124,58,237,.2)">+ {{ buyMinerLabel }}</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px">
+          <sc-for list="{{ minerCards }}" as="mn" hint-placeholder-count="3">
+            <div style="background:#111827;border:1px solid {{ mn.border }};border-radius:15px;padding:18px 20px;transition:border-color .2s ease">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <span style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:#0A0E17">{{ mn.icon }}</span>
+                <div style="flex:1">
+                  <div style="font-weight:800;font-size:14.5px">{{ mn.name }} <span style="font-size:10px;color:{{ mn.tierColor }};font-weight:800;margin-left:4px">{{ mn.tier }}</span></div>
+                  <div style="font-size:11.5px;color:#6B7280">Lv {{ mn.level }} · {{ mn.hash }} GH/s · {{ mn.energyUse }}⚡/h</div>
+                </div>
+                <span style="font-size:10px;font-weight:800;letter-spacing:.05em;color:{{ mn.statusColor }};background:{{ mn.statusBg }};padding:3px 8px;border-radius:6px">{{ mn.status }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B7280;margin-bottom:3px"><span>{{ durabilityLabel }}</span><span>{{ mn.durability }}%</span></div>
+                  <div style="height:4px;background:rgba(229,231,235,.07);border-radius:2px;overflow:hidden"><div style="width:{{ mn.durPct }};height:100%;background:{{ mn.durColor }};border-radius:2px"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B7280;margin-bottom:3px"><span>{{ efficiencyLabel }}</span><span>{{ mn.eff }}%</span></div>
+                  <div style="height:4px;background:rgba(229,231,235,.07);border-radius:2px;overflow:hidden"><div style="width:{{ mn.effPct }};height:100%;background:#22D3EE;border-radius:2px"></div></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button onClick="{{ mn.upgrade }}" style="flex:1;background:rgba(57,255,136,.1);border:1px solid rgba(57,255,136,.3);color:#2EE6A6;font-size:11.5px;font-weight:800;padding:9px;border-radius:8px;cursor:pointer" style-hover="background:rgba(57,255,136,.18)">⬆ {{ upgradeLabel }} · {{ mn.upgradeCost }}</button>
+                <sc-if value="{{ mn.needsRepair }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ mn.repair }}" style="flex:1;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:#f59e0b;font-size:11.5px;font-weight:800;padding:9px;border-radius:8px;cursor:pointer">🔧 {{ repairLabel }} · {{ mn.repairCost }}</button>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">⚡ {{ energyMgmtLabel }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#22D3EE">{{ energy }}/100</span>
+            </div>
+            <div style="height:8px;background:rgba(229,231,235,.07);border-radius:4px;overflow:hidden;margin-bottom:14px"><div style="width:{{ energyPct }};height:100%;background:linear-gradient(90deg,#22D3EE,#2EE6A6);border-radius:4px;transition:width .4s ease"></div></div>
+            <div style="font-size:12px;color:#6B7280;margin-bottom:14px">{{ energyDrainNote }}</div>
+            <button onClick="{{ restoreEnergy }}" style="width:100%;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);color:#22D3EE;font-size:13px;font-weight:800;padding:11px;border-radius:10px;cursor:pointer" style-hover="background:rgba(34,211,238,.18)">{{ restoreEnergyLabel }} · 80 ZYXE</button>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">🏆 {{ miningRankLabel }}</div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ miningRanking }}" as="rk" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px">
+                  <span style="font-family:'JetBrains Mono',monospace;color:{{ rk.posColor }};width:28px">{{ rk.pos }}</span>
+                  <span style="flex:1;font-weight:{{ rk.weight }}">{{ rk.name }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">{{ rk.hash }} GH/s</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ BOOST STORE ============ -->
+      <sc-if value="{{ scrStore }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+          <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0;letter-spacing:-.01em">🚀 {{ storeTitle }}</h1>
+          <span style="font-size:12.5px;color:#6B7280">{{ storeBalanceNote }}: <span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ availableFmt }} ZYXE</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px">
+          <sc-for list="{{ storeItems }}" as="it" hint-placeholder-count="6">
+            <div style="background:#111827;border:1px solid {{ it.border }};border-radius:15px;padding:20px;display:flex;flex-direction:column;transition:transform .2s ease,border-color .2s ease" style-hover="transform:translateY(-3px)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+                <span style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:{{ it.iconBg }}">{{ it.icon }}</span>
+                <span style="font-size:9.5px;font-weight:800;letter-spacing:.06em;color:{{ it.tagColor }};border:1px solid {{ it.tagColor }};padding:2px 8px;border-radius:6px">{{ it.tag }}</span>
+              </div>
+              <div style="font-weight:800;font-size:15px;margin-bottom:4px">{{ it.name }}</div>
+              <div style="font-size:12.5px;color:#9CA3AF;line-height:1.5;margin-bottom:10px;flex:1">{{ it.desc }}</div>
+              <div style="font-size:11px;color:#6B7280;margin-bottom:12px">{{ it.meta }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#E5E7EB">{{ it.price }} <span style="font-size:11px;color:#2EE6A6">ZYXE</span></span>
+                <button onClick="{{ it.buy }}" style="background:{{ it.btnBg }};color:{{ it.btnFg }};border:none;font-size:12px;font-weight:800;padding:9px 20px;border-radius:8px;cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px)">{{ buyLabel }}</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <p style="font-size:11.5px;color:#4B5563;margin-top:20px;line-height:1.6">{{ storeLegal }}</p>
+      </div>
+      </sc-if>
+
+      <!-- ============ WALLET ============ -->
+      <sc-if value="{{ scrWallet }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 18px;letter-spacing:-.01em">💠 {{ walletTitle }}</h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
+          <sc-for list="{{ walletBuckets }}" as="wb" hint-placeholder-count="6">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-top:2px solid {{ wb.accent }};border-radius:13px;padding:16px 18px">
+              <div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:5px">{{ wb.label }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px">{{ wb.value }}</div>
+              <div style="font-size:10.5px;color:#4B5563;margin-top:3px">{{ wb.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+          <button onClick="{{ goConvert }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:13px;font-weight:800;padding:11px 22px;border-radius:10px;cursor:pointer" style-hover="transform:translateY(-1px)">🔄 {{ convertCta }}</button>
+          <button onClick="{{ goWithdraw }}" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);color:#22D3EE;font-size:13px;font-weight:800;padding:11px 22px;border-radius:10px;cursor:pointer" style-hover="background:rgba(34,211,238,.18)">📤 {{ withdrawCta }}</button>
+          <button onClick="{{ goVault }}" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);color:#c4a5f5;font-size:13px;font-weight:800;padding:11px 22px;border-radius:10px;cursor:pointer" style-hover="background:rgba(124,58,237,.2)">🏦 {{ vaultCta }}</button>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ txHistoryLabel }}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ txFilters }}" as="tf" hint-placeholder-count="6">
+                <button onClick="{{ tf.pick }}" style="background:{{ tf.bg }};border:1px solid {{ tf.border }};color:{{ tf.color }};font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;cursor:pointer">{{ tf.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ walletTxs }}" as="wt" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid rgba(229,231,235,.05);flex-wrap:wrap">
+                <span style="width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:15px;background:rgba(34,211,238,.08)">{{ wt.icon }}</span>
+                <div style="flex:1;min-width:150px">
+                  <div style="font-size:13.5px;font-weight:700">{{ wt.label }}</div>
+                  <div style="font-size:11px;color:#6B7280;font-family:'JetBrains Mono',monospace">{{ wt.ref }} · {{ wt.date }}</div>
+                </div>
+                <span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;color:{{ wt.stColor }};background:{{ wt.stBg }};padding:3px 9px;border-radius:6px;flex:none">{{ wt.status }}</span>
+                <div style="text-align:right;flex:none;min-width:100px">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:{{ wt.amtColor }}">{{ wt.amount }}</div>
+                  <div style="font-size:10.5px;color:#4B5563">{{ balAfterLabel }}: {{ wt.after }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ VAULT ============ -->
+      <sc-if value="{{ scrVault }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both;max-width:860px;margin:0 auto">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 6px;letter-spacing:-.01em">🏦 ZYXE Vault</h1>
+        <p style="font-size:13px;color:#6B7280;margin:0 0 20px">{{ vaultSub }}</p>
+
+        <sc-if value="{{ vaultHasPosition }}" hint-placeholder-val="{{ false }}">
+          <div style="background:linear-gradient(135deg,rgba(124,58,237,.14),#111827);border:1px solid rgba(124,58,237,.4);border-radius:16px;padding:22px 24px;margin-bottom:18px">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;align-items:center">
+              <div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#c4a5f5;margin-bottom:5px">{{ activeLockLabel }}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:26px">{{ vaultLockedFmt }} ZYXE</div>
+                <div style="font-size:12px;color:#9CA3AF;margin-top:4px">{{ vaultPosDetail }}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:11px;color:#6B7280">{{ estRewardLabel }}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:#2EE6A6">~{{ vaultEstReward }} ZYXE</div>
+                <div style="font-size:10.5px;color:#6B7280">{{ notGuaranteedShort }}</div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px;margin-bottom:18px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ newLockLabel }}</div>
+            <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px" for="vault-amt">{{ amountLabel }} <span style="color:#4B5563">· {{ availableLabel }}: {{ availableFmt }}</span></label>
+            <input id="vault-amt" type="number" value="{{ vaultAmount }}" onInput="{{ setVaultAmount }}" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:16px;font-family:'JetBrains Mono',monospace;margin-bottom:14px;outline:none" style-focus="border-color:#7C3AED">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+              <sc-for list="{{ vaultPeriods }}" as="vp" hint-placeholder-count="4">
+                <button onClick="{{ vp.pick }}" style="background:{{ vp.bg }};border:1px solid {{ vp.border }};border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:border-color .15s ease">
+                  <div style="font-size:13px;font-weight:800;color:{{ vp.color }}">{{ vp.name }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#c4a5f5;margin-top:2px">{{ vp.mult }}</div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="background:#0A0E17;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:6px;font-size:12.5px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ estRewardLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">~{{ vaultQuoteReward }} ZYXE</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ poolWeightLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ vaultQuoteWeight }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ unlockDateLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ vaultUnlockDate }}</span></div>
+            </div>
+            <button onClick="{{ openVaultConfirm }}" style="width:100%;background:#7C3AED;color:#fff;border:none;font-size:14px;font-weight:800;padding:13px;border-radius:11px;cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px);background:#8d52f0">{{ lockCta }}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ poolStatsLabel }}</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ totalPoolLabel }}</span><span style="font-family:'JetBrains Mono',monospace">120,000 ZYXE</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ totalLockedLabel }}</span><span style="font-family:'JetBrains Mono',monospace">8.4M ZYXE</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ yourShareLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#c4a5f5">{{ vaultShare }}</span></div>
+              </div>
+            </div>
+            <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.22);border-radius:16px;padding:18px 20px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.08em;color:#c4a5f5;margin-bottom:8px">⚠ {{ vaultRulesLabel }}</div>
+              <ul style="margin:0;padding-left:18px;font-size:12px;color:#9CA3AF;line-height:1.7">
+                <li>{{ vaultRule1 }}</li>
+                <li>{{ vaultRule2 }}</li>
+                <li>{{ vaultRule3 }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ CREW ============ -->
+      <sc-if value="{{ scrCrew }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 6px;letter-spacing:-.01em">👥 Mining Crew</h1>
+        <p style="font-size:13px;color:#6B7280;margin:0 0 20px">{{ crewSub }}</p>
+        <div style="display:grid;grid-template-columns:{{ twoColGrid }};gap:16px;margin-bottom:18px">
+          <div style="background:#111827;border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:22px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ inviteLabel }}</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <div style="flex:1;background:#0A0E17;border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#c4a5f5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">fauzet.io/r/FZ-MATEO7</div>
+              <button onClick="{{ copyRef }}" style="background:#7C3AED;color:#fff;border:none;font-size:12.5px;font-weight:800;padding:0 18px;border-radius:10px;cursor:pointer" style-hover="background:#8d52f0">{{ copyLabel }}</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ copyRef }}" style="flex:1;background:rgba(229,231,235,.05);border:1px solid rgba(229,231,235,.1);color:#9CA3AF;font-size:12px;font-weight:700;padding:9px;border-radius:9px;cursor:pointer">✈ Telegram</button>
+              <button onClick="{{ copyRef }}" style="flex:1;background:rgba(229,231,235,.05);border:1px solid rgba(229,231,235,.1);color:#9CA3AF;font-size:12px;font-weight:700;padding:9px;border-radius:9px;cursor:pointer">𝕏 Post</button>
+              <button onClick="{{ copyRef }}" style="flex:1;background:rgba(229,231,235,.05);border:1px solid rgba(229,231,235,.1);color:#9CA3AF;font-size:12px;font-weight:700;padding:9px;border-radius:9px;cursor:pointer">▦ QR</button>
+            </div>
+          </div>
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px;display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
+            <div><div style="font-size:11px;color:#6B7280">{{ t.totalCrew }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:24px">12</div></div>
+            <div><div style="font-size:11px;color:#6B7280">{{ t.activeCrew }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:#2EE6A6">7</div></div>
+            <div><div style="font-size:11px;color:#6B7280">{{ inactiveLabel }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:#6B7280">5</div></div>
+            <div><div style="font-size:11px;color:#6B7280">{{ earnedTotalLabel }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:#7C3AED">438</div></div>
+          </div>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px;margin-bottom:18px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:16px">{{ levelsLabel }}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ crewLevels }}" as="cl" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <span style="width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;background:rgba(124,58,237,{{ cl.alpha }});color:#c4a5f5;font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600">L{{ cl.level }}</span>
+                <div style="flex:1;min-width:120px">
+                  <div style="height:22px;background:rgba(229,231,235,.05);border-radius:6px;overflow:hidden;position:relative">
+                    <div style="width:{{ cl.barPct }};height:100%;background:linear-gradient(90deg,rgba(124,58,237,.7),rgba(124,58,237,.35));border-radius:6px;transition:width .5s ease"></div>
+                    <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700">{{ cl.members }} {{ membersLabel }}</span>
+                  </div>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c4a5f5;width:44px;text-align:right">{{ cl.pct }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#2EE6A6;width:80px;text-align:right">+{{ cl.earned }} ZYXE</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:11px;color:#4B5563;margin-top:14px">{{ crewLegal }}</div>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">{{ crewActivityLabel }}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ crewActivity }}" as="ca" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px;flex-wrap:wrap">
+                <span style="width:30px;height:30px;flex:none;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#22D3EE);display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff">{{ ca.initial }}</span>
+                <span style="font-weight:700">{{ ca.name }}</span>
+                <span style="font-size:10.5px;color:#c4a5f5;background:rgba(124,58,237,.12);padding:2px 8px;border-radius:5px">L{{ ca.level }}</span>
+                <span style="flex:1;color:#9CA3AF;min-width:140px">{{ ca.action }}</span>
+                <span style="font-size:10.5px;font-weight:800;color:{{ ca.stColor }}">{{ ca.status }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">+{{ ca.amount }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ TRADING ============ -->
+      <sc-if value="{{ scrTrading }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0;letter-spacing:-.01em">📈 Microtrading</h1>
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#f59e0b;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);padding:5px 12px;border-radius:7px">{{ tradingModeTag }}</span>
+        </div>
+        <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18);border-radius:11px;padding:11px 16px;margin-bottom:16px;font-size:12px;color:#9CA3AF;line-height:1.5">{{ tradingWarning }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+          <sc-for list="{{ tradingPairs }}" as="tp" hint-placeholder-count="5">
+            <button onClick="{{ tp.pick }}" style="background:{{ tp.bg }};border:1px solid {{ tp.border }};color:{{ tp.color }};font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer">{{ tp.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ tradingGrid }};gap:16px">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px 22px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+              <div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600">{{ pairPrice }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:{{ pairChangeColor }};margin-left:10px">{{ pairChange }}</span>
+              </div>
+              <div style="display:flex;gap:5px">
+                <sc-for list="{{ timeframes }}" as="tf2" hint-placeholder-count="4">
+                  <button onClick="{{ tf2.pick }}" style="background:{{ tf2.bg }};border:none;color:{{ tf2.color }};font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer">{{ tf2.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#6B7280;margin-bottom:14px">Vol 24h: <span style="font-family:'JetBrains Mono',monospace">{{ pairVolume }}</span> · Spread: <span style="font-family:'JetBrains Mono',monospace">0.8%</span></div>
+            <svg viewBox="0 0 600 220" style="width:100%;height:auto;display:block" aria-label="Price chart">
+              <polyline points="{{ chartArea }}" fill="rgba(34,211,238,.08)" stroke="none"></polyline>
+              <polyline points="{{ chartLine }}" fill="none" stroke="#22D3EE" stroke-width="2"></polyline>
+            </svg>
+            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:#4B5563;margin-top:6px"><span>{{ chartFrom }}</span><span>{{ chartTo }}</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:20px">
+              <div style="display:flex;gap:8px;margin-bottom:14px">
+                <button onClick="{{ setBuySide }}" style="flex:1;background:{{ buyTabBg }};border:1px solid {{ buyTabBorder }};color:{{ buyTabColor }};font-size:13px;font-weight:800;padding:10px;border-radius:9px;cursor:pointer">{{ buyLabel2 }}</button>
+                <button onClick="{{ setSellSide }}" style="flex:1;background:{{ sellTabBg }};border:1px solid {{ sellTabBorder }};color:{{ sellTabColor }};font-size:13px;font-weight:800;padding:10px;border-radius:9px;cursor:pointer">{{ sellLabel }}</button>
+              </div>
+              <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px" for="trade-amt">{{ amountLabel }} (ZYXE)</label>
+              <input id="trade-amt" type="number" value="{{ tradeAmount }}" onInput="{{ setTradeAmount }}" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:11px 14px;color:#E5E7EB;font-size:15px;font-family:'JetBrains Mono',monospace;margin-bottom:12px;outline:none" style-focus="border-color:#22D3EE">
+              <div style="background:#0A0E17;border-radius:10px;padding:11px 14px;margin-bottom:14px;display:flex;flex-direction:column;gap:5px;font-size:12px">
+                <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ rateLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ pairPrice }}</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ feeLabel }} (0.5%)</span><span style="font-family:'JetBrains Mono',monospace">{{ tradeFee }}</span></div>
+                <div style="display:flex;justify-content:space-between;font-weight:700"><span style="color:#9CA3AF">{{ youReceiveLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ tradeReceive }}</span></div>
+              </div>
+              <button onClick="{{ placeOrder }}" style="width:100%;background:{{ orderBtnBg }};color:{{ orderBtnFg }};border:none;font-size:13.5px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px)">{{ orderCta }}</button>
+            </div>
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:18px 20px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ tradeHistoryLabel }}</div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ tradeHistory }}" as="th" hint-placeholder-count="3">
+                  <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:12px">
+                    <span style="color:{{ th.sideColor }};font-weight:800">{{ th.side }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">{{ th.amt }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:#6B7280">{{ th.price }}</span>
+                    <span style="color:#4B5563">{{ th.time }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ CONVERT ============ -->
+      <sc-if value="{{ scrConvert }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both;max-width:640px;margin:0 auto">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 6px;letter-spacing:-.01em">🔄 {{ convertTitle }}</h1>
+        <p style="font-size:13px;color:#6B7280;margin:0 0 20px">{{ convertSub }}</p>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:24px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:16px">
+            <span style="color:#6B7280">{{ eligibleBalLabel }}: <span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ eligibleFmt }} ZYXE</span></span>
+            <span style="color:#6B7280">{{ nonEligibleLabel }}: <span style="font-family:'JetBrains Mono',monospace;color:#4B5563">{{ nonEligibleFmt }}</span></span>
+          </div>
+          <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px" for="cv-amt">{{ amountLabel }} (ZYXE)</label>
+          <input id="cv-amt" type="number" value="{{ convertAmount }}" onInput="{{ setConvertAmount }}" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:13px 14px;color:#E5E7EB;font-size:17px;font-family:'JetBrains Mono',monospace;margin-bottom:16px;outline:none" style-focus="border-color:#22D3EE">
+          <div style="font-size:12px;color:#9CA3AF;margin-bottom:8px">{{ selectAssetLabel }}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:18px">
+            <sc-for list="{{ convertAssets }}" as="cvA" hint-placeholder-count="4">
+              <button onClick="{{ cvA.pick }}" style="background:{{ cvA.bg }};border:1px solid {{ cvA.border }};border-radius:11px;padding:12px 8px;cursor:pointer;text-align:center;transition:border-color .15s ease">
+                <img src="{{ cvA.img }}" alt="" style="width:26px;height:26px;border-radius:50%;display:block;margin:0 auto 5px"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:{{ cvA.color }}">{{ cvA.sym }}</div>
+                <div style="font-size:10.5px;color:#6B7280;margin-top:2px">{{ cvA.name }}</div>
+              </button>
+            </sc-for>
+          </div>
+          <div style="background:#0A0E17;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ rateLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ cvRate }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Spread (1%)</span><span style="font-family:'JetBrains Mono',monospace">{{ cvSpread }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ networkFeeLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ cvNetFee }}</span></div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(229,231,235,.07);padding-top:7px;font-weight:700"><span style="color:#9CA3AF">{{ youReceiveLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ cvReceive }}</span></div>
+          </div>
+          <div style="font-size:11.5px;color:#6B7280;margin-bottom:16px">{{ cvLimitsNote }}</div>
+          <button onClick="{{ doConvert }}" style="width:100%;background:{{ cvBtnBg }};color:{{ cvBtnFg }};border:none;font-size:14.5px;font-weight:800;padding:14px;border-radius:11px;cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px)">{{ convertCta2 }}</button>
+        </div>
+        <sc-if value="{{ cvSuccess }}" hint-placeholder-val="{{ false }}">
+          <div style="background:rgba(57,255,136,.06);border:1px solid rgba(57,255,136,.3);border-radius:14px;padding:18px 20px;display:flex;gap:14px;align-items:center;animation:popIn .3s ease both">
+            <span style="font-size:24px">✓</span>
+            <div>
+              <div style="font-size:13.5px;font-weight:800;color:#2EE6A6">{{ cvSuccessTitle }}</div>
+              <div style="font-size:12px;color:#9CA3AF;margin-top:3px">{{ cvSuccessBody }}</div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- ============ WITHDRAW ============ -->
+      <sc-if value="{{ scrWithdraw }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both;max-width:640px;margin:0 auto">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 6px;letter-spacing:-.01em">📤 {{ withdrawTitle }}</h1>
+        <p style="font-size:13px;color:#6B7280;margin:0 0 20px">{{ withdrawSub }}</p>
+
+        <sc-if value="{{ wdStep1 }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:24px;margin-bottom:16px">
+            <div style="font-size:12px;color:#9CA3AF;margin-bottom:8px">{{ selectAssetLabel }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:18px">
+              <sc-for list="{{ wdAssets }}" as="wa" hint-placeholder-count="4">
+                <button onClick="{{ wa.pick }}" style="background:{{ wa.bg }};border:1px solid {{ wa.border }};border-radius:11px;padding:12px 8px;cursor:pointer;text-align:center">
+                  <img src="{{ wa.img }}" alt="" style="width:26px;height:26px;border-radius:50%;display:block;margin:0 auto 5px"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:{{ wa.color }}">{{ wa.sym }}</div>
+                  <div style="font-size:10.5px;color:#6B7280;margin-top:2px">{{ wa.bal }}</div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#9CA3AF;margin-bottom:8px">{{ destWalletLabel }} <span style="font-size:10.5px;color:#2EE6A6">· {{ whitelistedLabel }}</span></div>
+            <div style="background:#0A0E17;border:1px solid rgba(57,255,136,.2);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+              <span style="color:#2EE6A6;font-size:14px">✓</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9CA3AF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">ltc1q8x…k2f4 (Main LTC)</span>
+              <button onClick="{{ copyAddr }}" style="background:none;border:none;color:#22D3EE;font-size:12px;cursor:pointer;font-weight:700">⧉</button>
+            </div>
+            <button onClick="{{ showToastAddWallet }}" style="background:none;border:1px dashed rgba(229,231,235,.2);color:#6B7280;font-size:12px;font-weight:700;padding:10px;border-radius:10px;cursor:pointer;width:100%;margin-bottom:18px" style-hover="border-color:#22D3EE;color:#22D3EE">+ {{ addWalletLabel }}</button>
+            <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px" for="wd-amt">{{ amountLabel }} (ZYXE) <span style="color:#4B5563">· min 1,000 · max 50,000/{{ dayLabel }}</span></label>
+            <input id="wd-amt" type="number" value="{{ wdAmount }}" onInput="{{ setWdAmount }}" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:13px 14px;color:#E5E7EB;font-size:17px;font-family:'JetBrains Mono',monospace;margin-bottom:16px;outline:none" style-focus="border-color:#22D3EE">
+            <div style="background:#0A0E17;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ networkFeeLabel }}</span><span style="font-family:'JetBrains Mono',monospace">0.0001 LTC</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ processingFeeLabel }} (1%)</span><span style="font-family:'JetBrains Mono',monospace">{{ wdProcFee }} ZYXE</span></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(229,231,235,.07);padding-top:7px;font-weight:700"><span style="color:#9CA3AF">{{ youReceiveLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ wdReceive }} LTC</span></div>
+            </div>
+            <button onClick="{{ wdNext }}" style="width:100%;background:{{ wdBtnBg }};color:{{ wdBtnFg }};border:none;font-size:14.5px;font-weight:800;padding:14px;border-radius:11px;cursor:pointer" style-hover="transform:translateY(-1px)">{{ continueLabel }}</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ wdStep2 }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#111827;border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:24px;margin-bottom:16px;animation:popIn .25s ease both">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#c4a5f5;margin-bottom:16px">🔐 {{ securityConfirmLabel }}</div>
+            <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">{{ t.password }}</label>
+            <input type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:12px 14px;color:#E5E7EB;font-size:14px;margin-bottom:14px;outline:none" style-focus="border-color:#7C3AED">
+            <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">{{ confirm2faLabel }}</label>
+            <input type="text" inputMode="numeric" maxLength="6" placeholder="000000" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(124,58,237,.35);border-radius:10px;padding:12px;color:#E5E7EB;font-size:17px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:.25em;margin-bottom:18px;outline:none" style-focus="border-color:#7C3AED">
+            <div style="display:flex;gap:10px">
+              <button onClick="{{ wdBack }}" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:13px;border-radius:10px;cursor:pointer">{{ backLabel }}</button>
+              <button onClick="{{ wdSubmit }}" style="flex:1;background:#2EE6A6;color:#04140A;border:none;font-size:13px;font-weight:800;padding:13px;border-radius:10px;cursor:pointer">{{ confirmWithdrawLabel }}</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ wdStep3 }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:28px;margin-bottom:16px;animation:popIn .25s ease both">
+            <div style="text-align:center;margin-bottom:22px">
+              <div style="width:58px;height:58px;border-radius:50%;background:rgba(34,211,238,.1);display:grid;place-items:center;font-size:26px;margin:0 auto 12px">🕐</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700">{{ wdReviewTitle }}</div>
+              <div style="font-size:12.5px;color:#9CA3AF;margin-top:5px">{{ wdReviewBody }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <sc-for list="{{ wdTimeline }}" as="wtl" hint-placeholder-count="5">
+                <div style="display:flex;gap:14px;align-items:flex-start">
+                  <div style="display:flex;flex-direction:column;align-items:center">
+                    <span style="width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11px;background:{{ wtl.dotBg }};color:{{ wtl.dotFg }};border:1px solid {{ wtl.dotBorder }}">{{ wtl.mark }}</span>
+                    <sc-if value="{{ wtl.hasLine }}" hint-placeholder-val="{{ true }}"><span style="width:2px;height:26px;background:rgba(229,231,235,.08)"></span></sc-if>
+                  </div>
+                  <div style="padding-bottom:14px">
+                    <div style="font-size:13px;font-weight:700;color:{{ wtl.titleColor }}">{{ wtl.title }}</div>
+                    <div style="font-size:11px;color:#6B7280">{{ wtl.note }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ wdReset }}" style="width:100%;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);color:#22D3EE;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer;margin-top:8px">{{ t.backToDashboard }}</button>
+          </div>
+        </sc-if>
+
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ wdHistoryLabel }}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ wdHistory }}" as="wh" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:12.5px;flex-wrap:wrap">
+                <span style="font-family:'JetBrains Mono',monospace;color:#9CA3AF">{{ wh.date }}</span>
+                <span style="font-weight:700">{{ wh.asset }}</span>
+                <span style="flex:1;font-family:'JetBrains Mono',monospace;color:#6B7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:90px">{{ wh.tx }}</span>
+                <span style="font-size:10.5px;font-weight:800;color:{{ wh.stColor }}">{{ wh.status }}</span>
+                <span style="font-family:'JetBrains Mono',monospace">{{ wh.amount }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ PROFILE ============ -->
+      <sc-if value="{{ scrProfile }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both;max-width:760px;margin:0 auto">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 20px;letter-spacing:-.01em">⚙️ {{ profileTitle }}</h1>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#22D3EE,#7C3AED);display:grid;place-items:center;font-weight:800;font-size:24px;color:#fff">M</div>
+          <div style="flex:1;min-width:160px">
+            <div style="font-size:17px;font-weight:800">Mateo <span style="font-size:10.5px;color:#2EE6A6;background:rgba(57,255,136,.1);padding:3px 9px;border-radius:6px;margin-left:6px">{{ t.verified }}</span></div>
+            <div style="font-size:12.5px;color:#6B7280;margin-top:3px">mateo@example.com · Colombia · UTC-5</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:#6B7280">{{ accountLevelLabel }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:#c4a5f5">Lv 3</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ profileRows }}" as="pr" hint-placeholder-count="8">
+            <div style="background:#111827;border:1px solid rgba(229,231,235,.07);border-radius:13px;padding:16px 20px;display:flex;align-items:center;gap:14px;transition:border-color .18s ease" style-hover="border-color:rgba(34,211,238,.3)">
+              <span style="font-size:18px;width:26px;text-align:center">{{ pr.icon }}</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700">{{ pr.title }}</div>
+                <div style="font-size:12px;color:#6B7280">{{ pr.desc }}</div>
+              </div>
+              <sc-if value="{{ pr.isToggle }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ pr.toggle }}" role="switch" aria-checked="{{ pr.on }}" style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;background:{{ pr.togBg }};transition:background .2s ease">
+                  <span style="position:absolute;top:3px;left:{{ pr.knobLeft }};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s ease"></span>
+                </button>
+              </sc-if>
+              <sc-if value="{{ pr.isStatus }}" hint-placeholder-val="{{ true }}">
+                <span style="font-size:11.5px;font-weight:800;color:{{ pr.stColor }}">{{ pr.status }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:18px;background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ sessionsLabel }}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ deviceSessions }}" as="ds" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px;flex-wrap:wrap">
+                <span style="font-size:15px">{{ ds.icon }}</span>
+                <div style="flex:1;min-width:140px">
+                  <div style="font-weight:700">{{ ds.device }} <sc-if value="{{ ds.current }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:#2EE6A6;margin-left:6px">{{ currentLabel }}</span></sc-if></div>
+                  <div style="font-size:11px;color:#6B7280;font-family:'JetBrains Mono',monospace">{{ ds.meta }}</div>
+                </div>
+                <sc-if value="{{ ds.notCurrent }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ ds.revoke }}" style="background:none;border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer">{{ revokeLabel }}</button>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ SUPPORT ============ -->
+      <sc-if value="{{ scrSupport }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .3s ease both;max-width:760px;margin:0 auto">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:24px;margin:0 0 20px;letter-spacing:-.01em">🛟 {{ supportTitle }}</h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+          <sc-for list="{{ supportActions }}" as="sa" hint-placeholder-count="4">
+            <button onClick="{{ sa.go }}" style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:20px 14px;color:#E5E7EB;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:9px;transition:transform .18s ease,border-color .18s ease" style-hover="transform:translateY(-2px);border-color:rgba(34,211,238,.35)">
+              <span style="font-size:24px">{{ sa.icon }}</span>
+              <span style="font-size:12.5px;font-weight:800">{{ sa.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">{{ systemStatusLabel }}</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#2EE6A6;font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:#2EE6A6"></span>{{ allOperationalLabel }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <sc-for list="{{ statusItems }}" as="si" hint-placeholder-count="6">
+              <div style="display:flex;justify-content:space-between;background:#0A0E17;border-radius:8px;padding:9px 12px;font-size:12px">
+                <span style="color:#9CA3AF">{{ si.name }}</span>
+                <span style="color:{{ si.color }}">●</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.08);border-radius:14px;padding:18px 20px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">{{ myTicketsLabel }}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ tickets }}" as="tk" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px;flex-wrap:wrap">
+                <span style="font-family:'JetBrains Mono',monospace;color:#6B7280">{{ tk.id }}</span>
+                <span style="flex:1;font-weight:700;min-width:150px">{{ tk.subject }}</span>
+                <span style="font-size:10.5px;font-weight:800;color:{{ tk.stColor }};background:{{ tk.stBg }};padding:3px 9px;border-radius:6px">{{ tk.status }}</span>
+                <span style="font-size:11px;color:#4B5563">{{ tk.date }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ VAULT CONFIRM MODAL ============ -->
+      <sc-if value="{{ vaultConfirmOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ cancelVault }}" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+        <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(400px,94vw);background:#0D1220;border:1px solid rgba(124,58,237,.3);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:14px">{{ confirmLockLabel }}</div>
+          <div style="background:#111827;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ amountLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ vaultAmount }} ZYXE</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ periodLabel }}</span><span>{{ vaultPeriodName }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ multiplierLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#c4a5f5">{{ vaultPeriodMult }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">{{ estRewardLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">~{{ vaultQuoteReward }} ZYXE · {{ notGuaranteedShort }}</span></div>
+          </div>
+          <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">{{ confirm2faLabel }}</label>
+          <input type="text" inputMode="numeric" maxLength="6" placeholder="000000" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(124,58,237,.35);border-radius:10px;padding:12px;color:#E5E7EB;font-size:17px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:.25em;margin-bottom:16px;outline:none" style-focus="border-color:#7C3AED">
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ cancelVault }}" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">{{ cancelLabel }}</button>
+            <button onClick="{{ confirmVault }}" style="flex:1;background:#7C3AED;color:#fff;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer" style-hover="background:#8d52f0">{{ lockCta }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ GAME MODAL ============ -->
+      <sc-if value="{{ gameOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeGame }}" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+        <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(440px,94vw);background:#0D1220;border:1px solid rgba(229,231,235,.1);border-radius:20px;padding:28px;animation:popIn .25s ease both;box-shadow:0 30px 90px rgba(0,0,0,.6)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <span style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700">{{ gameTitle }}</span>
+            <button onClick="{{ closeGame }}" style="background:none;border:none;color:#9CA3AF;font-size:18px;cursor:pointer">✕</button>
+          </div>
+
+          <sc-if value="{{ gameIntro }}" hint-placeholder-val="{{ true }}">
+            <div style="text-align:center;padding:10px 0">
+              <div style="font-size:46px;margin-bottom:14px">{{ gameIcon }}</div>
+              <div style="font-size:13.5px;color:#9CA3AF;line-height:1.65;margin-bottom:20px">{{ gameTutorial }}</div>
+              <div style="display:flex;justify-content:center;gap:18px;font-size:12px;color:#6B7280;margin-bottom:22px">
+                <span>⚡ {{ gameEnergyCost }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ gameRewardRange }}</span>
+              </div>
+              <button onClick="{{ startGame }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:15px;font-weight:800;padding:13px 40px;border-radius:11px;cursor:pointer" style-hover="transform:translateY(-1px)">{{ startLabel }}</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ gamePlayingTap }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center">
+              <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:14px;margin-bottom:18px">
+                <span style="color:#22D3EE">⏱ {{ gameTimeLeft }}s</span>
+                <span style="color:#2EE6A6">{{ scoreLabel }}: {{ gameScore }}</span>
+              </div>
+              <button onClick="{{ tapMine }}" style="width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3ef79a,#1fb763);border:4px solid rgba(57,255,136,.35);color:#04140A;font-size:44px;cursor:pointer;transition:transform .08s ease;box-shadow:0 10px 40px rgba(57,255,136,.25)" style-active="transform:scale(.93)">⛏️</button>
+              <div style="font-size:12px;color:#6B7280;margin-top:16px">{{ tapHint }}</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ gamePlayingMemory }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:13px;margin-bottom:14px">
+              <span style="color:#22D3EE">⏱ {{ gameTimeLeft }}s</span>
+              <span style="color:#2EE6A6">{{ pairsLabel }}: {{ memoryPairs }}/6</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+              <sc-for list="{{ memoryCards }}" as="mc" hint-placeholder-count="12">
+                <button onClick="{{ mc.flip }}" style="aspect-ratio:1;background:{{ mc.bg }};border:1px solid {{ mc.border }};border-radius:10px;font-size:24px;cursor:pointer;display:grid;place-items:center;transition:background .2s ease,transform .15s ease;color:#E5E7EB" style-hover="transform:scale(1.04)">{{ mc.face }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ gamePlayingSpin }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.08em;color:#6B7280;margin-bottom:12px">{{ spinOddsLabel }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">
+                <sc-for list="{{ spinOdds }}" as="so" hint-placeholder-count="5">
+                  <div style="display:flex;justify-content:space-between;background:#111827;border-radius:8px;padding:8px 14px;font-size:12.5px">
+                    <span>{{ so.prize }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:#22D3EE">{{ so.odds }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ spinSpinning }}" hint-placeholder-val="{{ false }}">
+                <div style="width:56px;height:56px;margin:0 auto;border:3px solid rgba(124,58,237,.25);border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite"></div>
+              </sc-if>
+              <sc-if value="{{ spinIdle }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ doSpin }}" style="background:#7C3AED;color:#fff;border:none;font-size:15px;font-weight:800;padding:13px 40px;border-radius:11px;cursor:pointer" style-hover="background:#8d52f0">{{ spinLabel }}</button>
+                <div style="font-size:11px;color:#6B7280;margin-top:12px">{{ spinFreeNote }}</div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ gameDone }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;position:relative;overflow:hidden;padding:6px 0">
+              <sc-for list="{{ confetti }}" as="cf" hint-placeholder-count="0">
+                <span style="position:absolute;top:0;left:{{ cf.x }};width:7px;height:7px;background:{{ cf.c }};border-radius:2px;animation:confettiFall {{ cf.dur }} ease-out {{ cf.delay }} both"></span>
+              </sc-for>
+              <div style="font-size:44px;margin-bottom:10px">🏁</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;margin-bottom:4px">{{ gameDoneTitle }}</div>
+              <div style="font-size:13px;color:#9CA3AF;margin-bottom:14px">{{ scoreLabel }}: <span style="font-family:'JetBrains Mono',monospace;color:#E5E7EB">{{ gameScore }}</span></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:32px;color:#2EE6A6;font-weight:600;margin-bottom:6px">+{{ gameReward }} ZYXE</div>
+              <div style="font-size:11.5px;color:#6B7280;margin-bottom:20px">{{ gameRewardStatus }}</div>
+              <div style="display:flex;gap:10px;justify-content:center">
+                <button onClick="{{ closeGame }}" style="background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:11px 24px;border-radius:10px;cursor:pointer">{{ doneLabel }}</button>
+                <button onClick="{{ startGame }}" style="background:#2EE6A6;color:#04140A;border:none;font-size:13px;font-weight:800;padding:11px 24px;border-radius:10px;cursor:pointer">{{ retryLabel }}</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ============ PURCHASE CONFIRM MODAL ============ -->
+      <sc-if value="{{ buyOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ cancelBuy }}" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+        <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(380px,94vw);background:#0D1220;border:1px solid rgba(229,231,235,.1);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:14px">{{ confirmPurchaseLabel }}</div>
+          <div style="background:#111827;border-radius:12px;padding:14px 16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:#6B7280">{{ itemLabel }}</span><span style="font-weight:700">{{ buyItemName }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:#6B7280">{{ effectLabel }}</span><span>{{ buyItemEffect }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#6B7280">{{ priceLabel }}</span><span style="font-family:'JetBrains Mono',monospace;color:#2EE6A6">{{ buyItemPrice }} ZYXE</span></div>
+          </div>
+          <div style="font-size:11.5px;color:#6B7280;margin-bottom:18px;line-height:1.5">{{ nonRefundNote }}</div>
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ cancelBuy }}" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">{{ cancelLabel }}</button>
+            <button onClick="{{ confirmBuy }}" style="flex:1;background:#2EE6A6;color:#04140A;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">{{ confirmLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Fallback for unbuilt screens -->
+      <sc-if value="{{ scrPlaceholder }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:80px 20px;color:#6B7280">
+          <div style="font-size:40px;margin-bottom:14px">🛠️</div>
+          <div style="font-size:15px">{{ t.comingSoon }}</div>
+        </div>
+      </sc-if>
+    </main>
+
+    <!-- Bottom nav (mobile) -->
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <nav style="position:sticky;bottom:0;z-index:40;background:rgba(10,14,23,.96);backdrop-filter:blur(12px);border-top:1px solid rgba(229,231,235,.08);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))" aria-label="Mobile">
+        <sc-for list="{{ mobileNav }}" as="mn" hint-placeholder-count="5">
+          <button onClick="{{ mn.go }}" style="background:none;border:none;color:{{ mn.color }};cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 10px;min-width:44px;min-height:44px">
+            <span style="font-size:19px">{{ mn.icon }}</span>
+            <span style="font-size:10px;font-weight:800">{{ mn.label }}</span>
+          </button>
+        </sc-for>
+      </nav>
+    </sc-if>
+  </div>
+</div>
+
+<!-- Notifications drawer -->
+<sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ toggleNotif }}" style="position:fixed;inset:0;background:rgba(4,6,10,.6);z-index:60;animation:fadeUp .2s ease both"></div>
+  <div style="position:fixed;top:0;right:0;bottom:0;width:min(360px,92vw);background:#0D1220;border-left:1px solid rgba(229,231,235,.08);z-index:61;padding:22px;overflow-y:auto;animation:popIn .25s ease both">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700">{{ t.notifications }}</span>
+      <button onClick="{{ toggleNotif }}" style="background:none;border:none;color:#9CA3AF;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ notifList }}" as="nf" hint-placeholder-count="6">
+        <div style="background:#111827;border:1px solid rgba(229,231,235,.07);border-left:3px solid {{ nf.accent }};border-radius:10px;padding:12px 14px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">{{ nf.title }}</div>
+          <div style="font-size:12px;color:#9CA3AF;line-height:1.5">{{ nf.body }}</div>
+          <div style="font-size:10.5px;color:#4B5563;margin-top:6px">{{ nf.time }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</sc-if>
+
+<!-- Toast -->
+<sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:80;background:#111827;border:1px solid rgba(57,255,136,.35);border-radius:12px;padding:12px 22px;font-size:13.5px;font-weight:700;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:popIn .25s ease both;display:flex;align-items:center;gap:10px">
+    <span style="color:#2EE6A6">✓</span> {{ toastMsg }}
+  </div>
+</sc-if>
+
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    lang: 'en',
+    view: 'auth', authTab: 'login',
+    obStep: 0,
+    screen: 'dashboard',
+    isMobile: false,
+    // economy (MOCK DATA — demo prototype, not authoritative)
+    balances: { available: 2180, pending: 640, locked: 600, eligible: 1450, promo: 100 },
+    energy: 64,
+    faucet: { status: 'ready', secs: 0, streak: 6, claimsToday: 3, captchaOk: false, lastAmount: 0, history: [
+      { time: 'Today 10:12', status: 'CONFIRMED', statusColor: '#2EE6A6', amount: 18 },
+      { time: 'Today 08:44', status: 'CONFIRMED', statusColor: '#2EE6A6', amount: 9 },
+      { time: 'Today 07:03', status: 'CONFIRMED', statusColor: '#2EE6A6', amount: 14 },
+      { time: 'Yesterday 22:10', status: 'REJECTED', statusColor: '#f87171', amount: 0 },
+      { time: 'Yesterday 20:31', status: 'CONFIRMED', statusColor: '#2EE6A6', amount: 22 },
+    ]},
+    txs: [
+      { icon: '💧', label: 'Faucet claim', time: '10:12', status: 'Confirmed', statusColor: '#2EE6A6', amount: '+18', amtColor: '#2EE6A6' },
+      { icon: '🎮', label: 'Tap Miner reward', time: '09:58', status: 'Confirmed', statusColor: '#2EE6A6', amount: '+24', amtColor: '#2EE6A6' },
+      { icon: '⛏️', label: 'Mining pool payout', time: '00:00', status: 'Confirmed', statusColor: '#2EE6A6', amount: '+181', amtColor: '#2EE6A6' },
+      { icon: '👥', label: 'Crew reward · L1', time: 'Yesterday', status: 'Pending', statusColor: '#22D3EE', amount: '+12', amtColor: '#9CA3AF' },
+      { icon: '🚀', label: 'Boost purchase', time: 'Yesterday', status: 'Confirmed', statusColor: '#2EE6A6', amount: '-150', amtColor: '#f87171' },
+    ],
+    notifOpen: false,
+    toast: null,
+    gameCat: 'all',
+    game: null, // {id, phase, score, timeLeft, cards, flipped, pairs, spinPhase, reward}
+    missionTab: 'all',
+    claimedMissions: [],
+    miners: [
+      { id: 1, name: 'Drip Node', icon: '🖥️', tier: 'BASIC', tierColor: '#22D3EE', level: 2, hash: 24, energyUse: 2, eff: 96, durability: 82, upgradeCost: 220, repairCost: 60 },
+      { id: 2, name: 'Core Rig', icon: '⚙️', tier: 'STANDARD', tierColor: '#2EE6A6', level: 3, hash: 46, energyUse: 4, eff: 88, durability: 34, upgradeCost: 480, repairCost: 120 },
+      { id: 3, name: 'Nova Rig', icon: '🔮', tier: 'PREMIUM', tierColor: '#7C3AED', level: 1, hash: 58, energyUse: 6, eff: 92, durability: 91, upgradeCost: 900, repairCost: 200 },
+    ],
+    buy: null,
+    txFilter: 'all',
+    vault: { amount: 500, period: 1, position: { amount: 600, periodName: '30d', mult: '1.15×', end: 'Aug 02, 2026' } },
+    vaultConfirm: false,
+    pair: 0, timeframe: 1, tradeSide: 'buy', tradeAmount: 500,
+    tradeHist: [
+      { side: 'BUY', sideColor: '#2EE6A6', amt: '1,000 ZYXE', price: '0.00000112', time: 'Jul 09' },
+      { side: 'SELL', sideColor: '#f87171', amt: '400 ZYXE', price: '0.00000118', time: 'Jul 06' },
+      { side: 'BUY', sideColor: '#2EE6A6', amt: '250 ZYXE', price: '0.00000105', time: 'Jul 02' },
+    ],
+    convertAmount: 1000, convertAsset: 0, cvDone: false,
+    wdStep: 1, wdAmount: 1500, wdAsset: 0,
+    twoFaOn: true, pinOn: false, notifEmailOn: true,
+  };
+
+  // ---- games ----
+  openGame(id) { this.setState({ game: { id, phase: 'intro', score: 0, timeLeft: 0, cards: null, flipped: [], pairs: 0, spinPhase: 'idle', reward: 0 } }); }
+  closeGame() { clearInterval(this._gameT); this.setState({ game: null }); }
+  startGame() {
+    const g = this.state.game; if (!g) return;
+    clearInterval(this._gameT);
+    if (g.id === 'tap') {
+      this.setState({ game: { ...g, phase: 'playing', score: 0, timeLeft: 10 } });
+      this._gameT = setInterval(() => {
+        const gg = this.state.game; if (!gg) return;
+        if (gg.timeLeft <= 1) { clearInterval(this._gameT); this.finishGame(Math.min(25, 5 + Math.floor(gg.score / 4))); }
+        else this.setState({ game: { ...gg, timeLeft: gg.timeLeft - 1 } });
+      }, 1000);
+    } else if (g.id === 'memory') {
+      const syms = ['💧', '⛏️', '💠', '🚀', '🔋', '🏆'];
+      const deck = [...syms, ...syms].map((sym, i) => ({ sym, i, matched: false }))
+        .sort(() => Math.random() - .5);
+      this.setState({ game: { ...g, phase: 'playing', score: 0, timeLeft: 45, cards: deck, flipped: [], pairs: 0 } });
+      this._gameT = setInterval(() => {
+        const gg = this.state.game; if (!gg) return;
+        if (gg.timeLeft <= 1) { clearInterval(this._gameT); this.finishGame(5 + gg.pairs * 3); }
+        else this.setState({ game: { ...gg, timeLeft: gg.timeLeft - 1 } });
+      }, 1000);
+    } else if (g.id === 'spin') {
+      this.setState({ game: { ...g, phase: 'playing', spinPhase: 'idle' } });
+    }
+  }
+  flipCard(idx) {
+    const g = this.state.game; if (!g || g.phase !== 'playing') return;
+    if (g.flipped.length === 2 || g.flipped.includes(idx) || g.cards[idx].matched) return;
+    const flipped = [...g.flipped, idx];
+    if (flipped.length === 2) {
+      const [a, b] = flipped;
+      if (g.cards[a].sym === g.cards[b].sym) {
+        const cards = g.cards.map((c, i) => (i === a || i === b) ? { ...c, matched: true } : c);
+        const pairs = g.pairs + 1;
+        this.setState({ game: { ...g, cards, flipped: [], pairs, score: pairs * 10 + g.timeLeft } });
+        if (pairs === 6) { clearInterval(this._gameT); setTimeout(() => this.finishGame(15 + Math.floor(g.timeLeft / 2)), 500); }
+      } else {
+        this.setState({ game: { ...g, flipped } });
+        setTimeout(() => { const gg = this.state.game; if (gg) this.setState({ game: { ...gg, flipped: [] } }); }, 700);
+      }
+    } else this.setState({ game: { ...g, flipped } });
+  }
+  finishGame(reward) {
+    const g = this.state.game; if (!g) return;
+    this.setState(st => ({
+      game: { ...st.game, phase: 'done', reward },
+      energy: Math.max(0, st.energy - 5),
+      balances: { ...st.balances, pending: st.balances.pending + reward },
+      txs: [{ icon: '🎮', label: (g.id === 'tap' ? 'Tap Miner' : g.id === 'memory' ? 'Memory Drops' : 'Daily Spin') + ' reward', time: 'now', status: 'Pending', statusColor: '#22D3EE', amount: '+' + reward, amtColor: '#9CA3AF' }, ...st.txs].slice(0, 6),
+    }));
+  }
+  chartPoints(area) {
+    // deterministic pseudo-random walk per pair+timeframe
+    const seed = this.state.pair * 7 + this.state.timeframe * 13 + 5;
+    let v = 110, x = 0;
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const r = Math.sin(seed + i * 1.7) * 14 + Math.sin(seed * 2 + i * 0.6) * 9;
+      v = Math.max(30, Math.min(190, 110 + r));
+      x = i * 10;
+      pts.push(x + ',' + Math.round(220 - v));
+    }
+    if (area) return '0,220 ' + pts.join(' ') + ' 600,220';
+    return pts.join(' ');
+  }
+
+  doSpin() {
+    const g = this.state.game; if (!g) return;
+    this.setState({ game: { ...g, spinPhase: 'spinning' } });
+    setTimeout(() => {
+      const r = Math.random();
+      const reward = r < .5 ? 5 : r < .8 ? 10 : r < .95 ? 25 : 50;
+      clearInterval(this._gameT);
+      this.finishGame(reward);
+    }, 1300);
+  }
+
+  componentDidMount() {
+    this._mq = window.matchMedia('(max-width: 760px)');
+    const upd = () => this.setState({ isMobile: this._mq.matches });
+    upd();
+    this._mq.addEventListener('change', upd);
+    this._timer = setInterval(() => {
+      this.setState(s => {
+        const f = { ...s.faucet };
+        if (f.status === 'cooling' && f.secs > 0) { f.secs--; if (f.secs === 0) { f.status = 'ready'; f.captchaOk = false; } }
+        return { faucet: f };
+      });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._timer); }
+
+  nav(screen) { this.setState({ screen, notifOpen: false }); window.scrollTo(0, 0); }
+  toast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 2400);
+  }
+
+  dict() {
+    const en = {
+      welcomeBack: 'Welcome back', loginSub: 'Log in to your Fauzet account.', password: 'Password', forgot: 'Forgot password?',
+      login: 'Log In', noAccount: 'No account yet?', signup: 'Sign up', createAccount: 'Create account',
+      signupSub: 'Free forever. Start earning in minutes.', username: 'Username', country: 'Country', confirmPassword: 'Confirm password',
+      referralCode: 'Referral code', optional: 'optional',
+      acceptTerms: 'I accept the Terms of Service and the Privacy Policy.',
+      acceptAge: 'I confirm I am of legal age in my country.',
+      haveAccount: 'Already have an account?', resetPassword: 'Reset password',
+      resetSub: 'We will email you a secure reset link.', sendResetLink: 'Send reset link', backToLogin: 'Back to log in',
+      verifyEmail: 'Verify your email', verifySub: 'We sent a 6-digit code to your email. Enter it below to activate your account.',
+      confirmCode: 'Confirm code', resendHint: 'Didn\u2019t get it? Resend in 00:42',
+      twoFactor: 'Two-factor authentication', twoFactorSub: 'Enter the 6-digit code from your authenticator app.',
+      verify: 'Verify', recoveryHint: 'Lost your device? Use a recovery code.',
+      authFooter: 'Protected by rate limits, captcha and anti-fraud monitoring. ZYXE is an internal utility and reward unit — not an investment.',
+      orLabel: 'or', googleCta: 'Continue with Google',
+      skip: 'Skip', next: 'Next', finish: 'Claim & enter', promoTag: 'Promotional balance — not withdrawable',
+      verified: 'Verified',
+      hiMateo: 'Hi, Mateo 👋', demoNote: 'Demo data — mocked, not authoritative',
+      totalBalance: 'TOTAL BALANCE', estRef: 'Reference value', notGuaranteed: 'not guaranteed',
+      available: 'Available', pending: 'Pending', locked: 'Locked', eligibleConv: 'Eligible to convert', promo: 'Promotional',
+      streak: 'Streak', faucetReady: 'Your faucet is ready.', faucetReadyLong: 'YOUR FAUCET IS READY',
+      nextClaim: 'Next claim in', claimZyxes: 'Claim ZYXEs', rewardRange: 'Reward range', claimsToday: 'claims today',
+      mining: 'MINING', active: 'Active', hashpower: 'Hashpower', estDaily: 'Est. daily', poolShare: 'Pool share',
+      energy: 'Energy', openMining: 'Open mining room', dailyProgress: 'TODAY\u2019S PROGRESS',
+      activeMissions: 'ACTIVE MISSIONS', viewAll: 'View all', recentActivity: 'RECENT ACTIVITY',
+      totalCrew: 'Total crew', activeCrew: 'Active', thisWeek: 'ZYXE this week',
+      seasonEvent: 'SEASONAL EVENT', seasonDesc: 'Complete event missions to climb the seasonal ranking.', joinEvent: 'View event',
+      notifications: 'Notifications', comingSoon: 'This module is being built.',
+      faucetCooling: 'FAUCET COOLING DOWN', nextClaimHint: 'Come back when the countdown ends. Streak stays safe for 24h.',
+      claimValidating: 'Validating claim… checking cooldown, device and anti-fraud rules.',
+      claimApproved: 'Claim approved and credited to your available balance.',
+      backToDashboard: 'Back to dashboard', bonusMult: 'Bonus multiplier',
+      captchaLabel: 'I\u2019m not a robot — tap to verify',
+      dailyClaims: 'DAILY CLAIM LIMIT', limitResets: 'resets at 00:00 UTC', streakBonus: 'CLAIM STREAK', days: 'days',
+      streakHint: '+20% bonus at 7 days', claimHistory: 'CLAIM HISTORY',
+    };
+    const es = {
+      welcomeBack: 'Hola de nuevo', loginSub: 'Inicia sesión en tu cuenta Fauzet.', password: 'Contraseña', forgot: '¿Olvidaste tu contraseña?',
+      login: 'Iniciar sesión', noAccount: '¿Aún no tienes cuenta?', signup: 'Regístrate', createAccount: 'Crear cuenta',
+      signupSub: 'Gratis para siempre. Empieza a ganar en minutos.', username: 'Usuario', country: 'País', confirmPassword: 'Confirmar contraseña',
+      referralCode: 'Código de referido', optional: 'opcional',
+      acceptTerms: 'Acepto los Términos de Servicio y la Política de Privacidad.',
+      acceptAge: 'Confirmo que soy mayor de edad en mi país.',
+      haveAccount: '¿Ya tienes cuenta?', resetPassword: 'Restablecer contraseña',
+      resetSub: 'Te enviaremos un enlace seguro por email.', sendResetLink: 'Enviar enlace', backToLogin: 'Volver a iniciar sesión',
+      verifyEmail: 'Verifica tu email', verifySub: 'Enviamos un código de 6 dígitos a tu email. Ingrésalo para activar tu cuenta.',
+      confirmCode: 'Confirmar código', resendHint: '¿No llegó? Reenviar en 00:42',
+      twoFactor: 'Autenticación de dos factores', twoFactorSub: 'Ingresa el código de 6 dígitos de tu app de autenticación.',
+      verify: 'Verificar', recoveryHint: '¿Perdiste tu dispositivo? Usa un código de recuperación.',
+      authFooter: 'Protegido por límites de tasa, captcha y monitoreo antifraude. ZYXE es una unidad interna de utilidad y recompensa — no una inversión.',
+      orLabel: 'o', googleCta: 'Continuar con Google',
+      skip: 'Omitir', next: 'Siguiente', finish: 'Reclamar y entrar', promoTag: 'Saldo promocional — no retirable',
+      verified: 'Verificado',
+      hiMateo: 'Hola, Mateo 👋', demoNote: 'Datos demo — simulados, no autoritativos',
+      totalBalance: 'SALDO TOTAL', estRef: 'Valor de referencia', notGuaranteed: 'no garantizado',
+      available: 'Disponible', pending: 'Pendiente', locked: 'Bloqueado', eligibleConv: 'Elegible para convertir', promo: 'Promocional',
+      streak: 'Racha', faucetReady: 'Tu faucet está listo.', faucetReadyLong: 'TU FAUCET ESTÁ LISTO',
+      nextClaim: 'Próximo claim en', claimZyxes: 'Reclamar ZYXEs', rewardRange: 'Rango de recompensa', claimsToday: 'claims hoy',
+      mining: 'MINERÍA', active: 'Activa', hashpower: 'Hashpower', estDaily: 'Est. diario', poolShare: 'Parte del pool',
+      energy: 'Energía', openMining: 'Abrir sala de minería', dailyProgress: 'PROGRESO DE HOY',
+      activeMissions: 'MISIONES ACTIVAS', viewAll: 'Ver todo', recentActivity: 'ACTIVIDAD RECIENTE',
+      totalCrew: 'Crew total', activeCrew: 'Activos', thisWeek: 'ZYXE esta semana',
+      seasonEvent: 'EVENTO DE TEMPORADA', seasonDesc: 'Completa misiones del evento para subir en el ranking.', joinEvent: 'Ver evento',
+      notifications: 'Notificaciones', comingSoon: 'Este módulo está en construcción.',
+      faucetCooling: 'FAUCET EN ENFRIAMIENTO', nextClaimHint: 'Vuelve cuando termine la cuenta regresiva. Tu racha se conserva 24h.',
+      claimValidating: 'Validando claim… revisando cooldown, dispositivo y reglas antifraude.',
+      claimApproved: 'Claim aprobado y acreditado a tu saldo disponible.',
+      backToDashboard: 'Volver al dashboard', bonusMult: 'Multiplicador de bono',
+      captchaLabel: 'No soy un robot — toca para verificar',
+      dailyClaims: 'LÍMITE DIARIO DE CLAIMS', limitResets: 'se reinicia a las 00:00 UTC', streakBonus: 'RACHA DE CLAIMS', days: 'días',
+      streakHint: '+20% de bono a los 7 días', claimHistory: 'HISTORIAL DE CLAIMS',
+    };
+    return this.state.lang === 'es' ? es : en;
+  }
+
+  obSteps() {
+    const es = this.state.lang === 'es';
+    return es ? [
+      { icon: '👋', title: 'Bienvenido a Fauzet', desc: 'Reclama recompensas, juega, construye minería virtual y haz crecer tu saldo de ZYXEs. Te mostramos lo esencial en 4 pasos.' },
+      { icon: '💠', title: 'Conoce ZYXE', desc: 'ZYXE es la unidad interna de recompensa y utilidad de Fauzet. Se gana con actividad válida y se usa dentro de la plataforma. No es una inversión.' },
+      { icon: '🎯', title: 'Elige cómo ganar', desc: 'Selecciona lo que más te interesa. Puedes cambiarlo cuando quieras.' },
+      { icon: '🛡️', title: 'Protege tu cuenta', desc: 'Activa la autenticación de dos factores ahora y agrega tu wallet de retiro más adelante, cuando la necesites.' },
+      { icon: '🎁', title: 'Tu recompensa de bienvenida', desc: 'Un bono promocional para explorar la plataforma. No es retirable, pero puedes usarlo en boosts y energía.' },
+    ] : [
+      { icon: '👋', title: 'Welcome to Fauzet', desc: 'Claim rewards, play games, build virtual mining power and grow your ZYXE balance. Here\u2019s the essential tour in 4 steps.' },
+      { icon: '💠', title: 'Meet ZYXE', desc: 'ZYXE is Fauzet\u2019s internal reward and utility unit. You earn it through valid activity and use it inside the platform. It is not an investment.' },
+      { icon: '🎯', title: 'Choose how to earn', desc: 'Pick what interests you most. You can change this anytime.' },
+      { icon: '🛡️', title: 'Protect your account', desc: 'Enable two-factor authentication now, and add a withdrawal wallet later when you need it.' },
+      { icon: '🎁', title: 'Your welcome reward', desc: 'A promotional bonus to explore the platform. It isn\u2019t withdrawable, but you can spend it on boosts and energy.' },
+    ];
+  }
+
+  renderVals() {
+    const s = this.state, t = this.dict(), es = s.lang === 'es';
+    const f = s.faucet;
+    const pad = n => String(n).padStart(2, '0');
+    const cd = Math.floor(f.secs / 60) + ':' + pad(f.secs % 60);
+    const total = s.balances.available + s.balances.pending + s.balances.locked + s.balances.promo;
+    const navDefs = [
+      { id: 'dashboard', icon: '⬒', label: es ? 'Panel' : 'Dashboard' },
+      { id: 'faucet', icon: '💧', label: 'Faucet', badge: f.status === 'ready' ? (es ? 'LISTO' : 'READY') : null },
+      { id: 'games', icon: '🎮', label: es ? 'Juegos' : 'Games' },
+      { id: 'mining', icon: '⛏️', label: es ? 'Minería' : 'Mining' },
+      { id: 'missions', icon: '🎯', label: es ? 'Misiones' : 'Missions' },
+      { id: 'store', icon: '🚀', label: es ? 'Tienda' : 'Boost Store' },
+      { id: 'wallet', icon: '💠', label: 'Wallet' },
+      { id: 'vault', icon: '🏦', label: 'Vault' },
+      { id: 'crew', icon: '👥', label: 'Mining Crew' },
+      { id: 'trading', icon: '📈', label: 'Trading' },
+      { id: 'convert', icon: '🔄', label: es ? 'Convertir' : 'Convert' },
+      { id: 'withdraw', icon: '📤', label: es ? 'Retirar' : 'Withdraw' },
+      { id: 'profile', icon: '⚙️', label: es ? 'Cuenta' : 'Account' },
+      { id: 'support', icon: '🛟', label: es ? 'Soporte' : 'Support' },
+    ];
+    const builtScreens = ['dashboard', 'faucet', 'games', 'mining', 'missions', 'store', 'wallet', 'vault', 'crew', 'trading', 'convert', 'withdraw', 'profile', 'support'];
+    const ob = this.obSteps()[s.obStep] || this.obSteps()[0];
+
+    return {
+      t,
+      // shell
+      showAuth: s.view === 'auth', showOnboarding: s.view === 'onboarding', showApp: s.view === 'app',
+      authLogin: s.authTab === 'login', authSignup: s.authTab === 'signup', authForgot: s.authTab === 'forgot',
+      authVerify: s.authTab === 'verify', auth2fa: s.authTab === '2fa',
+      goLogin: () => this.setState({ authTab: 'login' }),
+      goSignup: () => this.setState({ authTab: 'signup' }),
+      goForgot: () => this.setState({ authTab: 'forgot' }),
+      doLogin: () => this.setState({ authTab: '2fa' }),
+      doGoogle: () => this.setState({ authTab: '2fa' }),
+      doSignup: () => this.setState({ authTab: 'verify' }),
+      doVerify: () => this.setState({ view: 'onboarding', obStep: 0 }),
+      do2fa: () => this.setState({ view: 'app', screen: 'dashboard' }),
+      doLogout: () => this.setState({ view: 'auth', authTab: 'login' }),
+      otpDigits: [{ v: '4' }, { v: '8' }, { v: '2' }, { v: '9' }, { v: '1' }, { v: '7' }],
+      // onboarding
+      obIcon: ob.icon, obTitle: ob.title, obDesc: ob.desc,
+      obDots: [0, 1, 2, 3, 4].map(i => ({ color: i <= s.obStep ? '#2EE6A6' : 'rgba(229,231,235,.1)' })),
+      obShowEarnGrid: s.obStep === 2,
+      obShowWelcomeReward: s.obStep === 4,
+      obNotLast: s.obStep < 4,
+      obNext: () => {
+        if (s.obStep >= 4) { this.setState({ view: 'app', screen: 'dashboard' }); this.toast(es ? '+100 ZYXE promocionales acreditados' : '+100 promotional ZYXE credited'); }
+        else this.setState({ obStep: s.obStep + 1 });
+      },
+      obSkip: () => this.setState({ obStep: Math.min(4, s.obStep + 1) }),
+      obNextLabel: s.obStep >= 4 ? t.finish : t.next,
+      obStepLabel: (es ? 'Paso ' : 'Step ') + (s.obStep + 1) + ' / 5',
+      obEarnOptions: [
+        { icon: '💧', label: 'Faucet', bg: 'rgba(34,211,238,.08)', border: 'rgba(34,211,238,.3)', toggle: () => {} },
+        { icon: '🎮', label: es ? 'Juegos' : 'Games', bg: 'rgba(57,255,136,.08)', border: 'rgba(57,255,136,.3)', toggle: () => {} },
+        { icon: '⛏️', label: es ? 'Minería' : 'Mining', bg: 'rgba(57,255,136,.08)', border: 'rgba(57,255,136,.3)', toggle: () => {} },
+        { icon: '🎯', label: es ? 'Misiones' : 'Missions', bg: 'rgba(124,58,237,.1)', border: 'rgba(124,58,237,.35)', toggle: () => {} },
+      ],
+      // layout
+      isMobile: s.isMobile, notMobile: !s.isMobile,
+      mainPad: s.isMobile ? '18px 14px 90px' : '28px 28px 48px',
+      twoColGrid: s.isMobile ? '1fr' : '1fr 1fr',
+      dashBottomGrid: s.isMobile ? '1fr' : '1.4fr 1fr',
+      langLabel: es ? 'ES · EN' : 'EN · ES',
+      toggleLang: () => this.setState({ lang: es ? 'en' : 'es' }),
+      // nav
+      navItems: navDefs.map(n => ({
+        ...n,
+        bg: s.screen === n.id ? 'rgba(57,255,136,.1)' : 'transparent',
+        color: s.screen === n.id ? '#2EE6A6' : '#9CA3AF',
+        go: () => this.nav(n.id),
+      })),
+      mobileNav: [
+        { id: 'dashboard', icon: '⬒', label: es ? 'Panel' : 'Home' },
+        { id: 'faucet', icon: '💧', label: 'Faucet' },
+        { id: 'games', icon: '🎮', label: es ? 'Juegos' : 'Games' },
+        { id: 'mining', icon: '⛏️', label: es ? 'Minería' : 'Mining' },
+        { id: 'wallet', icon: '💠', label: 'Wallet' },
+      ].map(n => ({ ...n, color: s.screen === n.id ? '#2EE6A6' : '#6B7280', go: () => this.nav(n.id) })),
+      // screen flags
+      scrDashboard: s.screen === 'dashboard',
+      scrFaucet: s.screen === 'faucet',
+      scrGames: s.screen === 'games',
+      scrMining: s.screen === 'mining',
+      scrMissions: s.screen === 'missions',
+      scrStore: s.screen === 'store',
+      scrWallet: s.screen === 'wallet',
+      scrVault: s.screen === 'vault',
+      scrCrew: s.screen === 'crew',
+      scrTrading: s.screen === 'trading',
+      scrConvert: s.screen === 'convert',
+      scrWithdraw: s.screen === 'withdraw',
+      scrProfile: s.screen === 'profile',
+      scrSupport: s.screen === 'support',
+      scrPlaceholder: !builtScreens.includes(s.screen),
+      goDashboard: () => this.nav('dashboard'), goFaucet: () => this.nav('faucet'), goGames: () => this.nav('games'),
+      goMining: () => this.nav('mining'), goMissions: () => this.nav('missions'), goStore: () => this.nav('store'),
+      goWallet: () => this.nav('wallet'), goVault: () => this.nav('vault'), goCrew: () => this.nav('crew'),
+      goTrading: () => this.nav('trading'), goConvert: () => this.nav('convert'), goWithdraw: () => this.nav('withdraw'),
+      // balances
+      availableFmt: s.balances.available.toLocaleString('en-US'),
+      totalFmt: total.toLocaleString('en-US'),
+      estValue: '$3.52 USD',
+      bucketList: [
+        { label: t.available, value: s.balances.available.toLocaleString('en-US'), dot: '#2EE6A6' },
+        { label: t.pending, value: s.balances.pending.toLocaleString('en-US'), dot: '#22D3EE' },
+        { label: t.locked, value: s.balances.locked.toLocaleString('en-US'), dot: '#7C3AED' },
+        { label: t.eligibleConv, value: s.balances.eligible.toLocaleString('en-US'), dot: '#E5E7EB' },
+      ],
+      // faucet
+      faucetReady: f.status === 'ready', faucetCooling: f.status === 'cooling',
+      faucetClaiming: f.status === 'claiming', faucetClaimed: f.status === 'claimed',
+      faucetNeedsCaptcha: f.status === 'ready' && !f.captchaOk && f.claimsToday >= 3,
+      faucetCaptchaOk: f.status === 'ready' && (f.captchaOk || f.claimsToday < 3),
+      faucetCountdown: cd, faucetStreak: f.streak, faucetClaimsToday: f.claimsToday,
+      lastClaimAmount: f.lastAmount,
+      faucetBtnBg: f.status === 'ready' ? '#2EE6A6' : 'rgba(229,231,235,.08)',
+      faucetBtnFg: f.status === 'ready' ? '#04140A' : '#9CA3AF',
+      faucetBtnLabel: f.status === 'ready' ? t.claimZyxes : (es ? 'Ver faucet' : 'View faucet'),
+      solveCaptcha: () => this.setState({ faucet: { ...f, captchaOk: true } }),
+      doClaim: () => {
+        this.setState({ faucet: { ...f, status: 'claiming' } });
+        setTimeout(() => {
+          const amount = 5 + Math.floor(Math.random() * 21);
+          this.setState(st => ({
+            faucet: { ...st.faucet, status: 'claimed', lastAmount: amount, streak: st.faucet.streak, claimsToday: st.faucet.claimsToday + 1, secs: 15 * 60,
+              history: [{ time: es ? 'Ahora' : 'Just now', status: 'CONFIRMED', statusColor: '#2EE6A6', amount }, ...st.faucet.history].slice(0, 6) },
+            balances: { ...st.balances, available: st.balances.available + amount },
+            txs: [{ icon: '💧', label: 'Faucet claim', time: es ? 'ahora' : 'now', status: 'Confirmed', statusColor: '#2EE6A6', amount: '+' + amount, amtColor: '#2EE6A6' }, ...st.txs].slice(0, 6),
+          }));
+          setTimeout(() => this.setState(st => ({ faucet: { ...st.faucet, status: 'cooling' } })), 4000);
+        }, 1400);
+      },
+      claimSlots: [...Array(8)].map((_, i) => ({ color: i < f.claimsToday ? '#2EE6A6' : 'rgba(229,231,235,.08)' })),
+      claimHistory: f.history,
+      // dashboard data
+      energy: s.energy, energyPct: s.energy + '%',
+      totalHash: 128, estMiningDaily: '184 ZYXE', poolShare: '0.074',
+      quickActions: [
+        { icon: '💧', label: 'Claim', go: () => this.nav('faucet') },
+        { icon: '🎮', label: es ? 'Jugar' : 'Play', go: () => this.nav('games') },
+        { icon: '⛏️', label: es ? 'Minar' : 'Mine', go: () => this.nav('mining') },
+        { icon: '🎯', label: es ? 'Misiones' : 'Missions', go: () => this.nav('missions') },
+        { icon: '🚀', label: 'Boosts', go: () => this.nav('store') },
+        { icon: '🏦', label: 'Vault', go: () => this.nav('vault') },
+        { icon: '🔄', label: es ? 'Convertir' : 'Convert', go: () => this.nav('convert') },
+        { icon: '📤', label: es ? 'Retirar' : 'Withdraw', go: () => this.nav('withdraw') },
+      ],
+      dailyProgress: [
+        { label: es ? 'Claims completados' : 'Claims completed', value: f.claimsToday + '/8', pct: (f.claimsToday / 8 * 100) + '%', color: '#22D3EE' },
+        { label: es ? 'Juegos jugados' : 'Games played', value: '2/5', pct: '40%', color: '#2EE6A6' },
+        { label: es ? 'Misiones completadas' : 'Missions completed', value: '3/6', pct: '50%', color: '#7C3AED' },
+        { label: es ? 'ZYXEs ganados hoy' : 'ZYXEs earned today', value: '+223', pct: '62%', color: '#2EE6A6' },
+      ],
+      dashMissions: [
+        { icon: '💧', title: es ? 'Reclama 5 veces hoy' : 'Claim 5 times today', pct: '60%', reward: 30 },
+        { icon: '🎮', title: es ? 'Gana 50 ZYXE en juegos' : 'Earn 50 ZYXE from games', pct: '48%', reward: 40 },
+        { icon: '⛏️', title: es ? 'Mantén 100+ GH/s por 24h' : 'Keep 100+ GH/s for 24h', pct: '85%', reward: 60 },
+      ],
+      recentTxs: s.txs.slice(0, 5),
+      // ---- games screen ----
+      gamesTitle: es ? 'Centro de juegos' : 'Games hub',
+      gamesSubNote: es ? 'cada juego cuesta energía' : 'each game costs energy',
+      gameCats: [
+        { id: 'all', label: es ? 'Todos' : 'All' },
+        { id: 'quick', label: es ? 'Rápidos' : 'Quick' },
+        { id: 'skill', label: es ? 'Habilidad' : 'Skill' },
+        { id: 'daily', label: es ? 'Desafío diario' : 'Daily challenge' },
+        { id: 'premium', label: 'Premium' },
+      ].map(c => ({
+        ...c,
+        bg: s.gameCat === c.id ? 'rgba(57,255,136,.12)' : '#111827',
+        border: s.gameCat === c.id ? 'rgba(57,255,136,.4)' : 'rgba(229,231,235,.1)',
+        color: s.gameCat === c.id ? '#2EE6A6' : '#9CA3AF',
+        pick: () => this.setState({ gameCat: c.id }),
+      })),
+      gameCards: [
+        { id: 'tap', cat: 'quick', icon: '⛏️', bg: 'linear-gradient(135deg,rgba(57,255,136,.14),rgba(34,211,238,.08))', name: 'Tap Miner', diff: es ? 'FÁCIL' : 'EASY', diffColor: '#2EE6A6', desc: es ? 'Toca lo más rápido posible durante 10 segundos.' : 'Tap as fast as you can for 10 seconds.', energy: 5, duration: '10s', reward: '5–25', best: '84', playable: true, cta: es ? 'Jugar' : 'Play' },
+        { id: 'memory', cat: 'skill', icon: '🃏', bg: 'linear-gradient(135deg,rgba(34,211,238,.14),rgba(124,58,237,.1))', name: 'Memory Drops', diff: es ? 'MEDIO' : 'MEDIUM', diffColor: '#22D3EE', desc: es ? 'Encuentra los 6 pares antes de que acabe el tiempo.' : 'Match all 6 pairs before time runs out.', energy: 8, duration: '45s', reward: '10–40', best: '112', playable: true, cta: es ? 'Jugar' : 'Play' },
+        { id: 'runner', cat: 'skill', icon: '🏃', bg: 'linear-gradient(135deg,rgba(124,58,237,.16),rgba(34,211,238,.08))', name: 'Hash Runner', diff: es ? 'MEDIO' : 'MEDIUM', diffColor: '#22D3EE', desc: es ? 'Esquiva obstáculos y multiplica tu puntuación.' : 'Dodge obstacles and multiply your score.', energy: 10, duration: '60s', reward: '10–50', best: '2,140', playable: false, cta: es ? 'Límite diario alcanzado' : 'Daily limit reached' },
+        { id: 'rush', cat: 'quick', icon: '💧', bg: 'linear-gradient(135deg,rgba(34,211,238,.16),rgba(57,255,136,.08))', name: 'Faucet Rush', diff: es ? 'FÁCIL' : 'EASY', diffColor: '#2EE6A6', desc: es ? 'Recoge gotas a contrarreloj y mantén tu racha.' : 'Collect drops against the clock and keep your streak.', energy: 5, duration: '30s', reward: '5–30', best: '—', playable: false, cta: es ? 'En cooldown · 22 min' : 'Cooling down · 22 min' },
+        { id: 'spin', cat: 'daily', icon: '🎡', bg: 'linear-gradient(135deg,rgba(124,58,237,.18),rgba(57,255,136,.06))', name: 'Daily Spin', diff: es ? 'GRATIS' : 'FREE', diffColor: '#7C3AED', desc: es ? '1 giro gratis al día. Probabilidades publicadas, sin apuestas.' : '1 free spin per day. Published odds, no wagering.', energy: 0, duration: '5s', reward: '5–50', best: '25', playable: true, cta: es ? 'Girar' : 'Spin' },
+      ].filter(g => s.gameCat === 'all' || g.cat === s.gameCat).map(g => ({
+        ...g, bestLabel: es ? 'Tu mejor' : 'Your best', blocked: !g.playable,
+        play: () => this.openGame(g.id),
+      })),
+      // ---- game modal ----
+      gameOpen: !!s.game,
+      closeGame: () => this.closeGame(),
+      gameTitle: s.game ? (s.game.id === 'tap' ? 'Tap Miner' : s.game.id === 'memory' ? 'Memory Drops' : 'Daily Spin') : '',
+      gameIcon: s.game ? (s.game.id === 'tap' ? '⛏️' : s.game.id === 'memory' ? '🃏' : '🎡') : '',
+      gameIntro: !!s.game && s.game.phase === 'intro',
+      gameTutorial: s.game ? (s.game.id === 'tap'
+        ? (es ? 'Toca el botón tantas veces como puedas en 10 segundos. Tu recompensa depende de tu puntuación y se valida en el servidor.' : 'Tap the button as many times as you can in 10 seconds. Your reward depends on your score and is validated server-side.')
+        : s.game.id === 'memory'
+        ? (es ? 'Voltea cartas y encuentra los 6 pares. Bonus por tiempo restante y precisión.' : 'Flip cards and match all 6 pairs. Bonus for remaining time and accuracy.')
+        : (es ? 'Un giro gratis al día. Las probabilidades están publicadas abajo. Los premios son ZYXEs de utilidad interna — esto no es una apuesta.' : 'One free spin per day. The odds are published below. Prizes are internal utility ZYXEs — this is not wagering.')) : '',
+      gameEnergyCost: s.game ? (s.game.id === 'spin' ? (es ? 'Gratis' : 'Free') : (s.game.id === 'memory' ? '8' : '5') + (es ? ' energía' : ' energy')) : '',
+      gameRewardRange: s.game ? (s.game.id === 'memory' ? '10–40 ZYXE' : s.game.id === 'spin' ? '5–50 ZYXE' : '5–25 ZYXE') : '',
+      startGame: () => this.startGame(),
+      startLabel: es ? 'Comenzar' : 'Start',
+      gamePlayingTap: !!s.game && s.game.phase === 'playing' && s.game.id === 'tap',
+      gamePlayingMemory: !!s.game && s.game.phase === 'playing' && s.game.id === 'memory',
+      gamePlayingSpin: !!s.game && s.game.phase === 'playing' && s.game.id === 'spin',
+      gameTimeLeft: s.game ? s.game.timeLeft : 0,
+      gameScore: s.game ? s.game.score : 0,
+      scoreLabel: es ? 'Puntos' : 'Score',
+      tapMine: () => { const g = s.game; if (g) this.setState({ game: { ...g, score: g.score + 1 } }); },
+      tapHint: es ? '¡Toca el pico tan rápido como puedas!' : 'Tap the pickaxe as fast as you can!',
+      pairsLabel: es ? 'Pares' : 'Pairs',
+      memoryPairs: s.game ? s.game.pairs : 0,
+      memoryCards: (s.game && s.game.cards ? s.game.cards : []).map((c, i) => {
+        const up = c.matched || (s.game.flipped || []).includes(i);
+        return {
+          face: up ? c.sym : '?',
+          bg: c.matched ? 'rgba(57,255,136,.12)' : up ? 'rgba(34,211,238,.12)' : '#111827',
+          border: c.matched ? 'rgba(57,255,136,.4)' : 'rgba(229,231,235,.1)',
+          flip: () => this.flipCard(i),
+        };
+      }),
+      spinOddsLabel: es ? 'PROBABILIDADES PUBLICADAS' : 'PUBLISHED ODDS',
+      spinOdds: [
+        { prize: '5 ZYXE', odds: '50%' }, { prize: '10 ZYXE', odds: '30%' },
+        { prize: '25 ZYXE', odds: '15%' }, { prize: '50 ZYXE', odds: '5%' },
+      ],
+      spinSpinning: !!s.game && s.game.spinPhase === 'spinning',
+      spinIdle: !!s.game && s.game.phase === 'playing' && s.game.spinPhase === 'idle',
+      doSpin: () => this.doSpin(),
+      spinLabel: es ? 'Girar' : 'Spin',
+      spinFreeNote: es ? 'Giro gratis diario · recompensas de utilidad, no efectivo' : 'Free daily spin · utility rewards, not cash',
+      gameDone: !!s.game && s.game.phase === 'done',
+      gameDoneTitle: es ? '¡Ronda completada!' : 'Round complete!',
+      gameReward: s.game ? s.game.reward : 0,
+      gameRewardStatus: es ? 'Recompensa pendiente de validación en servidor' : 'Reward pending server-side validation',
+      doneLabel: es ? 'Cerrar' : 'Done',
+      retryLabel: es ? 'Jugar de nuevo' : 'Play again',
+      confetti: (s.game && s.game.phase === 'done' && s.game.reward >= 25) ? [...Array(14)].map((_, i) => ({
+        x: (5 + i * 6.8) + '%', c: ['#2EE6A6', '#22D3EE', '#7C3AED'][i % 3], dur: (0.9 + (i % 4) * .18) + 's', delay: (i % 5) * .07 + 's',
+      })) : [],
+      // ---- missions ----
+      missionsTitle: es ? 'Centro de misiones' : 'Mission center',
+      msStreakLabel: es ? 'RACHA DIARIA' : 'DAILY STREAK', msDays: es ? 'días' : 'days',
+      msBadgesLabel: es ? 'LOGROS' : 'ACHIEVEMENTS',
+      msClaimLabel: es ? 'Reclamar' : 'Claim',
+      msInProgressLabel: es ? 'En progreso' : 'In progress',
+      streakDots: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => ({ d, bg: i < 6 ? 'rgba(57,255,136,.16)' : 'rgba(229,231,235,.06)', fg: i < 6 ? '#2EE6A6' : '#4B5563' })),
+      missionTabs: [
+        { id: 'all', label: es ? 'Todas' : 'All' },
+        { id: 'daily', label: es ? 'Diarias' : 'Daily' },
+        { id: 'weekly', label: es ? 'Semanales' : 'Weekly' },
+        { id: 'mining', label: es ? 'Minería' : 'Mining' },
+        { id: 'referral', label: 'Crew' },
+        { id: 'premium', label: 'Premium' },
+      ].map(c => ({
+        ...c,
+        bg: s.missionTab === c.id ? 'rgba(124,58,237,.14)' : '#111827',
+        border: s.missionTab === c.id ? 'rgba(124,58,237,.45)' : 'rgba(229,231,235,.1)',
+        color: s.missionTab === c.id ? '#c4a5f5' : '#9CA3AF',
+        pick: () => this.setState({ missionTab: c.id }),
+      })),
+      missionList: [
+        { id: 'm1', cat: 'daily', icon: '💧', title: es ? 'Reclama 5 veces hoy' : 'Claim 5 times today', req: es ? 'Claims de faucet válidos' : 'Valid faucet claims', cur: 3, goal: 5, reward: 30, expires: es ? 'expira hoy 24:00' : 'expires today 24:00' },
+        { id: 'm2', cat: 'daily', icon: '🎮', title: es ? 'Gana 50 ZYXE en juegos' : 'Earn 50 ZYXE from games', req: es ? 'Recompensas validadas de juego' : 'Validated game rewards', cur: 24, goal: 50, reward: 40, expires: es ? 'expira hoy 24:00' : 'expires today 24:00' },
+        { id: 'm3', cat: 'mining', icon: '⛏️', title: es ? 'Mantén 100+ GH/s por 24h' : 'Keep 100+ GH/s for 24h', req: es ? 'Hashpower válido continuo' : 'Continuous valid hashpower', cur: 20, goal: 24, reward: 60, expires: es ? '2 días restantes' : '2 days left' },
+        { id: 'm4', cat: 'weekly', icon: '🔥', title: es ? 'Racha de 7 días' : '7-day streak', req: es ? 'Actividad diaria válida' : 'Valid daily activity', cur: 6, goal: 7, reward: 100, expires: es ? 'semanal' : 'weekly' },
+        { id: 'm5', cat: 'referral', icon: '👥', title: es ? 'Un miembro de crew activo' : 'One active crew member', req: es ? 'Actividad monetizable de tu red' : 'Monetizable activity from your network', cur: 1, goal: 1, reward: 50, expires: es ? 'sin límite' : 'no expiry' },
+        { id: 'm6', cat: 'premium', icon: '💎', title: es ? 'Misión patrocinada: encuesta' : 'Sponsored mission: survey', req: es ? 'Verificada por el proveedor' : 'Verified by provider', cur: 0, goal: 1, reward: 200, expires: es ? '5 días restantes' : '5 days left', premium: true },
+      ].filter(m => s.missionTab === 'all' || m.cat === s.missionTab).map(m => {
+        const done = m.cur >= m.goal, claimed = s.claimedMissions.includes(m.id);
+        return {
+          ...m,
+          iconBg: m.premium ? 'rgba(124,58,237,.16)' : 'rgba(34,211,238,.1)',
+          border: done && !claimed ? 'rgba(57,255,136,.35)' : 'rgba(229,231,235,.08)',
+          tag: claimed ? (es ? 'COMPLETADA' : 'COMPLETED') : m.cat.toUpperCase(),
+          tagColor: m.premium ? '#c4a5f5' : '#22D3EE',
+          tagBg: m.premium ? 'rgba(124,58,237,.15)' : 'rgba(34,211,238,.1)',
+          pct: Math.min(100, m.cur / m.goal * 100) + '%',
+          barColor: done ? '#2EE6A6' : '#22D3EE',
+          progress: m.cur + '/' + m.goal,
+          claimable: done && !claimed,
+          inProgress: !done || claimed,
+          claim: () => {
+            this.setState(st => ({
+              claimedMissions: [...st.claimedMissions, m.id],
+              balances: { ...st.balances, available: st.balances.available + m.reward },
+            }));
+            this.toast(es ? `+${m.reward} ZYXE de misión acreditados` : `+${m.reward} mission ZYXE credited`);
+          },
+        };
+      }),
+      // ---- mining ----
+      miningTitle: es ? 'Sala de minería' : 'Mining room',
+      miningStatusLabel: es ? 'Minería activa' : 'Mining is active',
+      miningStats: [
+        { label: 'HASHPOWER', value: s.miners.reduce((a, m) => a + m.hash, 0) + ' GH/s', color: '#E5E7EB' },
+        { label: es ? 'MINEROS ACTIVOS' : 'ACTIVE MINERS', value: s.miners.length + '/4', color: '#E5E7EB' },
+        { label: es ? 'EFICIENCIA' : 'EFFICIENCY', value: '92%', color: '#22D3EE' },
+        { label: es ? 'POOL DIARIO' : 'DAILY POOL', value: '250K ZYXE', color: '#E5E7EB' },
+        { label: es ? 'EST. HOY' : 'EST. TODAY', value: '~184 ZYXE', color: '#2EE6A6' },
+      ],
+      miningFormula: es ? 'recompensa = (tu hashpower válido ÷ hashpower total de la red) × pool diario — estimado, no garantizado' : 'reward = (your valid hashpower ÷ total network hashpower) × daily pool — estimated, not guaranteed',
+      minersHeading: es ? 'Tus mineros' : 'Your miners',
+      buyMinerLabel: es ? 'Comprar minero' : 'Buy miner',
+      durabilityLabel: es ? 'Durabilidad' : 'Durability',
+      efficiencyLabel: es ? 'Eficiencia' : 'Efficiency',
+      upgradeLabel: es ? 'Mejorar' : 'Upgrade',
+      repairLabel: es ? 'Reparar' : 'Repair',
+      minerCards: s.miners.map(m => {
+        const needsRepair = m.durability < 40;
+        return {
+          ...m,
+          border: needsRepair ? 'rgba(245,158,11,.35)' : 'rgba(229,231,235,.08)',
+          status: needsRepair ? (es ? 'MANTENIMIENTO' : 'MAINTENANCE') : (es ? 'ACTIVO' : 'ACTIVE'),
+          statusColor: needsRepair ? '#f59e0b' : '#2EE6A6',
+          statusBg: needsRepair ? 'rgba(245,158,11,.12)' : 'rgba(57,255,136,.1)',
+          durPct: m.durability + '%',
+          durColor: needsRepair ? '#f59e0b' : '#2EE6A6',
+          effPct: m.eff + '%',
+          needsRepair,
+          upgrade: () => {
+            if (s.balances.available < m.upgradeCost) { this.toast(es ? 'Saldo insuficiente' : 'Insufficient balance'); return; }
+            this.setState(st => ({
+              balances: { ...st.balances, available: st.balances.available - m.upgradeCost },
+              miners: st.miners.map(x => x.id === m.id ? { ...x, level: x.level + 1, hash: Math.round(x.hash * 1.25), upgradeCost: Math.round(x.upgradeCost * 1.6) } : x),
+            }));
+            this.toast(es ? `${m.name} mejorado a Lv ${m.level + 1}` : `${m.name} upgraded to Lv ${m.level + 1}`);
+          },
+          repair: () => {
+            if (s.balances.available < m.repairCost) { this.toast(es ? 'Saldo insuficiente' : 'Insufficient balance'); return; }
+            this.setState(st => ({
+              balances: { ...st.balances, available: st.balances.available - m.repairCost },
+              miners: st.miners.map(x => x.id === m.id ? { ...x, durability: 100 } : x),
+            }));
+            this.toast(es ? `${m.name} reparado` : `${m.name} repaired`);
+          },
+        };
+      }),
+      energyMgmtLabel: es ? 'GESTIÓN DE ENERGÍA' : 'ENERGY MANAGEMENT',
+      energyDrainNote: es ? 'Tus mineros consumen 12⚡/h. Con la energía actual: ~5h de operación.' : 'Your miners consume 12⚡/h. At current energy: ~5h of operation.',
+      restoreEnergyLabel: es ? 'Restaurar energía' : 'Restore energy',
+      restoreEnergy: () => {
+        if (s.balances.available < 80) { this.toast(es ? 'Saldo insuficiente' : 'Insufficient balance'); return; }
+        this.setState(st => ({ energy: 100, balances: { ...st.balances, available: st.balances.available - 80 } }));
+        this.toast(es ? 'Energía restaurada al 100%' : 'Energy restored to 100%');
+      },
+      miningRankLabel: es ? 'RANKING DE MINERÍA' : 'MINING RANKING',
+      miningRanking: [
+        { pos: '#1', posColor: '#2EE6A6', name: 'hashqueen', weight: 700, hash: '2,410' },
+        { pos: '#2', posColor: '#22D3EE', name: 'drip_lord', weight: 700, hash: '1,982' },
+        { pos: '#3', posColor: '#7C3AED', name: 'zyxe_max', weight: 700, hash: '1,760' },
+        { pos: '#214', posColor: '#9CA3AF', name: 'Mateo (' + (es ? 'tú' : 'you') + ')', weight: 800, hash: '128' },
+      ],
+      // ---- store ----
+      storeTitle: es ? 'Tienda de boosts' : 'Boost store',
+      storeBalanceNote: es ? 'Disponible' : 'Available',
+      buyLabel: es ? 'Comprar' : 'Buy',
+      storeLegal: es ? 'Las compras son finales y no reembolsables salvo error de la plataforma. Los efectos, límites y duraciones se muestran antes de confirmar. Del importe gastado: 40% se quema, 40% vuelve a pools de recompensas y 20% pasa a tesorería.' : 'Purchases are final and non-refundable except for platform errors. Effects, limits and durations are shown before you confirm. Of each spend: 40% is burned, 40% returns to reward pools, 20% goes to treasury.',
+      storeItems: [
+        { id: 'b1', icon: '⚡', name: es ? 'Recarga de energía' : 'Energy refill', desc: es ? 'Restaura tu energía al 100% al instante.' : 'Instantly restores your energy to 100%.', meta: es ? 'Instantáneo · máx 3/día' : 'Instant · max 3/day', price: 80, tag: 'UTILITY', tagColor: '#22D3EE', iconBg: 'rgba(34,211,238,.12)', border: 'rgba(229,231,235,.08)', effect: es ? 'Energía → 100' : 'Energy → 100' },
+        { id: 'b2', icon: '🚀', name: es ? 'Boost de hashpower ×1.5' : 'Hashpower boost ×1.5', desc: es ? 'Aumenta tu hashpower válido un 50% durante 6 horas.' : 'Increases your valid hashpower by 50% for 6 hours.', meta: es ? '6 horas · no acumulable' : '6 hours · not stackable', price: 150, tag: 'BOOST', tagColor: '#2EE6A6', iconBg: 'rgba(57,255,136,.12)', border: 'rgba(229,231,235,.08)', effect: '×1.5 hash / 6h' },
+        { id: 'b3', icon: '⏩', name: es ? 'Acelerador de cooldown' : 'Cooldown accelerator', desc: es ? 'Reduce el cooldown del faucet a la mitad durante 24h.' : 'Halves faucet cooldown for 24 hours.', meta: es ? '24 horas · máx 1 activo' : '24 hours · max 1 active', price: 200, tag: 'BOOST', tagColor: '#2EE6A6', iconBg: 'rgba(57,255,136,.12)', border: 'rgba(229,231,235,.08)', effect: es ? 'Cooldown ÷2 / 24h' : 'Cooldown ÷2 / 24h' },
+        { id: 'b4', icon: '🔧', name: es ? 'Kit de reparación' : 'Repair kit', desc: es ? 'Repara completamente un minero de cualquier tier.' : 'Fully repairs one miner of any tier.', meta: es ? 'Un uso · cualquier minero' : 'Single use · any miner', price: 120, tag: 'UTILITY', tagColor: '#22D3EE', iconBg: 'rgba(34,211,238,.12)', border: 'rgba(229,231,235,.08)', effect: es ? 'Durabilidad → 100%' : 'Durability → 100%' },
+        { id: 'b5', icon: '🎟️', name: es ? 'Pase de misión premium' : 'Premium mission pass', desc: es ? 'Desbloquea las misiones patrocinadas premium de la semana.' : 'Unlocks this week\u2019s premium sponsored missions.', meta: es ? '7 días · renovable' : '7 days · renewable', price: 350, tag: 'PREMIUM', tagColor: '#c4a5f5', iconBg: 'rgba(124,58,237,.15)', border: 'rgba(124,58,237,.3)', effect: es ? 'Misiones premium / 7d' : 'Premium missions / 7d' },
+        { id: 'b6', icon: '🔮', name: 'Nova Rig II', desc: es ? 'Minero premium: 74 GH/s, alta eficiencia, 6⚡/h.' : 'Premium miner: 74 GH/s, high efficiency, 6⚡/h.', meta: es ? 'Permanente · requiere slot' : 'Permanent · requires slot', price: 1200, tag: 'MINER', tagColor: '#c4a5f5', iconBg: 'rgba(124,58,237,.15)', border: 'rgba(124,58,237,.3)', effect: '+74 GH/s' },
+      ].map(it => ({
+        ...it,
+        btnBg: s.balances.available >= it.price ? '#2EE6A6' : 'rgba(229,231,235,.08)',
+        btnFg: s.balances.available >= it.price ? '#04140A' : '#6B7280',
+        buy: () => {
+          if (s.balances.available < it.price) { this.toast(es ? 'Saldo insuficiente' : 'Insufficient balance'); return; }
+          this.setState({ buy: it });
+        },
+      })),
+      // ---- buy modal ----
+      buyOpen: !!s.buy,
+      buyItemName: s.buy ? s.buy.name : '', buyItemEffect: s.buy ? s.buy.effect : '', buyItemPrice: s.buy ? s.buy.price : 0,
+      confirmPurchaseLabel: es ? 'Confirmar compra' : 'Confirm purchase',
+      itemLabel: es ? 'Artículo' : 'Item', effectLabel: es ? 'Efecto' : 'Effect', priceLabel: es ? 'Precio' : 'Price',
+      nonRefundNote: es ? 'Esta compra no es reembolsable. El importe se divide entre quema (40%), pools de recompensas (40%) y tesorería (20%).' : 'This purchase is non-refundable. The amount is split between burn (40%), reward pools (40%) and treasury (20%).',
+      cancelLabel: es ? 'Cancelar' : 'Cancel', confirmLabel: es ? 'Confirmar' : 'Confirm',
+      cancelBuy: () => this.setState({ buy: null }),
+      confirmBuy: () => {
+        const it = s.buy; if (!it) return;
+        this.setState(st => ({
+          buy: null,
+          balances: { ...st.balances, available: st.balances.available - it.price },
+          energy: it.id === 'b1' ? 100 : st.energy,
+          txs: [{ icon: '🚀', label: it.name, time: 'now', status: 'Confirmed', statusColor: '#2EE6A6', amount: '-' + it.price, amtColor: '#f87171' }, ...st.txs].slice(0, 6),
+        }));
+        this.toast(es ? 'Compra completada' : 'Purchase completed');
+      },
+      // ---- wallet ----
+      walletTitle: es ? 'Wallet ZYXE' : 'ZYXE Wallet',
+      convertCta: es ? 'Convertir' : 'Convert', withdrawCta: es ? 'Retirar' : 'Withdraw', vaultCta: es ? 'Abrir Vault' : 'Open Vault',
+      txHistoryLabel: es ? 'HISTORIAL DE TRANSACCIONES' : 'TRANSACTION HISTORY',
+      balAfterLabel: es ? 'saldo' : 'balance',
+      walletBuckets: [
+        { label: es ? 'DISPONIBLE' : 'AVAILABLE', value: s.balances.available.toLocaleString('en-US'), accent: '#2EE6A6', note: es ? 'utilizable ahora' : 'usable now' },
+        { label: es ? 'PENDIENTE' : 'PENDING', value: s.balances.pending.toLocaleString('en-US'), accent: '#22D3EE', note: es ? 'en validación' : 'being validated' },
+        { label: es ? 'BLOQUEADO' : 'LOCKED', value: s.balances.locked.toLocaleString('en-US'), accent: '#7C3AED', note: 'Vault' },
+        { label: es ? 'ELEGIBLE' : 'ELIGIBLE', value: s.balances.eligible.toLocaleString('en-US'), accent: '#E5E7EB', note: es ? 'para conversión' : 'for conversion' },
+        { label: es ? 'PROMOCIONAL' : 'PROMOTIONAL', value: s.balances.promo.toLocaleString('en-US'), accent: '#f59e0b', note: es ? 'no retirable' : 'not withdrawable' },
+        { label: es ? 'VALOR REF.' : 'REF. VALUE', value: '≈ $3.52', accent: '#4B5563', note: es ? 'no garantizado' : 'not guaranteed' },
+      ],
+      txFilters: [
+        { id: 'all', label: es ? 'Todo' : 'All' }, { id: 'faucet', label: 'Faucet' }, { id: 'games', label: es ? 'Juegos' : 'Games' },
+        { id: 'mining', label: es ? 'Minería' : 'Mining' }, { id: 'crew', label: 'Crew' }, { id: 'purchases', label: es ? 'Compras' : 'Purchases' },
+      ].map(fl => ({
+        ...fl,
+        bg: s.txFilter === fl.id ? 'rgba(34,211,238,.12)' : 'transparent',
+        border: s.txFilter === fl.id ? 'rgba(34,211,238,.4)' : 'rgba(229,231,235,.1)',
+        color: s.txFilter === fl.id ? '#22D3EE' : '#6B7280',
+        pick: () => this.setState({ txFilter: fl.id }),
+      })),
+      walletTxs: [
+        { cat: 'faucet', icon: '💧', label: 'Faucet claim', ref: 'TX-88412', date: 'Jul 11 10:12', status: 'CONFIRMED', amount: '+18', after: '2,198' },
+        { cat: 'games', icon: '🎮', label: 'Tap Miner reward', ref: 'TX-88399', date: 'Jul 11 09:58', status: 'CONFIRMED', amount: '+24', after: '2,180' },
+        { cat: 'mining', icon: '⛏️', label: 'Mining pool payout', ref: 'TX-88102', date: 'Jul 11 00:00', status: 'CONFIRMED', amount: '+181', after: '2,156' },
+        { cat: 'crew', icon: '👥', label: 'Crew reward · L1 · satoshi_ana', ref: 'TX-87990', date: 'Jul 10 18:24', status: 'PENDING', amount: '+12', after: '—' },
+        { cat: 'purchases', icon: '🚀', label: 'Hashpower boost ×1.5', ref: 'TX-87721', date: 'Jul 10 14:02', status: 'CONFIRMED', amount: '-150', after: '1,975' },
+        { cat: 'faucet', icon: '💧', label: 'Faucet claim', ref: 'TX-87614', date: 'Jul 10 11:40', status: 'REJECTED', amount: '+0', after: '2,125' },
+        { cat: 'mining', icon: '⛏️', label: 'Mining pool payout', ref: 'TX-87001', date: 'Jul 10 00:00', status: 'CONFIRMED', amount: '+176', after: '2,125' },
+        { cat: 'crew', icon: '👥', label: 'Crew reward · L2 · block_leo', ref: 'TX-86818', date: 'Jul 09 21:05', status: 'UNDER REVIEW', amount: '+8', after: '—' },
+      ].filter(tx => s.txFilter === 'all' || tx.cat === s.txFilter).map(tx => ({
+        ...tx,
+        stColor: tx.status === 'CONFIRMED' ? '#2EE6A6' : tx.status === 'PENDING' ? '#22D3EE' : tx.status === 'REJECTED' ? '#f87171' : '#f59e0b',
+        stBg: tx.status === 'CONFIRMED' ? 'rgba(57,255,136,.1)' : tx.status === 'PENDING' ? 'rgba(34,211,238,.1)' : tx.status === 'REJECTED' ? 'rgba(248,113,113,.1)' : 'rgba(245,158,11,.1)',
+        amtColor: tx.amount.startsWith('-') ? '#f87171' : tx.status === 'CONFIRMED' ? '#2EE6A6' : '#9CA3AF',
+      })),
+      // ---- vault ----
+      vaultSub: es ? 'Bloquea ZYXEs y participa en un pool de recompensas variable. Sin rendimiento garantizado.' : 'Lock ZYXEs and share a variable reward pool. No guaranteed yield.',
+      vaultHasPosition: !!s.vault.position,
+      activeLockLabel: es ? 'BLOQUEO ACTIVO' : 'ACTIVE LOCK',
+      vaultLockedFmt: s.vault.position ? s.vault.position.amount.toLocaleString('en-US') : '0',
+      vaultPosDetail: s.vault.position ? (s.vault.position.periodName + ' · ' + s.vault.position.mult + ' · ' + (es ? 'desbloqueo' : 'unlocks') + ' ' + s.vault.position.end) : '',
+      vaultEstReward: '9.4',
+      notGuaranteedShort: es ? 'no garantizado' : 'not guaranteed',
+      newLockLabel: es ? 'NUEVO BLOQUEO' : 'NEW LOCK',
+      amountLabel: es ? 'Monto' : 'Amount', availableLabel: es ? 'disponible' : 'available',
+      vaultAmount: s.vault.amount,
+      setVaultAmount: (e) => this.setState({ vault: { ...s.vault, amount: Math.max(0, parseInt(e.target.value || '0', 10)) } }),
+      vaultPeriods: [
+        { name: 'Flexible', mult: '1.00×', m: 1.0, days: 0 }, { name: es ? '7 días' : '7 days', mult: '1.05×', m: 1.05, days: 7 },
+        { name: es ? '30 días' : '30 days', mult: '1.15×', m: 1.15, days: 30 }, { name: es ? '90 días' : '90 days', mult: '1.35×', m: 1.35, days: 90 },
+      ].map((p, i) => ({
+        ...p,
+        bg: s.vault.period === i ? 'rgba(124,58,237,.16)' : '#0A0E17',
+        border: s.vault.period === i ? 'rgba(124,58,237,.55)' : 'rgba(229,231,235,.1)',
+        color: s.vault.period === i ? '#E5E7EB' : '#9CA3AF',
+        pick: () => this.setState({ vault: { ...s.vault, period: i } }),
+      })),
+      vaultQuoteReward: (() => {
+        const mults = [1.0, 1.05, 1.15, 1.35];
+        return (s.vault.amount * 0.011 * mults[s.vault.period]).toFixed(1);
+      })(),
+      vaultQuoteWeight: ['1.00×', '1.05×', '1.15×', '1.35×'][s.vault.period],
+      vaultUnlockDate: ['—', 'Jul 18, 2026', 'Aug 10, 2026', 'Oct 09, 2026'][s.vault.period],
+      poolWeightLabel: es ? 'Peso en el pool' : 'Pool weight',
+      unlockDateLabel: es ? 'Fecha de desbloqueo' : 'Unlock date',
+      lockCta: es ? 'Bloquear ZYXEs' : 'Lock ZYXEs',
+      poolStatsLabel: es ? 'ESTADÍSTICAS DEL POOL' : 'POOL STATISTICS',
+      totalPoolLabel: es ? 'Pool del periodo' : 'Period pool',
+      totalLockedLabel: es ? 'Total bloqueado (red)' : 'Total locked (network)',
+      yourShareLabel: es ? 'Tu participación' : 'Your share',
+      vaultShare: '0.008%',
+      vaultRulesLabel: es ? 'Reglas y riesgos' : 'Rules & risks',
+      vaultRule1: es ? 'Las recompensas son variables y dependen del pool del periodo — nunca garantizadas.' : 'Rewards are variable and depend on the period pool — never guaranteed.',
+      vaultRule2: es ? 'El desbloqueo anticipado elimina el multiplicador y puede aplicar una penalización de hasta 5%.' : 'Early unlock removes the multiplier and may apply a penalty of up to 5%.',
+      vaultRule3: es ? 'Los parámetros (pools, multiplicadores, plazos) son configurables y pueden cambiar entre periodos.' : 'Parameters (pools, multipliers, terms) are configurable and may change between periods.',
+      vaultConfirmOpen: s.vaultConfirm,
+      openVaultConfirm: () => {
+        if (s.vault.amount <= 0 || s.vault.amount > s.balances.available) { this.toast(es ? 'Monto inválido' : 'Invalid amount'); return; }
+        this.setState({ vaultConfirm: true });
+      },
+      cancelVault: () => this.setState({ vaultConfirm: false }),
+      confirmLockLabel: es ? 'Confirmar bloqueo' : 'Confirm lock',
+      periodLabel: es ? 'Periodo' : 'Period', multiplierLabel: es ? 'Multiplicador' : 'Multiplier',
+      vaultPeriodName: ['Flexible', es ? '7 días' : '7 days', es ? '30 días' : '30 days', es ? '90 días' : '90 days'][s.vault.period],
+      vaultPeriodMult: ['1.00×', '1.05×', '1.15×', '1.35×'][s.vault.period],
+      confirm2faLabel: es ? 'Confirma con tu código 2FA' : 'Confirm with your 2FA code',
+      confirmVault: () => {
+        const amt = s.vault.amount;
+        this.setState(st => ({
+          vaultConfirm: false,
+          balances: { ...st.balances, available: st.balances.available - amt, locked: st.balances.locked + amt },
+          vault: { ...st.vault, position: { amount: (st.vault.position ? st.vault.position.amount : 0) + amt, periodName: ['Flex', '7d', '30d', '90d'][st.vault.period], mult: ['1.00×', '1.05×', '1.15×', '1.35×'][st.vault.period], end: ['—', 'Jul 18, 2026', 'Aug 10, 2026', 'Oct 09, 2026'][st.vault.period] } },
+        }));
+        this.toast(es ? 'Bloqueo creado — registrado en el ledger' : 'Lock created — recorded in the ledger');
+      },
+      // ---- crew ----
+      crewSub: es ? 'Cuatro niveles de recompensas por la actividad válida de tu red. Nada se paga por solo registrarse.' : 'Four levels of rewards from your network\u2019s valid activity. Nothing is paid for registrations alone.',
+      inviteLabel: es ? 'TU ENLACE DE INVITACIÓN' : 'YOUR INVITE LINK',
+      copyLabel: es ? 'Copiar' : 'Copy',
+      copyRef: () => { try { navigator.clipboard.writeText('https://fauzet.io/r/FZ-MATEO7'); } catch (e) {} this.toast(es ? 'Enlace copiado' : 'Link copied'); },
+      inactiveLabel: es ? 'Inactivos' : 'Inactive',
+      earnedTotalLabel: es ? 'ZYXE ganados' : 'ZYXE earned',
+      levelsLabel: es ? 'GANANCIAS POR NIVEL' : 'EARNINGS BY LEVEL',
+      membersLabel: es ? 'miembros' : 'members',
+      crewLevels: [
+        { level: 1, pct: '5%', alpha: '.35', members: 4, barPct: '80%', earned: 312 },
+        { level: 2, pct: '2%', alpha: '.26', members: 6, barPct: '100%', earned: 98 },
+        { level: 3, pct: '1%', alpha: '.18', members: 2, barPct: '40%', earned: 28 },
+        { level: 4, pct: '0.5%', alpha: '.12', members: 0, barPct: '4%', earned: 0 },
+      ],
+      crewLegal: es ? 'Las recompensas de crew se basan en actividad válida de la plataforma y pueden estar sujetas a verificación, límites y controles antifraude. No se calculan comisiones sobre comisiones.' : 'Crew rewards are based on valid platform activity and may be subject to verification, limits and anti-fraud controls. Commissions are never calculated on other commissions.',
+      crewActivityLabel: es ? 'ACTIVIDAD RECIENTE DEL CREW' : 'RECENT CREW ACTIVITY',
+      crewActivity: [
+        { initial: 'A', name: 'satoshi_ana', level: 1, action: es ? 'completó una misión patrocinada' : 'completed a sponsored mission', status: es ? 'VÁLIDA' : 'VALID', stColor: '#2EE6A6', amount: 12 },
+        { initial: 'L', name: 'block_leo', level: 2, action: es ? 'actividad recompensada verificada' : 'verified rewarded activity', status: es ? 'EN REVISIÓN' : 'REVIEWING', stColor: '#f59e0b', amount: 8 },
+        { initial: 'K', name: 'kripto_kai', level: 1, action: es ? 'compró un boost de minería' : 'bought a mining boost', status: es ? 'VÁLIDA' : 'VALID', stColor: '#2EE6A6', amount: 7 },
+        { initial: 'M', name: 'mina_marta', level: 3, action: es ? 'recompensa de pool de minería' : 'mining pool reward', status: es ? 'VÁLIDA' : 'VALID', stColor: '#2EE6A6', amount: 2 },
+        { initial: 'D', name: 'doge_dan', level: 1, action: es ? 'registro — sin recompensa aún' : 'signed up — no reward yet', status: es ? 'SIN ACTIVIDAD' : 'NO ACTIVITY', stColor: '#6B7280', amount: 0 },
+      ],
+      // ---- trading ----
+      tradingModeTag: es ? 'SIMULADO · CONTROLADO POR TESORERÍA · NO ES UN EXCHANGE PÚBLICO' : 'SIMULATED · TREASURY-CONTROLLED · NOT A PUBLIC EXCHANGE',
+      tradingWarning: es ? 'Este módulo es una interfaz de microtrading simulada/controlada por tesorería. Sin apalancamiento, sin derivados, sin garantía de ganancias. Los precios son de referencia interna y pueden pausarse.' : 'This module is a simulated / treasury-controlled microtrading interface. No leverage, no derivatives, no profit guarantees. Prices are internal reference values and may be paused.',
+      tradingGrid: s.isMobile ? '1fr' : '1.6fr 1fr',
+      tradingPairs: ['ZYXE/BTC', 'ZYXE/LTC', 'ZYXE/DOGE', 'ZYXE/BCH', 'ZYXE/DASH'].map((label, i) => ({
+        label,
+        bg: s.pair === i ? 'rgba(34,211,238,.12)' : '#111827',
+        border: s.pair === i ? 'rgba(34,211,238,.45)' : 'rgba(229,231,235,.1)',
+        color: s.pair === i ? '#22D3EE' : '#9CA3AF',
+        pick: () => this.setState({ pair: i }),
+      })),
+      pairPrice: ['0.00000114', '0.0000482', '0.0198', '0.0000091', '0.000162'][s.pair],
+      pairChange: ['+2.4%', '-0.8%', '+5.1%', '+0.3%', '-1.2%'][s.pair],
+      pairChangeColor: ['+2.4%', '-0.8%', '+5.1%', '+0.3%', '-1.2%'][s.pair].startsWith('+') ? '#2EE6A6' : '#f87171',
+      pairVolume: ['1.2M', '840K', '2.1M', '310K', '190K'][s.pair] + ' ZYXE',
+      timeframes: ['1H', '1D', '1W', '1M'].map((label, i) => ({
+        label,
+        bg: s.timeframe === i ? 'rgba(34,211,238,.14)' : 'transparent',
+        color: s.timeframe === i ? '#22D3EE' : '#6B7280',
+        pick: () => this.setState({ timeframe: i }),
+      })),
+      chartLine: this.chartPoints(false),
+      chartArea: this.chartPoints(true),
+      chartFrom: ['09:00', 'Jul 10', 'Jul 04', 'Jun 11'][s.timeframe],
+      chartTo: es ? 'ahora' : 'now',
+      setBuySide: () => this.setState({ tradeSide: 'buy' }),
+      setSellSide: () => this.setState({ tradeSide: 'sell' }),
+      buyLabel2: es ? 'Comprar' : 'Buy', sellLabel: es ? 'Vender' : 'Sell',
+      buyTabBg: s.tradeSide === 'buy' ? 'rgba(57,255,136,.14)' : 'transparent',
+      buyTabBorder: s.tradeSide === 'buy' ? 'rgba(57,255,136,.45)' : 'rgba(229,231,235,.1)',
+      buyTabColor: s.tradeSide === 'buy' ? '#2EE6A6' : '#6B7280',
+      sellTabBg: s.tradeSide === 'sell' ? 'rgba(248,113,113,.12)' : 'transparent',
+      sellTabBorder: s.tradeSide === 'sell' ? 'rgba(248,113,113,.4)' : 'rgba(229,231,235,.1)',
+      sellTabColor: s.tradeSide === 'sell' ? '#f87171' : '#6B7280',
+      tradeAmount: s.tradeAmount,
+      setTradeAmount: (e) => this.setState({ tradeAmount: Math.max(0, parseInt(e.target.value || '0', 10)) }),
+      rateLabel: es ? 'Tasa de referencia' : 'Reference rate',
+      feeLabel: es ? 'Comisión' : 'Fee',
+      youReceiveLabel: es ? 'Recibes' : 'You receive',
+      tradeFee: Math.round(s.tradeAmount * 0.005).toLocaleString('en-US') + ' ZYXE',
+      tradeReceive: (() => {
+        const rates = [0.00000114, 0.0000482, 0.0198, 0.0000091, 0.000162];
+        const units = ['BTC', 'LTC', 'DOGE', 'BCH', 'DASH'];
+        const net = s.tradeAmount * 0.995 * rates[s.pair];
+        return net.toFixed(8).replace(/0+$/, '').replace(/\.$/, '') + ' ' + units[s.pair];
+      })(),
+      orderBtnBg: s.tradeSide === 'buy' ? '#2EE6A6' : '#f87171',
+      orderBtnFg: '#04140A',
+      orderCta: (s.tradeSide === 'buy' ? (es ? 'Comprar' : 'Buy') : (es ? 'Vender' : 'Sell')) + ' · ' + (es ? 'orden simulada' : 'simulated order'),
+      placeOrder: () => {
+        this.setState(st => ({ tradeHist: [{ side: st.tradeSide.toUpperCase(), sideColor: st.tradeSide === 'buy' ? '#2EE6A6' : '#f87171', amt: st.tradeAmount.toLocaleString('en-US') + ' ZYXE', price: ['0.00000114', '0.0000482', '0.0198', '0.0000091', '0.000162'][st.pair], time: es ? 'ahora' : 'now' }, ...st.tradeHist].slice(0, 5) }));
+        this.toast(es ? 'Orden simulada ejecutada' : 'Simulated order filled');
+      },
+      tradeHistoryLabel: es ? 'HISTORIAL DE ÓRDENES' : 'ORDER HISTORY',
+      tradeHistory: s.tradeHist,
+      // ---- convert ----
+      convertTitle: es ? 'Convertir ZYXEs' : 'Convert ZYXEs',
+      convertSub: es ? 'Convierte ZYXEs elegibles en criptomonedas soportadas. Revisa las comisiones antes de confirmar.' : 'Convert eligible ZYXEs into supported cryptocurrencies. Review fees before confirming.',
+      eligibleBalLabel: es ? 'Elegible' : 'Eligible',
+      nonEligibleLabel: es ? 'No elegible' : 'Not eligible',
+      eligibleFmt: s.balances.eligible.toLocaleString('en-US'),
+      nonEligibleFmt: (s.balances.pending + s.balances.promo).toLocaleString('en-US'),
+      selectAssetLabel: es ? 'Selecciona el activo' : 'Select asset',
+      convertAmount: s.convertAmount,
+      setConvertAmount: (e) => this.setState({ convertAmount: Math.max(0, parseInt(e.target.value || '0', 10)), cvDone: false }),
+      convertAssets: [
+        { sym: 'LTC', name: 'Litecoin', color: '#bebebe', img: 'assets/coin-ltc.png' }, { sym: 'DOGE', name: 'Dogecoin', color: '#e1c76c', img: 'assets/coin-doge.png' },
+        { sym: 'BCH', name: 'Bitcoin Cash', color: '#7ddc8f', img: 'assets/coin-bch.png' }, { sym: 'DASH', name: 'Dash', color: '#7fb2e5', img: 'assets/coin-dash.png' },
+      ].map((a, i) => ({
+        ...a,
+        bg: s.convertAsset === i ? 'rgba(34,211,238,.1)' : '#0A0E17',
+        border: s.convertAsset === i ? 'rgba(34,211,238,.45)' : 'rgba(229,231,235,.1)',
+        pick: () => this.setState({ convertAsset: i, cvDone: false }),
+      })),
+      cvRate: ['1 ZYXE = 0.0000482 LTC', '1 ZYXE = 0.0198 DOGE', '1 ZYXE = 0.0000091 BCH', '1 ZYXE = 0.000162 DASH'][s.convertAsset],
+      cvSpread: Math.round(s.convertAmount * 0.01).toLocaleString('en-US') + ' ZYXE',
+      networkFeeLabel: es ? 'Comisión de red' : 'Network fee',
+      processingFeeLabel: es ? 'Comisión de servicio' : 'Processing fee',
+      cvNetFee: ['0.0001 LTC', '1 DOGE', '0.00001 BCH', '0.0001 DASH'][s.convertAsset],
+      cvReceive: (() => {
+        const rates = [0.0000482, 0.0198, 0.0000091, 0.000162];
+        const units = ['LTC', 'DOGE', 'BCH', 'DASH'];
+        const net = Math.max(0, s.convertAmount * 0.99 * rates[s.convertAsset] - [0.0001, 1, 0.00001, 0.0001][s.convertAsset]);
+        return net.toFixed(6).replace(/0+$/, '').replace(/\.$/, '') + ' ' + units[s.convertAsset];
+      })(),
+      cvLimitsNote: es ? 'Mínimo 500 · máximo 25,000 ZYXE por día · tiempo estimado: minutos tras validación de elegibilidad y reservas.' : 'Minimum 500 · maximum 25,000 ZYXE per day · estimated time: minutes after eligibility and reserve validation.',
+      cvBtnBg: (s.convertAmount >= 500 && s.convertAmount <= s.balances.eligible) ? '#2EE6A6' : 'rgba(229,231,235,.08)',
+      cvBtnFg: (s.convertAmount >= 500 && s.convertAmount <= s.balances.eligible) ? '#04140A' : '#6B7280',
+      convertCta2: es ? 'Confirmar conversión' : 'Confirm conversion',
+      doConvert: () => {
+        if (s.convertAmount < 500 || s.convertAmount > s.balances.eligible) { this.toast(es ? 'Monto fuera de límites' : 'Amount outside limits'); return; }
+        this.setState(st => ({
+          cvDone: true,
+          balances: { ...st.balances, eligible: st.balances.eligible - st.convertAmount, available: st.balances.available - Math.min(st.convertAmount, st.balances.available) },
+        }));
+      },
+      cvSuccess: s.cvDone,
+      cvSuccessTitle: es ? 'Conversión creada' : 'Conversion created',
+      cvSuccessBody: es ? 'Transacción pendiente en el ledger. Verás el crédito en tu balance cripto interno tras la validación de reservas.' : 'Pending ledger transaction created. You\u2019ll see the credit in your internal crypto balance after reserve validation.',
+      // ---- withdraw ----
+      withdrawTitle: es ? 'Retirar' : 'Withdraw',
+      withdrawSub: es ? 'Envía cripto a tu wallet externa. Cada retiro pasa revisión de seguridad.' : 'Send crypto to your external wallet. Every withdrawal passes security review.',
+      wdStep1: s.wdStep === 1, wdStep2: s.wdStep === 2, wdStep3: s.wdStep === 3,
+      wdAssets: [
+        { sym: 'LTC', bal: '0.0842 LTC', color: '#bebebe', img: 'assets/coin-ltc.png' }, { sym: 'DOGE', bal: '312 DOGE', color: '#e1c76c', img: 'assets/coin-doge.png' },
+        { sym: 'BCH', bal: '0 BCH', color: '#7ddc8f', img: 'assets/coin-bch.png' }, { sym: 'DASH', bal: '0 DASH', color: '#7fb2e5', img: 'assets/coin-dash.png' },
+      ].map((a, i) => ({
+        ...a,
+        bg: s.wdAsset === i ? 'rgba(34,211,238,.1)' : '#0A0E17',
+        border: s.wdAsset === i ? 'rgba(34,211,238,.45)' : 'rgba(229,231,235,.1)',
+        pick: () => this.setState({ wdAsset: i }),
+      })),
+      destWalletLabel: es ? 'Wallet de destino' : 'Destination wallet',
+      whitelistedLabel: es ? 'en lista blanca' : 'whitelisted',
+      copyAddr: () => { try { navigator.clipboard.writeText('ltc1q8x...k2f4'); } catch (e) {} this.toast(es ? 'Dirección copiada' : 'Address copied'); },
+      addWalletLabel: es ? 'Agregar wallet (espera de seguridad 24h)' : 'Add wallet (24h security wait)',
+      showToastAddWallet: () => this.toast(es ? 'Las wallets nuevas requieren confirmación por email y espera de 24h' : 'New wallets require email confirmation and a 24h wait'),
+      dayLabel: es ? 'día' : 'day',
+      wdAmount: s.wdAmount,
+      setWdAmount: (e) => this.setState({ wdAmount: Math.max(0, parseInt(e.target.value || '0', 10)) }),
+      wdProcFee: Math.round(s.wdAmount * 0.01).toLocaleString('en-US'),
+      wdReceive: (s.wdAmount * 0.99 * 0.0000482 - 0.0001).toFixed(6),
+      wdBtnBg: (s.wdAmount >= 1000 && s.wdAmount <= s.balances.eligible) ? '#2EE6A6' : 'rgba(229,231,235,.08)',
+      wdBtnFg: (s.wdAmount >= 1000 && s.wdAmount <= s.balances.eligible) ? '#04140A' : '#6B7280',
+      continueLabel: es ? 'Continuar' : 'Continue',
+      wdNext: () => {
+        if (s.wdAmount < 1000 || s.wdAmount > s.balances.eligible) { this.toast(es ? 'Monto fuera de límites' : 'Amount outside limits'); return; }
+        this.setState({ wdStep: 2 });
+      },
+      wdBack: () => this.setState({ wdStep: 1 }),
+      backLabel: es ? 'Atrás' : 'Back',
+      securityConfirmLabel: es ? 'CONFIRMACIÓN DE SEGURIDAD' : 'SECURITY CONFIRMATION',
+      confirmWithdrawLabel: es ? 'Confirmar retiro' : 'Confirm withdrawal',
+      wdSubmit: () => {
+        this.setState(st => ({ wdStep: 3, balances: { ...st.balances, eligible: st.balances.eligible - st.wdAmount } }));
+        this.toast(es ? 'Solicitud de retiro creada' : 'Withdrawal request created');
+      },
+      wdReset: () => { this.setState({ wdStep: 1 }); this.nav('dashboard'); },
+      wdReviewTitle: es ? 'Tu retiro está en revisión' : 'Your withdrawal is under review',
+      wdReviewBody: es ? 'Te avisaremos por email y en la app en cada paso.' : 'We\u2019ll notify you by email and in-app at every step.',
+      wdTimeline: [
+        { title: es ? 'Solicitud creada' : 'Request created', note: es ? 'ledger TX-88500 · hace 1 min' : 'ledger TX-88500 · 1 min ago', state: 'done' },
+        { title: es ? 'Revisión antifraude' : 'Anti-fraud review', note: es ? 'automática · en curso' : 'automated · in progress', state: 'active' },
+        { title: es ? 'Verificación de liquidez' : 'Treasury liquidity check', note: es ? 'pendiente' : 'pending', state: 'todo' },
+        { title: es ? 'Firma y transmisión' : 'Sign & broadcast', note: es ? 'pendiente' : 'pending', state: 'todo' },
+        { title: es ? 'Confirmación blockchain' : 'Blockchain confirmation', note: es ? 'verás el txid y el enlace al explorador' : 'you\u2019ll see the txid and explorer link', state: 'todo' },
+      ].map((step, i, arr) => ({
+        ...step,
+        mark: step.state === 'done' ? '✓' : step.state === 'active' ? '●' : (i + 1),
+        dotBg: step.state === 'done' ? 'rgba(57,255,136,.15)' : step.state === 'active' ? 'rgba(34,211,238,.15)' : 'transparent',
+        dotFg: step.state === 'done' ? '#2EE6A6' : step.state === 'active' ? '#22D3EE' : '#4B5563',
+        dotBorder: step.state === 'done' ? 'rgba(57,255,136,.4)' : step.state === 'active' ? 'rgba(34,211,238,.4)' : 'rgba(229,231,235,.12)',
+        titleColor: step.state === 'todo' ? '#6B7280' : '#E5E7EB',
+        hasLine: i < arr.length - 1,
+      })),
+      wdHistoryLabel: es ? 'HISTORIAL DE RETIROS' : 'WITHDRAWAL HISTORY',
+      wdHistory: [
+        { date: 'Jun 28', asset: 'LTC', tx: '3f8a09…c2d1', status: es ? 'COMPLETADO' : 'COMPLETED', stColor: '#2EE6A6', amount: '0.041 LTC' },
+        { date: 'Jun 12', asset: 'DOGE', tx: 'a1b2c3…9f0e', status: es ? 'COMPLETADO' : 'COMPLETED', stColor: '#2EE6A6', amount: '210 DOGE' },
+        { date: 'May 30', asset: 'LTC', tx: '—', status: es ? 'RECHAZADO' : 'REJECTED', stColor: '#f87171', amount: '0.02 LTC' },
+      ],
+      // ---- profile ----
+      profileTitle: es ? 'Cuenta y seguridad' : 'Account & security',
+      accountLevelLabel: es ? 'Nivel de cuenta' : 'Account level',
+      profileRows: [
+        { icon: '🔐', title: es ? 'Autenticación de dos factores' : 'Two-factor authentication', desc: es ? 'Requerida para retiros y cambios de wallet' : 'Required for withdrawals and wallet changes', isToggle: true, on: s.twoFaOn, key: 'twoFaOn' },
+        { icon: '🔢', title: es ? 'PIN de retiro' : 'Withdrawal PIN', desc: es ? 'Capa extra para confirmar retiros' : 'Extra layer to confirm withdrawals', isToggle: true, on: s.pinOn, key: 'pinOn' },
+        { icon: '📧', title: es ? 'Notificaciones por email' : 'Email notifications', desc: es ? 'Retiros, seguridad y recompensas' : 'Withdrawals, security and rewards', isToggle: true, on: s.notifEmailOn, key: 'notifEmailOn' },
+        { icon: '📋', title: es ? 'Lista blanca de wallets' : 'Wallet whitelist', desc: es ? '1 wallet confirmada · espera de 24h para nuevas' : '1 confirmed wallet · 24h wait for new ones', isStatus: true, status: es ? 'ACTIVA' : 'ACTIVE', stColor: '#2EE6A6' },
+        { icon: '🌐', title: es ? 'Idioma' : 'Language', desc: 'English / Español', isStatus: true, status: es ? 'ESPAÑOL' : 'ENGLISH', stColor: '#22D3EE' },
+        { icon: '🏅', title: es ? 'Logros' : 'Achievements', desc: es ? '3 de 24 insignias' : '3 of 24 badges', isStatus: true, status: '3/24', stColor: '#c4a5f5' },
+        { icon: '🛡️', title: es ? 'Estado de verificación' : 'Verification status', desc: es ? 'Email y actividad verificados' : 'Email and activity verified', isStatus: true, status: es ? 'VERIFICADO' : 'VERIFIED', stColor: '#2EE6A6' },
+        { icon: '🗑️', title: es ? 'Cerrar cuenta' : 'Close account', desc: es ? 'Requiere retirar saldos elegibles primero' : 'Requires withdrawing eligible balances first', isStatus: true, status: '→', stColor: '#6B7280' },
+      ].map(r => ({
+        ...r,
+        isStatus: !r.isToggle,
+        togBg: r.on ? '#2EE6A6' : 'rgba(229,231,235,.15)',
+        knobLeft: r.on ? '23px' : '3px',
+        toggle: r.isToggle ? () => { this.setState({ [r.key]: !s[r.key] }); } : undefined,
+      })),
+      sessionsLabel: es ? 'SESIONES DE DISPOSITIVOS' : 'DEVICE SESSIONS',
+      currentLabel: es ? 'actual' : 'current',
+      revokeLabel: es ? 'Cerrar' : 'Revoke',
+      deviceSessions: [
+        { icon: '💻', device: 'Chrome · macOS', meta: 'Bogotá, CO · 181.49.x.x · ' + (es ? 'ahora' : 'now'), current: true, notCurrent: false, revoke: () => {} },
+        { icon: '📱', device: 'Fauzet App · Android', meta: 'Bogotá, CO · 181.49.x.x · ' + (es ? 'hace 3h' : '3h ago'), current: false, notCurrent: true, revoke: () => this.toast(es ? 'Sesión cerrada' : 'Session revoked') },
+        { icon: '💻', device: 'Firefox · Windows', meta: 'Medellín, CO · 190.27.x.x · Jul 08', current: false, notCurrent: true, revoke: () => this.toast(es ? 'Sesión cerrada' : 'Session revoked') },
+      ],
+      // ---- support ----
+      supportTitle: es ? 'Centro de ayuda' : 'Help center',
+      supportActions: [
+        { icon: '❓', label: 'FAQ', go: () => this.toast('FAQ') },
+        { icon: '🎫', label: es ? 'Crear ticket' : 'Create ticket', go: () => this.toast(es ? 'Formulario de ticket' : 'Ticket form') },
+        { icon: '📤', label: es ? 'Problema de retiro' : 'Withdrawal issue', go: () => this.toast(es ? 'Formulario de retiro' : 'Withdrawal form') },
+        { icon: '🚨', label: es ? 'Reportar actividad sospechosa' : 'Report suspicious activity', go: () => this.toast(es ? 'Formulario de reporte' : 'Report form') },
+      ],
+      systemStatusLabel: es ? 'ESTADO DEL SISTEMA' : 'SYSTEM STATUS',
+      allOperationalLabel: es ? 'Todo operativo' : 'All operational',
+      statusItems: [
+        { name: 'Faucet', color: '#2EE6A6' }, { name: es ? 'Juegos' : 'Games', color: '#2EE6A6' },
+        { name: es ? 'Minería' : 'Mining', color: '#2EE6A6' }, { name: es ? 'Conversiones' : 'Conversions', color: '#2EE6A6' },
+        { name: es ? 'Retiros' : 'Withdrawals', color: '#f59e0b' }, { name: 'API', color: '#2EE6A6' },
+      ],
+      myTicketsLabel: es ? 'MIS TICKETS' : 'MY TICKETS',
+      tickets: [
+        { id: '#4821', subject: es ? 'Retiro LTC demorado' : 'Delayed LTC withdrawal', status: es ? 'EN CURSO' : 'IN PROGRESS', stColor: '#22D3EE', stBg: 'rgba(34,211,238,.1)', date: 'Jul 09' },
+        { id: '#4640', subject: es ? 'Pregunta sobre el Vault' : 'Question about the Vault', status: es ? 'RESUELTO' : 'RESOLVED', stColor: '#2EE6A6', stBg: 'rgba(57,255,136,.1)', date: 'Jun 22' },
+      ],
+      // notifications
+      notifOpen: s.notifOpen,
+      toggleNotif: () => this.setState({ notifOpen: !s.notifOpen }),
+      notifList: es ? [
+        { accent: '#2EE6A6', title: 'Tu faucet está listo', body: 'Puedes reclamar tu próxima recompensa ahora.', time: 'hace 2 min' },
+        { accent: '#2EE6A6', title: 'Recompensa de minería recibida', body: '+181 ZYXE del pool diario acreditados.', time: 'hace 6 h' },
+        { accent: '#f59e0b', title: 'Tu minero necesita mantenimiento', body: 'Core Rig al 34% de durabilidad. Repáralo para evitar pérdida de eficiencia.', time: 'hace 9 h' },
+        { accent: '#22D3EE', title: 'Energía baja', body: 'Te queda 64/100 de energía. Restaura para seguir minando a plena capacidad.', time: 'hace 12 h' },
+        { accent: '#7C3AED', title: 'Actividad de tu crew', body: 'satoshi_ana completó una misión monetizable. +12 ZYXE pendientes.', time: 'ayer' },
+        { accent: '#22D3EE', title: 'Anuncio de plataforma', body: 'Hash Season 02 comienza esta semana con pool de 500,000 ZYXE.', time: 'hace 2 días' },
+      ] : [
+        { accent: '#2EE6A6', title: 'Your faucet is ready', body: 'You can claim your next reward now.', time: '2 min ago' },
+        { accent: '#2EE6A6', title: 'Mining reward received', body: '+181 ZYXE from the daily pool credited.', time: '6 h ago' },
+        { accent: '#f59e0b', title: 'Your miner needs maintenance', body: 'Core Rig at 34% durability. Repair it to avoid efficiency loss.', time: '9 h ago' },
+        { accent: '#22D3EE', title: 'Energy low', body: 'You have 64/100 energy left. Restore it to keep mining at full capacity.', time: '12 h ago' },
+        { accent: '#7C3AED', title: 'Crew activity', body: 'satoshi_ana completed a monetizable mission. +12 ZYXE pending.', time: 'yesterday' },
+        { accent: '#22D3EE', title: 'Platform announcement', body: 'Hash Season 02 starts this week with a 500,000 ZYXE pool.', time: '2 days ago' },
+      ],
+      // toast
+      toastVisible: !!s.toast, toastMsg: s.toast || '',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,699 @@
+DOCUMENTACIÓN TÉCNICA, ECONÓMICA Y FUNCIONAL
+FAUZET &amp; ZYXE
+Versión 0.1  •  10 de julio de 2026
+Plataforma gamificada de micro-recompensas, minería virtual y economía digital interna.
+Propietario del concepto: Edison Múnera
+ESTADO: BORRADOR ESTRATÉGICO PARA DISEÑO, DESARROLLO, VALIDACIÓN Y REVISIÓN LEGAL
+Control del documento
+Campo
+Definición
+Proyecto
+Fauzet
+Unidad económica
+Zyxe (ticker propuesto: ZYXE; plural: Zyxes)
+Versión
+0.1 - definición inicial
+Fecha
+10 de julio de 2026
+Propósito
+Consolidar el modelo funcional, económico, técnico y administrativo para construir el MVP y orientar la evolución hacia un posible token público.
+Estado
+Documento de trabajo; no constituye whitepaper final, asesoría legal, promesa de inversión ni oferta pública.
+Advertencia esencialZYXE debe iniciar como unidad interna sin precio público ni convertibilidad automática. La tokenización pública, el trading real, la custodia y los rendimientos por bloqueo requieren validación económica, seguridad, auditoría y análisis jurídico en cada jurisdicción.
+Contenido
+1. Resumen ejecutivo
+14. Conversión y retiros
+2. Identidad de Fauzet y ZYXE
+15. Tesorería y separación de fondos
+3. Alcance del producto
+16. Panel administrativo y Owner Wallet
+4. Principios económicos
+17. Ledger, contabilidad y auditoría
+5. Modelo de ingresos y utilidad del propietario
+18. Seguridad y antifraude
+6. Economía de ZYXE
+19. Arquitectura técnica
+7. Formas de obtención
+20. MVP y flujo de prueba
+8. Usos y mecanismos de consumo
+21. Roadmap
+9. Minería virtual
+22. Indicadores y alertas
+10. ZYXE Vault
+23. Riesgos y controles
+11. Red de referidos de cuatro niveles
+24. Marco de cumplimiento preliminar
+12. Juegos, misiones y eventos
+25. Parámetros abiertos y decisiones pendientes
+13. Microtrading y mercados internos
+26. Anexos y fuentes de referencia
+1. Resumen ejecutivo
+Fauzet es una plataforma digital gamificada orientada a micro-recompensas cripto. Su experiencia combina faucet, minijuegos, misiones, minería virtual, equipos de referidos, boosts, aceleradores, mercado interno y una capa futura de conversión a criptoactivos reales.
+ZYXE es la unidad económica del ecosistema. Durante el MVP existirá únicamente como saldo interno registrado en un ledger. Su posible conversión en token blockchain público dependerá de que Fauzet demuestre utilidad, sostenibilidad, reservas, control antifraude, demanda orgánica y capacidad de cumplimiento.
+El dinero del propietario no proviene de emitir ZYXEs sin respaldo. Proviene de ingresos reales: anuncios recompensados, offerwalls, ventas digitales, membresías, patrocinios, afiliados, spreads y comisiones. Solo una fracción de esos ingresos financia recompensas, referidos, liquidez y retiros.
+El diseño prioriza una economía con pools limitados, mecanismos de gasto permanentes, tesorería separada, trazabilidad contable y un panel Owner que muestre utilidad disponible sin mezclarla con fondos de usuarios.
+Decisión rectoraPrimero se valida una economía interna sostenible. Después se habilitan retiros controlados. Solo entonces se evalúa tokenizar ZYXE en una red existente. Una red propia no forma parte del alcance inicial.
+2. Identidad de Fauzet y ZYXE
+Elemento
+Definición
+Marca
+Fauzet
+Tagline preliminar
+Drip sats. Every day.
+Nombre de la unidad
+Zyxe
+Ticker propuesto
+ZYXE
+Plural
+Zyxes
+Rol inicial
+Unidad de recompensa y utilidad interna
+Rol futuro posible
+Token público en una red existente, condicionado a auditoría y revisión legal
+Personalidad visual
+Dark crypto gaming, tecnología, progresión y recompensa
+Paleta
+#39FF88, #7C3AED, #22D3EE, #080B12, #111827, #E5E7EB
+2.1 Definición propuesta de ZYXE
+ZYXE es la unidad de recompensa, utilidad y medición de actividad del ecosistema Fauzet. Puede obtenerse mediante acciones validadas y utilizarse para adquirir funcionalidades, mejoras, acceso a experiencias, servicios digitales y beneficios internos. En su etapa inicial no representa acciones, deuda, participación societaria, derecho a utilidades ni promesa de rentabilidad.
+3. Alcance del producto
+Incluido en la visión
+No incluido al inicio
+Faucet y reclamos con cooldown
+Exchange público con dinero real
+Minijuegos con recompensas limitadas
+Blockchain propia
+Minería virtual y hashpower
+Minería PoW real en equipos del usuario
+Misiones, rachas, niveles y eventos
+Garantías de ganancia
+Boosts, aceleradores y mineros virtuales
+APY fijo o interés garantizado
+Referidos de hasta cuatro niveles
+Pago por registro sin actividad
+Vault con pools variables
+Captación de depósitos para financiar retiros
+Mercado simulado/controlado
+Liquidez ilimitada
+Retiros futuros con límites y validación
+Conversión automática de todo saldo promocional
+4. Principios económicos
+Emisión vinculada a presupuesto: La cantidad de ZYXE distribuida debe responder a pools definidos, ingresos monetizables y objetivos de crecimiento.
+Utilidad antes que especulación: La demanda inicial debe provenir de usos dentro de Fauzet, no de promesas de valorización.
+Más sinks que fuentes: ZYXE debe tener suficientes mecanismos de gasto, bloqueo, reciclaje y quema.
+Fondos separados: Recompensas, retiros, liquidez, operación y utilidad del propietario no pueden mezclarse.
+Recompensas variables: Vault, minería y eventos reparten pools; no prometen tasas fijas.
+Referidos por actividad real: Las comisiones se generan únicamente por actividad validada y preferiblemente monetizable.
+Trazabilidad completa: Cada movimiento de saldo debe generar un asiento inmutable o auditable.
+Control de concentración: Límites y rendimientos decrecientes evitan que pocas cuentas capturen el sistema.
+5. Modelo de ingresos y utilidad del propietario
+El modelo financiero de Fauzet debe medir ingresos reales por fuente y calcular una utilidad disponible después de reservar obligaciones operativas y económicas. El Owner Wallet no representa “todo el dinero recibido”, sino únicamente la fracción autorizada para retiro del propietario.
+Fuente
+Cómo monetiza Fauzet
+Etapa
+Rewarded ads
+Ingreso por impresiones o acciones voluntarias
+MVP / crecimiento
+Offerwalls y CPA
+Comisión por tareas, registros, encuestas o instalaciones validadas
+Fase 2
+Boosts y aceleradores
+Venta de mejoras digitales con ZYXE, cripto o dinero
+MVP / Fase 2
+Premium
+Suscripción por límites, experiencia y funciones ampliadas
+Fase 2
+Trading interno
+Comisión, spread y herramientas avanzadas
+Fase 3
+Retiros y conversión
+Fee transparente para red, liquidez, fraude y margen
+Fase 2
+Marketplace
+Comisión sobre operaciones de activos internos
+Fase 3
+Afiliados y patrocinadores
+Misiones, integraciones y campañas directas
+Fase 2
+Asignación orientativa por cada US$100
+Monto
+Recompensas de usuarios
+US$30
+Referidos y crecimiento
+US$8
+Reserva de retiros/liquidez
+US$15
+Operación, soporte e infraestructura
+US$17
+Margen bruto Fauzet
+US$30
+Regla de retiro del propietarioLa utilidad retirable debe calcularse después de reservas, pasivos, retiros pendientes, reversos, impuestos estimados y colchón operativo. Se recomienda retener al menos tres meses de costos y entre tres y seis meses de retiros esperados.
+Figura 1. Relación entre ingresos reales, recompensas, consumo de ZYXE, tesorería y utilidad.
+6. Economía de ZYXE
+6.1 Etapas de existencia
+Etapa
+Estado de ZYXE
+Condición
+MVP
+Saldo interno no transferible
+Pruebas cerradas, sin precio público ni retiro
+Economía controlada
+Saldo interno parcialmente elegible
+Retiros limitados y tesorería real
+Tokenización
+Token en red existente
+Auditoría, legal, reservas, utilidad y comunidad
+Escala avanzada
+Interoperabilidad y mercados externos
+Liquidez, cumplimiento, gobernanza y seguridad madura
+6.2 Suministro y distribución conceptual
+Como hipótesis inicial se propone un suministro objetivo de 1.000.000.000 ZYXE. No debe acuñarse en blockchain durante el MVP. La cifra y la distribución son parámetros de diseño sujetos a simulación.
+Destino
+% preliminar
+Observación
+Recompensas y minería virtual
+50%
+Liberación programada y pools dinámicos
+Tesorería Fauzet
+20%
+Operación, reservas y estabilidad
+Liquidez y expansión pública
+10%
+Solo al activar tokenización
+Equipo y desarrollo
+10%
+Vesting recomendado: 12 meses + 36 meses
+Comunidad, referidos y marketing
+7%
+Campañas con límites y criterios
+Reserva de seguridad
+3%
+Contingencias, auditorías y coberturas
+6.3 Emisión dinámica
+La emisión diaria debe partir de un pool máximo y ajustarse por ingresos, usuarios activos, inflación interna, fraude, ZYXE quemados y reservas. La plataforma nunca debe emitir simplemente para cubrir promesas previas.
+Fórmula conceptualEmisión diaria autorizada = presupuesto base + fracción de ingresos monetizables - ajuste de inflación - ajuste de fraude - ajuste de reservas.
+7. Formas de obtención de ZYXE
+Categoría
+Mecánicas
+Peso económico
+Gratuita
+Faucet, login, rachas, minijuegos básicos
+Bajo; retención
+Monetizable
+Ads, offerwalls, encuestas, afiliados
+Alto; produce ingreso real
+Competitiva
+Torneos, rankings, eventos, minería
+Pool limitado
+Social
+Referidos, crews y logros comunitarios
+Variable y condicionado
+Promocional
+Bonos, campañas y recompensas de lanzamiento
+No necesariamente retirable
+Clases de saldoEl sistema debe distinguir ZYXE disponible, bloqueado, pendiente, promocional y elegible para retiro. No todo ZYXE ganado crea automáticamente una obligación de pago externo.
+8. Usos y mecanismos de consumo
+Boosts temporales
+Aceleradores de cooldown
+Mineros virtuales
+Mejoras de hashpower
+Energía y mantenimiento
+Reparación y vida útil
+Entradas a torneos
+Misiones premium
+Cofres y eventos
+Personalización y niveles
+Comisiones internas
+Marketplace
+Herramientas de trading
+Reducción de tiempos de espera
+8.1 Quema, reciclaje y tesorería
+Modelo inicial por gasto estándar: 40% se quema, 40% vuelve a pools de recompensas y 20% pasa a tesorería operativa o de liquidez. Cada producto podrá usar una proporción distinta.
+9. Minería virtual
+La minería en Fauzet será una simulación económica y de juego. No ejecutará minería Proof-of-Work en el navegador o VPS. Los usuarios competirán por una participación de un pool diario de ZYXE.
+Fórmula baseRecompensa del usuario = (hashpower válido del usuario / hashpower total válido) × pool diario de minería.
+Componente
+Función
+Mineros virtuales
+Generan hashpower según rareza y eficiencia
+Energía
+Limita la operación y crea consumo recurrente
+Mantenimiento
+Evita producción perpetua sin gasto
+Vida útil
+Crea renovación y mercado de activos
+Boosts
+Aumentan temporalmente rendimiento o eficiencia
+Reputación
+Reduce beneficios de cuentas sospechosas
+Rendimiento decreciente
+Evita concentración extrema del pool
+Pool diario
+Fija el máximo de emisión minera
+10. ZYXE Vault
+El Vault permite bloquear ZYXE para participar en un pool variable. No debe comercializarse como interés garantizado ni APY permanente. Su recompensa depende del presupuesto disponible y de la participación ponderada de cada usuario.
+Modalidad
+Multiplicador orientativo
+Condición
+Flexible
+1,00×
+Disponibilidad inmediata
+7 días
+1,05×
+Bloqueo corto
+30 días
+1,15×
+Compromiso medio
+90 días
+1,35×
+Compromiso alto; mayor peso
+Fórmula baseRecompensa Vault = (peso del usuario / peso total de participantes) × pool Vault del periodo.
+11. Red de referidos de cuatro niveles
+La red de referidos puede tener cuatro niveles siempre que no pague por reclutamiento vacío ni dependa de depósitos de nuevos usuarios. Debe recompensar actividad validada y preferiblemente monetizable.
+Nivel
+Porcentaje preliminar
+Base de cálculo
+1
+5,0%
+Presupuesto comisionable de actividad válida
+2
+2,0%
+Presupuesto comisionable de actividad válida
+3
+1,0%
+Presupuesto comisionable de actividad válida
+4
+0,5%
+Presupuesto comisionable de actividad válida
+Permitido
+Prohibido
+Comisión sobre ads, offerwalls o compras validadas
+Pago únicamente por registro
+Bonus por crew activa
+Comisión sobre depósitos sin consumo
+Multiplicador con tope
+Comisión sobre comisión
+Recompensa expirable o limitada
+Autorreferidos y multicuentas
+Cuatro niveles con tasas decrecientes
+Promesas de ingresos garantizados
+Terminología recomendadaUsar “Mining Crew”, “Crew Rewards” o “Referral Network”. No usar “piramidal” en producto, marketing o documentación pública.
+12. Juegos, misiones y eventos
+Mecánica
+Objetivo
+Control económico
+Tap Miner
+Interacción corta y repetible
+Cooldown + recompensa máxima
+Memory Drops
+Habilidad y tiempo
+Ticket/energía + pool
+Misiones diarias
+Retención
+Presupuesto diario
+Rachas
+Hábitos
+Bonus limitado y reinicio
+Rankings
+Competencia
+Premio fijo por temporada
+Eventos
+Picos de actividad
+Fondo patrocinado o presupuestado
+Cofres
+Aleatoriedad controlada
+Tabla de probabilidades y gasto
+13. Microtrading y mercados internos
+El primer microtrading debe ser simulado o controlado por la tesorería. Las gráficas pueden usar precios externos para BTC, LTC, DOGE, BCH y DASH, mientras ZYXE opera con un valor interno de referencia. No se debe presentar como exchange real durante el MVP.
+Fase
+Modelo
+Riesgo
+MVP
+Trading educativo con saldo simulado
+Bajo
+Fase 2
+Conversión contra tesorería y límites
+Medio
+Fase 3
+Mercado interno/marketplace
+Alto
+Futuro
+Liquidez pública y mercados externos
+Muy alto; regulación y seguridad
+Pares conceptuales: ZYXE/BTC, ZYXE/LTC, ZYXE/DOGE, ZYXE/BCH y ZYXE/DASH.
+Fuentes de ingreso: comisión, spread transparente, herramientas premium y marketplace.
+Controles: límites, anti-wash-trading, prevención de manipulación, logs y pausas de mercado.
+14. Conversión y retiros
+No habrá retiros en la beta cerrada. La primera fase de pagos reales debe habilitar una sola criptomoneda, con revisión manual y límites conservadores. LTC o DOGE son candidatas operativas, pero la selección debe considerar liquidez, comisiones, soporte de wallet y cumplimiento.
+Control
+Regla inicial recomendada
+Antigüedad de cuenta
+Mínimo antes del primer retiro
+Saldo elegible
+Excluir bonos promocionales o pendientes
+Mínimo de retiro
+Superior a costo de red + soporte
+Límite diario/mensual
+Por usuario, dispositivo y riesgo
+Procesamiento
+Cola, revisión y estados
+Comisión
+Visible antes de confirmar
+Seguridad
+2FA, lista blanca y confirmación
+Fraude
+Retención y revisión ampliada
+Tesorería
+Pausa automática si baja cobertura
+15. Tesorería y separación de fondos
+Fondo
+Propósito
+¿Retirable por Owner?
+Recompensas
+Pools de actividad y eventos
+No
+Retiros
+Conversión y pagos a usuarios
+No
+Liquidez
+Trading y estabilidad
+No
+Operación
+Servidores, soporte, marketing, legal
+Solo por gastos documentados
+Seguridad
+Fraude, reversos y contingencias
+No
+Propietario
+Utilidad aprobada y disponible
+Sí
+Cobertura mínimaObjetivo inicial: tres meses de costos operativos y entre tres y seis meses de retiros esperados antes de liberar utilidad completa al Owner Wallet.
+16. Panel administrativo y Owner Wallet
+Módulo
+Información / acciones
+Dashboard ejecutivo
+Ingresos, costos, utilidad, DAU/MAU, reservas y alertas
+Usuarios
+Registro, país, dispositivo, IP, estado, balances y referidos
+Economía ZYXE
+Emitidos, gastados, quemados, bloqueados, retirables y concentración
+Ingresos
+Ads, offerwalls, compras, premium, afiliados, trading y fees
+Costos
+Rewards, referidos, retiros, infraestructura, fraude y marketing
+Tesorería
+Saldos por fondo, cobertura y proyecciones
+Owner Wallet
+Utilidad aprobada, saldo retirable e historial
+Retiros usuarios
+Cola, revisión, aprobación, rechazo y evidencias
+Fraude
+Reglas, casos, risk score y bloqueos
+Contenido
+Juegos, misiones, eventos, boosts y precios
+Auditoría
+Acciones administrativas y cambios de reglas
+16.1 Retiro del propietario
+Solo desde el fondo Propietario.
+Wallets de destino en lista blanca.
+2FA y espera de seguridad para cambios.
+Límites diarios y registro de aprobación.
+Conciliación contable antes y después del retiro.
+17. Ledger, contabilidad y auditoría
+El saldo no debe existir únicamente como un número editable en la tabla de usuarios. Cada cambio debe generar un asiento de ledger con trazabilidad y referencia al evento que lo originó.
+Campo mínimo
+Descripción
+transaction_id
+Identificador único e idempotente
+user_id
+Titular del movimiento
+wallet/fund
+Cuenta o fondo afectado
+type
+Claim, juego, compra, fee, referral, vault, retiro, ajuste
+amount
+Débito o crédito
+balance_after
+Saldo resultante
+status
+Pendiente, confirmado, revertido, bloqueado
+source_reference
+Juego, campaña, orden o payout asociado
+metadata
+IP, dispositivo, reglas y evidencia
+created_at
+Fecha y hora
+admin_actor
+Administrador, cuando aplique
+reason
+Motivo obligatorio de ajustes
+Principio de idempotenciaUn mismo claim, resultado de juego, callback de offerwall o retiro no puede acreditarse dos veces aunque se repita la solicitud.
+18. Seguridad y antifraude
+Rate limits por usuario, IP y dispositivo
+Detección de VPN, proxy, TOR y datacenter
+Huella de dispositivo con enfoque de privacidad
+Captcha adaptativo
+Detección de multicuentas y autocadenas
+Risk score por comportamiento
+Límites dinámicos por país y antigüedad
+Hold de recompensas sospechosas
+Callbacks server-to-server firmados
+2FA para usuarios sensibles y administradores
+Cifrado de secretos y rotación de llaves
+Hot wallet limitada y reservas separadas
+Backups cifrados y pruebas de restauración
+Monitoreo y alertas
+Programa de respuesta a incidentes
+19. Arquitectura técnica propuesta
+Capa
+Componentes
+Frontend
+Landing, autenticación, dashboard, faucet, juegos, wallet, mercado y perfil
+API Backend
+Usuarios, economía, reglas, ledger, referidos, vault, trading y admin
+Base de datos
+PostgreSQL con constraints, transacciones y réplicas/backups
+Cache/colas
+Redis para cooldowns, locks, rate limits, jobs e idempotencia
+Admin
+RBAC, auditoría, tesorería, fraude y contenidos
+Integraciones
+Ads, offerwalls, precios, correo, Telegram y wallets
+Infraestructura
+Docker, Nginx, TLS, CI/CD, observabilidad y secretos
+Futura blockchain
+Contrato token en red existente, indexador y wallet service
+19.1 Roles
+Rol
+Alcance
+Owner
+Finanzas completas y retiro de utilidad
+Superadmin
+Economía y usuarios; sin retiro de Owner
+Finanzas
+Tesorería, conciliación y payouts
+Fraude
+Casos, bloqueos y reglas
+Soporte
+Consulta y tickets con permisos limitados
+Contenido
+Juegos, misiones y promociones
+Auditor
+Solo lectura y exportación
+20. MVP y flujo de prueba
+La primera versión para Mateo debe ser una beta cerrada sin dinero real. Su propósito es validar claridad, diversión, retención, errores de saldo y percepción de confianza.
+Mateo abre la landing y entiende la propuesta.
+Crea cuenta e inicia sesión.
+Ve saldo inicial en 0 ZYXEs.
+Realiza un claim y recibe ZYXE interno.
+Juega Tap Miner y Memory Drops.
+Consulta historial y saldo actualizado.
+Compra o activa un boost de prueba.
+Revisa su crew de referidos en modo demo.
+Reporta confusiones, errores y percepción de valor.
+Función MVP
+Estado esperado
+Landing y branding
+Completo
+Registro/login
+Completo
+Dashboard
+Completo
+Ledger
+Completo
+Faucet
+Completo
+Dos minijuegos
+Completo
+Wallet/historial
+Completo
+Admin básico
+Completo
+Referidos nivel 1 demo
+Opcional
+Vault simulado
+Opcional
+Retiros reales
+Deshabilitado
+Trading real
+Deshabilitado
+21. Roadmap
+Fase
+Objetivo
+Entregables
+0 - Diseño
+Cerrar reglas y prototipo
+Documento v0.1, UX, arquitectura y simulaciones
+1 - Beta cerrada
+Validar experiencia
+Faucet, juegos, ledger, admin y ZYXE interno
+2 - Monetización
+Probar unit economics
+Ads, offerwalls, boosts, premium y referidos
+3 - Economía controlada
+Activar valor externo limitado
+Tesorería, retiros, Vault y antifraude avanzado
+4 - Mercado interno
+Profundizar utilidad
+Microtrading, marketplace, temporadas y crews
+5 - Token público
+Tokenizar ZYXE
+Legal, auditoría, contrato, liquidez y documentación pública
+6 - Escala
+Expansión
+Apps, alianzas, mercados y posible appchain
+22. Indicadores y alertas
+DAU, MAU y retención D1/D7/D30
+Ingreso por usuario y por fuente
+Costo de recompensa por usuario
+ZYXE emitidos, gastados, quemados y retirados
+Inflación neta y velocidad de circulación
+Porcentaje de saldo elegible para retiro
+Cobertura de tesorería
+Concentración por cuenta y top 1%
+Tasa de fraude y reversos
+Conversión de faucet a actividades monetizables
+LTV, CAC y periodo de recuperación
+Comisiones de referidos por nivel
+Utilización y costo del Vault
+Utilidad bruta y neta del propietario
+Ratio de sostenibilidadIngresos netos disponibles / valor económico de recompensas emitidas. Si es menor que 1 durante periodos sostenidos, la economía entrega más valor del que produce.
+23. Riesgos y controles
+Riesgo
+Impacto
+Control
+Inflación de ZYXE
+Pérdida de utilidad y presión de retiro
+Pools, sinks, quema y límites
+Bots/multicuentas
+Pérdida directa
+Risk score, device/IP y holds
+Referidos abusivos
+Costos y riesgo reputacional
+Actividad monetizable, topes y auditoría
+Falta de liquidez
+Pausa de retiros
+Cobertura, límites y reservas
+Hackeo de wallets
+Pérdida crítica
+Hot wallet mínima, multisig y whitelists
+Errores de ledger
+Saldos incorrectos
+Transacciones, idempotencia y conciliación
+Promesas financieras
+Riesgo legal
+Marketing controlado y revisión jurídica
+Manipulación de mercado
+Pérdidas y desconfianza
+Mercado simulado, límites y monitoreo
+Dependencia de proveedores
+Interrupciones
+Múltiples proveedores y fallback
+Utilidad insuficiente
+Abandono del producto
+Más sinks, eventos y contenido
+24. Marco de cumplimiento preliminar
+Esta sección no sustituye asesoría jurídica. Debe revisarse antes de habilitar depósitos, custodia, transferencias, retiros, trading real, token público o campañas de ingresos por referidos.
+En Colombia, la Resolución UIAF 314 de 2021 impone obligaciones de reporte a determinadas personas y empresas que proveen servicios de activos virtuales.
+La UIAF y los estándares FATF consideran actividades como intercambio, transferencia y custodia dentro del ámbito de proveedores de servicios de activos virtuales, según condiciones aplicables.
+La Superintendencia Financiera advierte que los criptoactivos no son moneda de curso legal en Colombia y ha publicado alertas sobre captación no autorizada y ofertas fraudulentas.
+Los sistemas multinivel deben evitar que la compensación dependa principalmente del reclutamiento; la FTC destaca el foco en ventas/uso real y advierte sobre promesas engañosas de ingresos.
+Si los juegos incorporan azar, entradas pagas o premios convertibles, debe revisarse la regulación de juegos de suerte y azar en los territorios objetivo.
+La privacidad, protección de datos, menores de edad, publicidad, impuestos y derechos del consumidor deben tratarse como líneas de trabajo separadas.
+Gate legal obligatorioNo habilitar token público, Vault con valor externo, trading real, depósitos ni cuatro niveles con recompensas monetarias sin concepto jurídico escrito y análisis de jurisdicciones.
+25. Parámetros abiertos y decisiones pendientes
+Parámetro
+Estado
+Cómo decidir
+Suministro final
+Hipótesis: 1.000 millones
+Simulación y estrategia de tokenización
+Red blockchain
+Pendiente
+Costos, seguridad, wallets y cumplimiento
+Valor de referencia
+Pendiente
+Reservas, demanda y fase
+Emisión diaria
+Dinámica
+Ingresos, inflación y DAU
+Pool Vault
+Pendiente
+Presupuesto y pruebas
+Retiros
+Deshabilitados
+Tesorería y antifraude
+Cripto inicial de retiro
+Pendiente
+Costos, soporte y liquidez
+Porcentajes de referidos
+Propuesta 5/2/1/0,5
+Unit economics y revisión legal
+Quema/reciclaje
+Propuesta 40/40/20
+Simulaciones
+Precios de boosts
+Pendiente
+Elasticidad y retención
+Monetización
+Por integrar
+Acuerdos con proveedores
+26. Anexos y fuentes de referencia
+26.1 Estructura mínima de base de datos
+Entidad
+Campos/relaciones principales
+users
+Identidad, estado, riesgo, sponsor, nivel y configuración
+wallets
+Usuario, activo, tipo de saldo y estado
+ledger_entries
+Débito/crédito, referencia, status y metadata
+faucet_claims
+Cooldown, recompensa, IP, device y regla
+game_sessions
+Inicio, resultado, evidencia y reward
+miners
+Tipo, hashpower, energía, desgaste y propietario
+referral_relations
+Ancestros 1-4, estado y fechas
+referral_commissions
+Base, porcentaje, nivel, status y source
+vault_positions
+Monto, plazo, peso, rewards y estado
+trades/orders
+Par, lado, precio, cantidad, fee y status
+withdrawals
+Activo, destino, fee, risk, status y txid
+treasury_accounts
+Fondo, activo, saldo y conciliación
+admin_audit_log
+Actor, acción, objeto, antes/después y razón
+26.2 Fuentes oficiales consultadas
+UIAF - Resolución 314 de 2021https://www.uiaf.gov.co/resolucion-314-de-2021
+UIAF - Reportes a proveedores de activos virtualeshttps://www.uiaf.gov.co/Reportes-a-proveedores-de-activos-virtuales
+Superintendencia Financiera de Colombia - Qué son los criptoactivoshttps://www.superfinanciera.gov.co/publicaciones/10115324/que-son-los-activos-digitales-o-criptoactivos/
+Superintendencia Financiera de Colombia - Criptoactivoshttps://www.superfinanciera.gov.co/publicaciones/10090492/sala-de-prensapublicaciones-criptoactivos-10090492/
+FATF - Virtual Assetshttps://www.fatf-gafi.org/en/topics/virtual-assets.html
+FATF - Updated Guidance for Virtual Assets and VASPshttps://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html
+FTC - Multi-Level Marketing Businesses and Pyramid Schemeshttps://consumer.ftc.gov/articles/multi-level-marketing-businesses-and-pyramid-schemes
+FTC - Business Guidance Concerning Multi-Level Marketinghttps://www.ftc.gov/business-guidance/resources/business-guidance-concerning-multi-level-marketing

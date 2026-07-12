@@ -1,0 +1,14 @@
+node_modules/
+.turbo/
+.next/
+dist/
+coverage/
+.env
+.env.local
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+tmp/

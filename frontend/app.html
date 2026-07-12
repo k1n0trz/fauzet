@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fauzet — App</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080B12;color:#E5E7EB;font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#22D3EE;text-decoration:none}
+a:hover{color:#7ee6f5}
+input,select,button,textarea{font-family:'Manrope',sans-serif}
+input::placeholder,textarea::placeholder{color:#4B5563}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(240deg);opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+::selection{background:#2EE6A6;color:#080B12}
+
+/* interaction utility classes (ported from style-hover / style-focus / style-active) */
+.hl{transition:transform .18s ease,box-shadow .18s ease}
+.hl:hover{transform:translateY(-1px)}
+.hl2{transition:transform .18s ease,box-shadow .18s ease}
+.hl2:hover{transform:translateY(-2px)}
+.hl-g:hover{box-shadow:0 6px 22px rgba(57,255,136,.28)}
+.hbc{transition:border-color .18s ease,color .18s ease}
+.hbc:hover{border-color:#22D3EE;color:#22D3EE}
+.hnav{transition:background .15s ease}
+.hnav:hover{background:rgba(229,231,235,.05)}
+.hcard{transition:transform .2s ease,border-color .2s ease}
+.hcard:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.35)}
+.hcard3{transition:transform .2s ease,border-color .2s ease}
+.hcard3:hover{transform:translateY(-3px)}
+.hgame{transition:transform .2s ease,border-color .2s ease}
+.hgame:hover{transform:scale(1.02);border-color:rgba(57,255,136,.35)}
+.hpurple{transition:background .18s ease}
+.hpurple:hover{background:#8d52f0!important}
+.hgreen-soft{transition:background .18s ease}
+.hgreen-soft:hover{background:rgba(57,255,136,.18)!important}
+.hcyan-soft{transition:background .18s ease}
+.hcyan-soft:hover{background:rgba(34,211,238,.18)!important}
+.hpurple-soft{transition:background .18s ease}
+.hpurple-soft:hover{background:rgba(124,58,237,.2)!important}
+.hdim:hover{color:#E5E7EB!important}
+.inp{outline:none;transition:border-color .18s ease}
+.inp:focus{border-color:#22D3EE!important}
+.inp-p{outline:none;transition:border-color .18s ease}
+.inp-p:focus{border-color:#7C3AED!important}
+.tapbtn{transition:transform .08s ease}
+.tapbtn:active{transform:scale(.93)}
+.hdash:hover{border-color:#22D3EE!important;color:#22D3EE!important}
+</style>
+</head>
+<body>
+<div id="app" style="min-height:100vh;display:flex;flex-direction:column"></div>
+<div id="overlayRoot"></div>
+<div id="toastRoot"></div>
+<script src="js/app-data.js"></script>
+<script src="js/app-views.js"></script>
+<script src="js/app-main.js"></script>
+</body>
+</html>

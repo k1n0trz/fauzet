@@ -1,0 +1,24 @@
+{
+  "name": "fauzet",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "corepack pnpm --filter @fauzet/database generate",
+    "db:migrate": "corepack pnpm --filter @fauzet/database migrate",
+    "db:studio": "corepack pnpm --filter @fauzet/database studio"
+  },
+  "devDependencies": {
+    "cross-env": "7.0.3",
+    "prettier": "3.5.3",
+    "turbo": "2.5.0",
+    "typescript": "5.8.3"
+  }
+}

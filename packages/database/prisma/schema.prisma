@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  RESTRICTED
+  SUSPENDED
+  CLOSED
+}
+
+enum Role {
+  USER
+  SUPPORT
+  CONTENT
+  FRAUD
+  FINANCE
+  AUDITOR
+  SUPERADMIN
+  OWNER
+}
+
+enum LedgerAccountKind {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+  CONTRA
+}
+
+enum BalanceBucket {
+  PENDING
+  AVAILABLE
+  PROMOTIONAL
+  LOCKED
+  ELIGIBLE
+  RESERVED
+  WITHDRAWN
+}
+
+enum LedgerTransactionStatus {
+  PENDING
+  POSTED
+  REVERSED
+  REJECTED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  displayName   String?
+  locale        String   @default("es")
+  countryCode   String?
+  status        UserStatus @default(PENDING_VERIFICATION)
+  riskLevel     Int      @default(0)
+  emailVerifiedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sessions      Session[]
+  roles         UserRole[]
+  accounts      LedgerAccount[]
+  faucetClaims  FaucetClaim[]
+  auditEvents   AuditEvent[] @relation("AuditActor")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  tokenHash   String   @unique
+  deviceId    String?
+  ipHash      String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+}
+
+model UserRole {
+  userId    String
+  role      Role
+  grantedAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, role])
+}
+
+model LedgerAccount {
+  id        String @id @default(uuid())
+  code      String @unique
+  name      String
+  kind      LedgerAccountKind
+  asset     String
+  bucket    BalanceBucket?
+  userId    String?
+  active    Boolean @default(true)
+  createdAt DateTime @default(now())
+  user      User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+  postings  LedgerPosting[]
+  @@index([userId, asset, bucket])
+}
+
+model LedgerTransaction {
+  id             String @id @default(uuid())
+  idempotencyKey String @unique
+  type           String
+  sourceType     String
+  sourceId       String
+  status         LedgerTransactionStatus @default(PENDING)
+  configVersion  Int
+  metadata       Json @default("{}")
+  postedAt       DateTime?
+  reversedById   String? @unique
+  createdAt      DateTime @default(now())
+  postings       LedgerPosting[]
+  reversedBy     LedgerTransaction? @relation("Reversal", fields: [reversedById], references: [id])
+  reverses       LedgerTransaction? @relation("Reversal")
+  @@unique([sourceType, sourceId, type])
+}
+
+model LedgerPosting {
+  id            String @id @default(uuid())
+  transactionId String
+  accountId     String
+  amount        Decimal @db.Decimal(36, 0)
+  balanceAfter  Decimal? @db.Decimal(36, 0)
+  createdAt     DateTime @default(now())
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  account       LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  @@index([accountId, createdAt])
+}
+
+model EconomicConfigVersion {
+  id          Int @id @default(autoincrement())
+  status      String @default("DRAFT")
+  parameters  Json
+  reason      String
+  createdById String
+  approvedById String?
+  effectiveAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model FaucetClaim {
+  id             String @id @default(uuid())
+  userId         String
+  challengeId    String @unique
+  rewardMinor    Decimal @db.Decimal(36, 0)
+  status         String
+  ruleVersion    Int
+  nextClaimAt    DateTime
+  transactionId String? @unique
+  ipHash         String?
+  deviceId       String?
+  createdAt      DateTime @default(now())
+  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([userId, createdAt])
+}
+
+model AuditEvent {
+  id          String @id @default(uuid())
+  actorId     String?
+  action      String
+  targetType  String
+  targetId    String
+  reason      String?
+  before      Json?
+  after       Json?
+  requestId   String
+  ipHash      String?
+  createdAt   DateTime @default(now())
+  actor       User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  @@index([targetType, targetId, createdAt])
+}
+
+model IdempotencyRecord {
+  key          String @id
+  scope        String
+  requestHash  String
+  responseCode Int?
+  responseBody Json?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}

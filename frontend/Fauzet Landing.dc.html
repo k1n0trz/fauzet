@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Fauzet — Earn Zyxes. Play, claim and grow.</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html{scroll-behavior:smooth}
+:root{--bg:#F8FAFC;--bg2:#EEF2F7;--bg3:#E5EBF2;--card:#ffffff;--text:#0F172A;--text2:#334155;--muted:#64748B;--faint:#94A3B8;--line1:rgba(15,23,42,.08);--line2:rgba(15,23,42,.11);--line3:rgba(15,23,42,.18);--primary:#00AEEF;--primary-ink:#ffffff;--green:#0E9F6E;--cyan:#0284C7;--purple2:#D97706;--header:rgba(248,250,252,.9);--shadow:rgba(15,23,42,.12)}
+body[data-theme="dark"]{--bg:#0B1220;--bg2:#0F172A;--bg3:#080E1A;--card:#141F38;--text:#E6EEF9;--text2:#94A3B8;--muted:#647591;--faint:#455571;--line1:rgba(226,236,250,.08);--line2:rgba(226,236,250,.11);--line3:rgba(226,236,250,.17);--primary:#22B8F0;--primary-ink:#04202B;--green:#2EE6A6;--cyan:#38BDF8;--purple2:#FFB020;--header:rgba(11,18,32,.85);--shadow:rgba(0,0,0,.5)}
+body{transition:background .3s ease,color .3s ease}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--cyan);text-decoration:none;transition:color .18s ease}
+a:hover{color:var(--green)}
+header nav a:hover{color:var(--primary)!important}
+footer a:hover{color:var(--primary)!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes drip{0%{transform:translateY(-2px);opacity:0}30%{opacity:1}100%{transform:translateY(10px);opacity:0}}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+::selection{background:var(--primary);color:var(--primary-ink)}
+</style>
+</helmet>
+
+<div style="min-width:320px">
+
+<!-- ===================== HEADER ===================== -->
+<header style="position:sticky;top:0;z-index:50;background:var(--header);backdrop-filter:blur(14px);border-bottom:1px solid var(--line1)">
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;gap:28px">
+    <a href="#top" style="display:flex;align-items:center;gap:10px;flex:none">
+      <img src="{{ logoSrc }}" alt="Fauzet" style="height:38px;width:auto;display:block">
+    </a>
+    <nav style="display:flex;gap:22px;flex:1;justify-content:center;flex-wrap:wrap" aria-label="Main">
+      <a href="#how" style="color:var(--text2);font-size:14px;font-weight:600" style-hover="color:var(--primary)">{{ t.navHow }}</a>
+      <a href="#games" style="color:var(--text2);font-size:14px;font-weight:600" style-hover="color:var(--primary)">{{ t.navGames }}</a>
+      <a href="#mining" style="color:var(--text2);font-size:14px;font-weight:600" style-hover="color:var(--primary)">{{ t.navMining }}</a>
+      <a href="#zyxe" style="color:var(--text2);font-size:14px;font-weight:600" style-hover="color:var(--primary)">ZYXE</a>
+      <a href="#rewards" style="color:var(--text2);font-size:14px;font-weight:600" style-hover="color:var(--primary)">{{ t.navRewards }}</a>
+      <a href="#faq" style="color:var(--text2);font-size:14px;font-weight:600" style-hover="color:var(--primary)">FAQ</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:12px;flex:none">
+      <button onClick="{{ toggleLang }}" aria-label="Language" style="background:none;border:1px solid var(--line3);color:var(--text2);border-radius:8px;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:border-color .18s ease,color .18s ease" style-hover="border-color:var(--cyan);color:var(--cyan)">{{ langLabel }}</button>
+      <button onClick="{{ toggleTheme }}" aria-label="Theme" title="Light / Dark" style="background:none;border:1px solid var(--line3);color:var(--text2);border-radius:8px;padding:7px 10px;font-size:13px;cursor:pointer;line-height:1;transition:border-color .18s ease,color .18s ease" style-hover="border-color:var(--cyan);color:var(--cyan)">{{ themeIcon }}</button>
+      <a href="Fauzet App.dc.html" style="color:var(--text);font-size:14px;font-weight:700;padding:8px 14px;border-radius:8px;transition:background .18s ease" style-hover="background:var(--line1);color:var(--text)">{{ t.login }}</a>
+      <a href="Fauzet App.dc.html" style="background:var(--primary);color:var(--primary-ink);font-size:14px;font-weight:800;padding:9px 18px;border-radius:9px;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-1px);box-shadow:0 6px 20px rgba(46,230,166,.25);color:var(--primary-ink)">{{ t.getStarted }}</a>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section id="top" style="max-width:1200px;margin:0 auto;padding:88px 24px 72px;display:flex;gap:56px;flex-wrap:wrap;align-items:center">
+  <div style="flex:1 1 440px;min-width:300px;animation:fadeUp .5s ease both">
+    <div style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(34,211,238,.3);border-radius:999px;padding:6px 14px;margin-bottom:26px">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:pulseDot 2.4s ease infinite"></span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);letter-spacing:.08em">DRIP SATS. EVERY DAY.</span>
+    </div>
+    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:clamp(38px,5vw,58px);line-height:1.06;margin:0 0 20px;font-weight:700;letter-spacing:-.02em">{{ t.heroA }} <span style="color:var(--green)">{{ t.heroB }}</span></h1>
+    <p style="font-size:18px;line-height:1.6;color:var(--text2);margin:0 0 34px;max-width:520px;text-wrap:pretty">{{ t.heroSub }}</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px">
+      <a href="Fauzet App.dc.html" style="background:var(--primary);color:var(--primary-ink);font-size:16px;font-weight:800;padding:15px 30px;border-radius:12px;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,230,166,.3);color:var(--primary-ink)">{{ t.ctaStart }}</a>
+      <a href="#how" style="border:1px solid var(--line3);color:var(--text);font-size:16px;font-weight:700;padding:15px 30px;border-radius:12px;transition:border-color .18s ease,background .18s ease" style-hover="border-color:var(--cyan);background:rgba(34,211,238,.06);color:var(--text)">{{ t.ctaExplore }}</a>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin:0;max-width:500px;line-height:1.55">{{ t.heroDisclaimer }}</p>
+  </div>
+
+  <!-- Hero preview -->
+  <div style="flex:1 1 400px;min-width:300px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .6s ease .1s both" aria-hidden="true">
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:2 1 210px;background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:20px 22px;box-shadow:0 12px 34px var(--shadow)">
+        <div style="font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px">{{ t.pvWallet }}</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:var(--text);letter-spacing:-.01em;display:flex;align-items:center;gap:9px">
+          <img src="assets/coin-zyxe.png" alt="" style="width:32px;height:32px;display:block">12,458.80 <span style="font-size:15px;color:var(--green);font-weight:800">ZYXE</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">≈ $215.34 USD</div>
+      </div>
+      <div style="flex:1 1 158px;background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;box-shadow:0 12px 34px var(--shadow)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+          <span style="font-size:12.5px;font-weight:700;color:var(--muted)">Faucet</span>
+          <img src="assets/ic-faucet.png" alt="" style="width:auto;height:42px;object-fit:contain;margin:-6px -4px 0 0">
+        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--text)">{{ t.pvReady }}</div>
+        <div style="font-size:12px;color:var(--muted);margin:3px 0 12px">{{ t.pvNextClaim }} {{ heroCountdown }}</div>
+        <div style="margin-top:auto;background:linear-gradient(90deg,#34D399,#10B981);color:#fff;text-align:center;font-weight:800;font-size:13px;padding:10px;border-radius:11px">{{ t.pvClaim }}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:1 1 130px;background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:16px 18px;box-shadow:0 12px 34px var(--shadow)">
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:8px">{{ t.pvMiningPower }}</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px"><span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--text)">1.25 <span style="font-size:11px;color:var(--muted);font-weight:600">MH/s</span></span><span style="font-size:11px;font-weight:800;color:var(--green)">+12.5%</span></div>
+        <svg viewBox="0 0 90 30" style="width:100%;height:26px;display:block"><polyline points="0,24 14,20 28,22 42,14 56,16 70,8 90,4" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
+      </div>
+      <div style="flex:1 1 130px;background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:16px 18px;box-shadow:0 12px 34px var(--shadow)">
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:8px">{{ t.pvActiveMiners }}</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--text);margin-bottom:8px">12</div>
+        <svg viewBox="0 0 90 30" style="width:100%;height:26px;display:block"><rect x="0" y="18" width="5" height="12" rx="1.5" fill="var(--green)"></rect><rect x="8" y="12" width="5" height="18" rx="1.5" fill="var(--green)"></rect><rect x="16" y="20" width="5" height="10" rx="1.5" fill="var(--green)"></rect><rect x="24" y="8" width="5" height="22" rx="1.5" fill="var(--green)"></rect><rect x="32" y="15" width="5" height="15" rx="1.5" fill="var(--green)"></rect><rect x="40" y="6" width="5" height="24" rx="1.5" fill="var(--green)"></rect><rect x="48" y="16" width="5" height="14" rx="1.5" fill="var(--green)"></rect><rect x="56" y="10" width="5" height="20" rx="1.5" fill="var(--green)"></rect><rect x="64" y="4" width="5" height="26" rx="1.5" fill="var(--green)"></rect><rect x="72" y="13" width="5" height="17" rx="1.5" fill="var(--green)"></rect><rect x="80" y="9" width="5" height="21" rx="1.5" fill="var(--green)"></rect></svg>
+      </div>
+      <div style="flex:1 1 130px;background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:16px 18px;box-shadow:0 12px 34px var(--shadow)">
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:8px">{{ t.pvEfficiency }}</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:11px"><span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--text)">86 <span style="font-size:11px;color:var(--muted);font-weight:600">%</span></span><span style="font-size:11px;font-weight:800;color:var(--green)">+6%</span></div>
+        <div style="height:7px;background:var(--line2);border-radius:4px;overflow:hidden"><div style="width:86%;height:100%;background:linear-gradient(90deg,#34D399,#10B981);border-radius:4px"></div></div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:16px 20px;box-shadow:0 12px 34px var(--shadow)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:11.5px;font-weight:700;color:var(--muted)">{{ t.pvPoolShare }}</span>
+        <a href="Fauzet App.dc.html" style="font-size:12px;font-weight:700;color:var(--cyan)">{{ t.pvViewDetails }} ›</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);flex:none">0.0732 <span style="font-size:11px;color:var(--green);font-weight:800">ZYXE</span></span>
+        <div style="flex:1;height:8px;background:var(--line2);border-radius:5px;overflow:hidden"><div style="width:52%;height:100%;background:linear-gradient(90deg,var(--cyan),#22B8F0);border-radius:5px"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section id="how" style="border-top:1px solid var(--line1);background:var(--bg2)">
+  <div style="max-width:1200px;margin:0 auto;padding:80px 24px">
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 10px;letter-spacing:-.01em">{{ t.howTitle }}</h2>
+    <p style="color:var(--text2);margin:0 0 44px;font-size:16px">{{ t.howSub }}</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px">
+      <sc-for list="{{ howSteps }}" as="s" hint-placeholder-count="4">
+        <div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:26px;transition:transform .2s ease,border-color .2s ease" style-hover="transform:translateY(-4px);border-color:rgba(34,211,238,.4)">
+          <div style="font-family:'JetBrains Mono',monospace;color:var(--cyan);font-size:13px;margin-bottom:14px">{{ s.n }}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;margin-bottom:8px">{{ s.title }}</div>
+          <div style="color:var(--text2);font-size:14px;line-height:1.55">{{ s.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EARNING METHODS ===================== -->
+<section id="rewards" style="max-width:1200px;margin:0 auto;padding:80px 24px">
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 10px;letter-spacing:-.01em">{{ t.earnTitle }}</h2>
+  <p style="color:var(--text2);margin:0 0 44px;font-size:16px">{{ t.earnSub }}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px">
+    <sc-for list="{{ earnMethods }}" as="m" hint-placeholder-count="7">
+      <div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:24px;display:flex;gap:16px;align-items:flex-start;transition:transform .2s ease,border-color .2s ease" style-hover="transform:translateY(-3px);border-color:rgba(46,230,166,.35)">
+        <div style="width:56px;height:56px;flex:none;display:grid;place-items:center"><img src="{{ m.img }}" alt="" style="width:56px;height:56px;object-fit:contain;display:block"></div>
+        <div>
+          <div style="font-weight:800;font-size:15.5px;margin-bottom:5px">{{ m.title }}</div>
+          <div style="color:var(--text2);font-size:13.5px;line-height:1.5">{{ m.desc }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ===================== ZYXE UTILITY ===================== -->
+<section id="zyxe" style="border-top:1px solid var(--line1);background:var(--bg2)">
+  <div style="max-width:1200px;margin:0 auto;padding:80px 24px;display:flex;gap:56px;flex-wrap:wrap;align-items:center">
+    <div style="flex:1 1 380px;min-width:300px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple2);letter-spacing:.12em;margin-bottom:14px">ZYXE — {{ t.zxTag }}</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 16px;letter-spacing:-.01em">{{ t.zxTitle }}</h2>
+      <p style="color:var(--text2);font-size:16px;line-height:1.65;margin:0 0 22px;max-width:480px">{{ t.zxDesc }}</p>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.55;border-left:2px solid rgba(230,140,20,.5);padding-left:14px;max-width:460px">{{ t.zxLegal }}</p>
+    </div>
+    <div style="flex:1 1 420px;min-width:300px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+      <sc-for list="{{ zyxeUses }}" as="u" hint-placeholder-count="8">
+        <div style="background:var(--card);border:1px solid rgba(230,140,20,.2);border-radius:12px;padding:16px 18px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;transition:border-color .2s ease" style-hover="border-color:rgba(230,140,20,.55)">
+          <span style="color:var(--purple2);font-size:16px">◆</span> {{ u.label }}
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== VIRTUAL MINING ===================== -->
+<section id="mining" style="max-width:1200px;margin:0 auto;padding:80px 24px">
+  <div style="display:flex;gap:56px;flex-wrap:wrap;align-items:center">
+    <div style="flex:1 1 460px;min-width:300px;order:2">
+      <div style="background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:26px;box-shadow:0 20px 60px var(--shadow)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--muted)">{{ t.mnRoom }}</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--green);font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:var(--primary);animation:pulseDot 2s ease infinite"></span>{{ t.mnActive }}</span>
+        </div>
+        <div style="text-align:center;margin:2px 0 16px"><img src="assets/mining-machine.png" alt="Virtual miner" style="width:100%;max-width:260px;height:auto;filter:drop-shadow(0 14px 26px rgba(0,174,239,.20))"></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+          <sc-for list="{{ demoMiners }}" as="mn" hint-placeholder-count="3">
+            <div style="background:var(--bg2);border:1px solid {{ mn.border }};border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:22px;margin-bottom:6px">{{ mn.icon }}</div>
+              <div style="font-size:12px;font-weight:700;margin-bottom:2px">{{ mn.name }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan)">{{ mn.hash }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;background:var(--bg2);border-radius:9px;padding:10px 14px"><span style="color:var(--muted)">{{ t.mnPool }}</span><span style="font-family:'JetBrains Mono',monospace">250,000 ZYXE</span></div>
+          <div style="display:flex;justify-content:space-between;background:var(--bg2);border-radius:9px;padding:10px 14px"><span style="color:var(--muted)">{{ t.mnShare }}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--green)">0.074%</span></div>
+          <div style="display:flex;justify-content:space-between;background:var(--bg2);border-radius:9px;padding:10px 14px"><span style="color:var(--muted)">{{ t.mnEff }}</span><span style="font-family:'JetBrains Mono',monospace">92%</span></div>
+          <div style="display:flex;justify-content:space-between;background:var(--bg2);border-radius:9px;padding:10px 14px"><span style="color:var(--muted)">{{ t.mnEst }}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--green)">~184 ZYXE</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1 1 380px;min-width:300px;order:1">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);letter-spacing:.12em;margin-bottom:14px">{{ t.mnTag }}</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 16px;letter-spacing:-.01em">{{ t.mnTitle }}</h2>
+      <p style="color:var(--text2);font-size:16px;line-height:1.65;margin:0 0 20px;max-width:480px">{{ t.mnDesc }}</p>
+      <div style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.2);border-radius:12px;padding:16px 18px;max-width:480px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--cyan);margin-bottom:8px">{{ t.mnFormula }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);line-height:1.6">{{ t.mnFormulaText }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GAMES ===================== -->
+<section id="games" style="border-top:1px solid var(--line1);background:var(--bg2)">
+  <div style="max-width:1200px;margin:0 auto;padding:80px 24px">
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 10px;letter-spacing:-.01em">{{ t.gmTitle }}</h2>
+    <p style="color:var(--text2);margin:0 0 44px;font-size:16px">{{ t.gmSub }}</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px">
+      <sc-for list="{{ games }}" as="g" hint-placeholder-count="4">
+        <div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;overflow:hidden;transition:transform .2s ease,border-color .2s ease" style-hover="transform:scale(1.02);border-color:rgba(46,230,166,.35)">
+          <div style="height:120px;display:grid;place-items:center;background:{{ g.bg }}"><img src="{{ g.img }}" alt="" style="height:72px;width:auto;object-fit:contain;display:block;filter:drop-shadow(0 8px 16px rgba(15,23,42,.14))"></div>
+          <div style="padding:18px 20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-weight:800;font-size:15.5px">{{ g.name }}</span>
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:{{ g.diffColor }};border:1px solid {{ g.diffColor }};border-radius:6px;padding:2px 7px">{{ g.diff }}</span>
+            </div>
+            <div style="color:var(--text2);font-size:13px;line-height:1.5;margin-bottom:12px">{{ g.desc }}</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:14px">
+              <span>⚡ {{ g.energy }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;color:var(--green)">{{ g.reward }}</span>
+            </div>
+            <a href="Fauzet App.dc.html" style="display:block;text-align:center;background:rgba(46,230,166,.1);border:1px solid rgba(46,230,166,.3);color:var(--green);font-weight:800;font-size:13px;padding:9px;border-radius:9px;transition:background .18s ease" style-hover="background:rgba(46,230,166,.2);color:var(--green)">{{ t.gmPlay }}</a>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MINING CREW (REFERRALS) ===================== -->
+<section style="max-width:1200px;margin:0 auto;padding:80px 24px;display:flex;gap:56px;flex-wrap:wrap;align-items:center">
+  <div style="flex:1 1 380px;min-width:300px">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple2);letter-spacing:.12em;margin-bottom:14px">MINING CREW</div>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 16px;letter-spacing:-.01em">{{ t.rfTitle }}</h2>
+    <p style="color:var(--text2);font-size:16px;line-height:1.65;margin:0 0 20px;max-width:480px">{{ t.rfDesc }}</p>
+    <p style="font-size:12.5px;color:var(--muted);line-height:1.55;border-left:2px solid rgba(230,140,20,.5);padding-left:14px;max-width:460px">{{ t.rfLegal }}</p>
+  </div>
+  <div style="flex:1 1 420px;min-width:300px;display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ refLevels }}" as="r" hint-placeholder-count="4">
+      <div style="background:var(--card);border:1px solid rgba(230,140,20,.18);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;transition:border-color .2s ease" style-hover="border-color:rgba(230,140,20,.5)">
+        <div style="width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;background:rgba(230,140,20,{{ r.alpha }})"><img src="{{ r.img }}" alt="Level {{ r.level }}" style="width:34px;height:34px;object-fit:contain;display:block"></div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px">{{ r.label }}</div>
+          <div style="font-size:12.5px;color:var(--muted)">{{ r.note }}</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:17px;color:var(--purple2);font-weight:600">{{ r.pct }}</div>
+      </div>
+    </sc-for>
+    <div style="font-size:11.5px;color:var(--muted);padding:4px 6px">{{ t.rfConfigNote }}</div>
+  </div>
+</section>
+
+<!-- ===================== VAULT ===================== -->
+<section style="border-top:1px solid var(--line1);background:var(--bg2)">
+  <div style="max-width:1200px;margin:0 auto;padding:80px 24px">
+    <div style="text-align:center;max-width:640px;margin:0 auto 44px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple2);letter-spacing:.12em;margin-bottom:14px">ZYXE VAULT</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 14px;letter-spacing:-.01em">{{ t.vtTitle }}</h2>
+      <p style="color:var(--text2);font-size:16px;line-height:1.6;margin:0">{{ t.vtDesc }}</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;max-width:980px;margin:0 auto">
+      <sc-for list="{{ vaultOptions }}" as="v" hint-placeholder-count="4">
+        <div style="background:var(--card);border:1px solid {{ v.border }};border-radius:16px;padding:24px;text-align:center;transition:transform .2s ease" style-hover="transform:translateY(-4px)">
+          <div style="font-weight:800;font-size:16px;margin-bottom:4px">{{ v.name }}</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">{{ v.note }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:var(--purple2);font-weight:600">{{ v.mult }}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:6px">{{ t.vtMultNote }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <p style="text-align:center;font-size:12.5px;color:var(--muted);max-width:620px;margin:30px auto 0;line-height:1.55">{{ t.vtLegal }}</p>
+  </div>
+</section>
+
+<!-- ===================== CONVERSION ===================== -->
+<section style="max-width:1200px;margin:0 auto;padding:80px 24px;display:flex;gap:56px;flex-wrap:wrap;align-items:center">
+  <div style="flex:1 1 380px;min-width:300px">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);letter-spacing:.12em;margin-bottom:14px">{{ t.cvTag }}</div>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 16px;letter-spacing:-.01em">{{ t.cvTitle }}</h2>
+    <p style="color:var(--text2);font-size:16px;line-height:1.65;margin:0 0 22px;max-width:480px">{{ t.cvDesc }}</p>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:480px">
+      <sc-for list="{{ cvPoints }}" as="p" hint-placeholder-count="4">
+        <div style="display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text2);line-height:1.5">
+          <span style="color:var(--cyan);flex:none;margin-top:1px">✓</span> {{ p.text }}
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="flex:1 1 400px;min-width:300px">
+    <div style="background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:26px;box-shadow:0 20px 60px var(--shadow)">
+      <div style="font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--muted);margin-bottom:18px">{{ t.cvCardTitle }}</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ cryptos }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:14px;background:var(--bg2);border-radius:11px;padding:12px 16px">
+            <sc-if value="{{ c.img }}" hint-placeholder-val="{{ true }}"><img src="{{ c.img }}" alt="{{ c.name }}" style="width:34px;height:34px;flex:none;border-radius:50%;display:block"></sc-if><sc-if value="{{ c.noImg }}" hint-placeholder-val="{{ false }}"><span style="width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:{{ c.bg }};color:var(--primary-ink);font-weight:800;font-size:13px;font-family:'JetBrains Mono',monospace">{{ c.sym }}</span></sc-if>
+            <span style="flex:1;font-weight:700;font-size:14.5px">{{ c.name }}</span>
+            <span style="font-size:11.5px;color:{{ c.statusColor }};font-weight:700">{{ c.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRUST & SECURITY ===================== -->
+<section style="border-top:1px solid var(--line1);background:var(--bg2)">
+  <div style="max-width:1200px;margin:0 auto;padding:80px 24px">
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 10px;letter-spacing:-.01em;text-align:center">{{ t.tsTitle }}</h2>
+    <p style="color:var(--text2);margin:0 auto 44px;font-size:16px;text-align:center;max-width:560px">{{ t.tsSub }}</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px">
+      <sc-for list="{{ trustItems }}" as="ti" hint-placeholder-count="6">
+        <div style="background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:22px;transition:border-color .2s ease" style-hover="border-color:rgba(34,211,238,.35)">
+          <div style="margin-bottom:14px"><img src="{{ ti.img }}" alt="" style="width:52px;height:52px;object-fit:contain;display:block"></div>
+          <div style="font-weight:800;font-size:15px;margin-bottom:6px">{{ ti.title }}</div>
+          <div style="color:var(--text2);font-size:13.5px;line-height:1.5">{{ ti.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section id="faq" style="max-width:840px;margin:0 auto;padding:80px 24px">
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 40px;letter-spacing:-.01em;text-align:center">FAQ</h2>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="6">
+      <details style="background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:0 22px;transition:border-color .2s ease">
+        <summary style="cursor:pointer;font-weight:700;font-size:15.5px;padding:18px 0;list-style:none;display:flex;justify-content:space-between;align-items:center">{{ f.q }}<span style="color:var(--cyan);font-size:18px;flex:none;margin-left:16px">+</span></summary>
+        <p style="color:var(--text2);font-size:14.5px;line-height:1.65;margin:0;padding:0 0 20px">{{ f.a }}</p>
+      </details>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section style="max-width:1200px;margin:0 auto;padding:20px 24px 90px;text-align:center">
+  <div style="background:linear-gradient(135deg,var(--card),var(--card));border:1px solid rgba(46,230,166,.2);border-radius:22px;padding:64px 32px">
+    <img src="{{ logoSrc }}" alt="" style="height:52px;margin-bottom:22px;opacity:.95">
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:32px;margin:0 0 12px;letter-spacing:-.01em">{{ t.finalTitle }}</h2>
+    <p style="color:var(--text2);font-size:16px;margin:0 0 30px">{{ t.finalSub }}</p>
+    <a href="Fauzet App.dc.html" style="display:inline-block;background:var(--primary);color:var(--primary-ink);font-size:16px;font-weight:800;padding:15px 36px;border-radius:12px;transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,230,166,.3);color:var(--primary-ink)">{{ t.ctaStart }}</a>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer style="border-top:1px solid var(--line1);background:var(--bg3)">
+  <div style="max-width:1200px;margin:0 auto;padding:52px 24px 40px">
+    <div style="display:flex;gap:48px;flex-wrap:wrap;justify-content:space-between;margin-bottom:36px">
+      <div style="max-width:320px">
+        <img src="{{ logoSrc }}" alt="Fauzet" style="height:34px;margin-bottom:14px">
+        <p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0">{{ t.ftAbout }}</p>
+      </div>
+      <div style="display:flex;gap:48px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">{{ t.ftLegal }}</div>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftTerms }}</a>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftPrivacy }}</a>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftRisk }}</a>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftRewardPolicy }}</a>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftWithdrawPolicy }}</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">{{ t.ftPlatform }}</div>
+          <a href="#how" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.navHow }}</a>
+          <a href="#games" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.navGames }}</a>
+          <a href="#mining" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.navMining }}</a>
+          <a href="Fauzet App.dc.html" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.login }}</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">{{ t.ftSupport }}</div>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftContact }}</a>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">{{ t.ftStatus }}</a>
+          <a href="#faq" style="color:var(--text2);font-size:13.5px" style-hover="color:var(--primary)">FAQ</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--line1);padding-top:24px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">
+      <span style="color:var(--faint);font-size:12px">© 2026 Fauzet. {{ t.ftRights }}</span>
+      <button onClick="{{ toggleLang }}" style="background:none;border:1px solid var(--line3);color:var(--muted);border-radius:8px;padding:6px 12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;cursor:pointer" style-hover="border-color:var(--cyan);color:var(--cyan)">{{ langLabel }}</button>
+    </div>
+    <p style="color:var(--faint);font-size:11.5px;line-height:1.6;margin:22px 0 0;max-width:900px">{{ t.ftDisclaimer }}</p>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { lang: 'en', theme: 'light', secs: 8 * 60 + 42, bal: 0 };
+
+  componentDidMount() {
+    let savedTheme = null;
+    try { savedTheme = localStorage.getItem('fz_theme'); } catch (e) {}
+    const theme = savedTheme === 'dark' ? 'dark' : 'light';
+    this.setState({ theme });
+    document.body.dataset.theme = theme;
+    this._timer = setInterval(() => {
+      this.setState(s => ({ secs: s.secs > 0 ? s.secs - 1 : 3600 }));
+    }, 1000);
+    // count-up for hero balance
+    const target = 3420, t0 = performance.now(), dur = 900;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      this.setState({ bal: Math.round(target * (1 - Math.pow(1 - p, 3))) });
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  componentWillUnmount() { clearInterval(this._timer); }
+
+  dict() {
+    const en = {
+      navHow: 'How It Works', navGames: 'Games', navMining: 'Mining', navRewards: 'Rewards',
+      login: 'Log In', getStarted: 'Get Started',
+      heroA: 'Earn Zyxes.', heroB: 'Play, claim and grow.',
+      heroSub: 'Claim rewards, play simple games, build virtual mining power and convert eligible rewards into supported cryptocurrencies.',
+      ctaStart: 'Start Earning', ctaExplore: 'Explore Fauzet',
+      heroDisclaimer: 'ZYXE is an internal utility and reward unit. Rewards are variable, based on valid activity, and may be subject to verification, limits and anti-fraud controls.',
+      pvBalance: 'TOTAL BALANCE', pvAvailable: 'available', pvPending: 'pending', pvLocked: 'locked',
+      pvClaim: 'Claim ZYXEs', pvMining: 'MINING POWER', pvEnergy: 'Energy', pvDaily: 'TODAY\u2019S REWARDS',
+      pvEstNote: 'Estimated reward — not guaranteed', pvWallet: 'Wallet balance', pvReady: 'Ready!', pvNextClaim: 'Next claim in', pvMiningPower: 'Mining power', pvActiveMiners: 'Active miners', pvEfficiency: 'Efficiency', pvPoolShare: 'Pool share (daily)', pvViewDetails: 'View details',
+      howTitle: 'How Fauzet works', howSub: 'Four steps from zero to eligible rewards.',
+      earnTitle: 'Ways to earn', earnSub: 'Stack ZYXEs across multiple activities. Every reward is validated before it settles.',
+      zxTag: 'INTERNAL UTILITY UNIT', zxTitle: 'What can you do with ZYXEs?',
+      zxDesc: 'ZYXE is the reward and utility unit of the Fauzet ecosystem. Earn it through validated activity and spend it inside the platform to grow faster.',
+      zxLegal: 'ZYXE begins as an internal unit with no public price or automatic convertibility. It does not represent equity, debt or a promise of profitability.',
+      mnTag: 'VIRTUAL MINING', mnTitle: 'Build mining power. Share the pool.',
+      mnDesc: 'Fauzet mining is a simulation inside the ecosystem — no real Proof-of-Work runs on your device. Buy and upgrade virtual miners, manage energy and efficiency, and earn a share of a limited daily ZYXE pool.',
+      mnFormula: 'TRANSPARENT REWARD FORMULA',
+      mnFormulaText: 'your valid hashpower ÷ total network hashpower × daily mining pool',
+      mnRoom: 'MINING ROOM', mnActive: 'Mining active', mnPool: 'Daily pool', mnShare: 'Your share', mnEff: 'Efficiency', mnEst: 'Est. today',
+      gmTitle: 'Games hub', gmSub: 'Short, simple games with validated rewards, energy costs and daily limits.', gmPlay: 'Play',
+      rfTitle: 'Build your Mining Crew',
+      rfDesc: 'Invite friends and earn a share of the rewards generated by your crew\u2019s valid activity — across four levels. Nobody earns for registrations alone.',
+      rfLegal: 'Crew rewards are based on valid platform activity and may be subject to verification, limits and anti-fraud controls. Percentages are configurable and no income is guaranteed.',
+      rfConfigNote: 'Percentages shown are initial values and may change. Rewards apply only to valid, eligible activity.',
+      vtTitle: 'Lock ZYXEs. Share the reward pool.',
+      vtDesc: 'The ZYXE Vault lets you lock Zyxes for a period and receive a share of a variable reward pool, weighted by your lock duration.',
+      vtMultNote: 'pool weight multiplier',
+      vtLegal: 'Vault rewards are variable, come from a limited pool and are not guaranteed. Early unlock may reduce or remove bonus weight. Full conditions are shown before you confirm a lock.',
+      cvTag: 'CONVERT & WITHDRAW', cvTitle: 'Convert eligible ZYXEs',
+      cvDesc: 'Once your rewards are validated and eligible, convert them into supported cryptocurrencies and withdraw to your own external wallet.',
+      cvCardTitle: 'SUPPORTED ASSETS',
+      tsTitle: 'Built on trust', tsSub: 'Security and transparency are part of the product, not an afterthought.',
+      finalTitle: 'Ready to start earning?', finalSub: 'Create your free account and claim your welcome reward.',
+      ftAbout: 'Fauzet is a gamified crypto micro-rewards platform. Claim, play, mine virtually and convert eligible rewards.',
+      ftLegal: 'LEGAL', ftTerms: 'Terms', ftPrivacy: 'Privacy', ftRisk: 'Risk notice', ftRewardPolicy: 'Reward policy', ftWithdrawPolicy: 'Withdrawal policy',
+      ftPlatform: 'PLATFORM', ftSupport: 'SUPPORT', ftContact: 'Contact', ftStatus: 'Status', ftRights: 'All rights reserved.',
+      ftDisclaimer: 'Risk notice: ZYXE is an internal utility and reward unit, not an investment. Rewards are variable and depend on valid activity, available pools and anti-fraud verification. Vault rewards are not guaranteed. The trading interface is simulated or treasury-controlled and is not a public exchange. Crypto withdrawals are subject to eligibility, fees, limits and security review. Availability may vary by country. Users are responsible for entering the correct wallet address and network.',
+    };
+    const es = {
+      navHow: 'Cómo funciona', navGames: 'Juegos', navMining: 'Minería', navRewards: 'Recompensas',
+      login: 'Iniciar sesión', getStarted: 'Comenzar',
+      heroA: 'Gana Zyxes.', heroB: 'Juega, reclama y crece.',
+      heroSub: 'Reclama recompensas, juega minijuegos, construye poder de minería virtual y convierte recompensas elegibles en criptomonedas soportadas.',
+      ctaStart: 'Empieza a ganar', ctaExplore: 'Explora Fauzet',
+      heroDisclaimer: 'ZYXE es una unidad interna de utilidad y recompensa. Las recompensas son variables, se basan en actividad válida y pueden estar sujetas a verificación, límites y controles antifraude.',
+      pvBalance: 'SALDO TOTAL', pvAvailable: 'disponible', pvPending: 'pendiente', pvLocked: 'bloqueado',
+      pvClaim: 'Reclamar ZYXEs', pvMining: 'PODER DE MINERÍA', pvEnergy: 'Energía', pvDaily: 'RECOMPENSAS DE HOY',
+      pvEstNote: 'Recompensa estimada — no garantizada', pvWallet: 'Saldo de billetera', pvReady: '¡Listo!', pvNextClaim: 'Próximo reclamo en', pvMiningPower: 'Poder de minería', pvActiveMiners: 'Mineros activos', pvEfficiency: 'Eficiencia', pvPoolShare: 'Pool diario', pvViewDetails: 'Ver detalles',
+      howTitle: 'Cómo funciona Fauzet', howSub: 'Cuatro pasos desde cero hasta recompensas elegibles.',
+      earnTitle: 'Formas de ganar', earnSub: 'Acumula ZYXEs con múltiples actividades. Cada recompensa se valida antes de liquidarse.',
+      zxTag: 'UNIDAD INTERNA DE UTILIDAD', zxTitle: '¿Qué puedes hacer con tus ZYXEs?',
+      zxDesc: 'ZYXE es la unidad de recompensa y utilidad del ecosistema Fauzet. Gánala con actividad validada y úsala dentro de la plataforma para crecer más rápido.',
+      zxLegal: 'ZYXE inicia como unidad interna sin precio público ni convertibilidad automática. No representa acciones, deuda ni promesa de rentabilidad.',
+      mnTag: 'MINERÍA VIRTUAL', mnTitle: 'Construye poder de minería. Comparte el pool.',
+      mnDesc: 'La minería en Fauzet es una simulación dentro del ecosistema — no se ejecuta Proof-of-Work real en tu dispositivo. Compra y mejora mineros virtuales, gestiona energía y eficiencia, y gana una parte de un pool diario limitado de ZYXE.',
+      mnFormula: 'FÓRMULA TRANSPARENTE',
+      mnFormulaText: 'tu hashpower válido ÷ hashpower total de la red × pool diario de minería',
+      mnRoom: 'SALA DE MINERÍA', mnActive: 'Minería activa', mnPool: 'Pool diario', mnShare: 'Tu parte', mnEff: 'Eficiencia', mnEst: 'Est. hoy',
+      gmTitle: 'Centro de juegos', gmSub: 'Juegos cortos y simples con recompensas validadas, costos de energía y límites diarios.', gmPlay: 'Jugar',
+      rfTitle: 'Construye tu Mining Crew',
+      rfDesc: 'Invita amigos y gana una parte de las recompensas generadas por la actividad válida de tu crew — en cuatro niveles. Nadie gana solo por registros.',
+      rfLegal: 'Las recompensas de crew se basan en actividad válida y pueden estar sujetas a verificación, límites y controles antifraude. Los porcentajes son configurables y no se garantizan ingresos.',
+      rfConfigNote: 'Los porcentajes mostrados son valores iniciales y pueden cambiar. Solo aplica actividad válida y elegible.',
+      vtTitle: 'Bloquea ZYXEs. Comparte el pool de recompensas.',
+      vtDesc: 'El ZYXE Vault te permite bloquear Zyxes por un periodo y recibir una parte de un pool variable, ponderada por la duración del bloqueo.',
+      vtMultNote: 'multiplicador de peso',
+      vtLegal: 'Las recompensas del Vault son variables, provienen de un pool limitado y no están garantizadas. El desbloqueo anticipado puede reducir o eliminar el bono. Las condiciones completas se muestran antes de confirmar.',
+      cvTag: 'CONVERTIR Y RETIRAR', cvTitle: 'Convierte ZYXEs elegibles',
+      cvDesc: 'Cuando tus recompensas estén validadas y sean elegibles, conviértelas en criptomonedas soportadas y retíralas a tu wallet externa.',
+      cvCardTitle: 'ACTIVOS SOPORTADOS',
+      tsTitle: 'Construido sobre confianza', tsSub: 'La seguridad y la transparencia son parte del producto, no una ocurrencia tardía.',
+      finalTitle: '¿Listo para empezar a ganar?', finalSub: 'Crea tu cuenta gratis y reclama tu recompensa de bienvenida.',
+      ftAbout: 'Fauzet es una plataforma gamificada de micro-recompensas cripto. Reclama, juega, mina virtualmente y convierte recompensas elegibles.',
+      ftLegal: 'LEGAL', ftTerms: 'Términos', ftPrivacy: 'Privacidad', ftRisk: 'Aviso de riesgo', ftRewardPolicy: 'Política de recompensas', ftWithdrawPolicy: 'Política de retiros',
+      ftPlatform: 'PLATAFORMA', ftSupport: 'SOPORTE', ftContact: 'Contacto', ftStatus: 'Estado', ftRights: 'Todos los derechos reservados.',
+      ftDisclaimer: 'Aviso de riesgo: ZYXE es una unidad interna de utilidad y recompensa, no una inversión. Las recompensas son variables y dependen de actividad válida, pools disponibles y verificación antifraude. Las recompensas del Vault no están garantizadas. La interfaz de trading es simulada o controlada por tesorería y no es un exchange público. Los retiros cripto están sujetos a elegibilidad, comisiones, límites y revisión de seguridad. La disponibilidad puede variar por país. El usuario es responsable de ingresar la wallet y la red correctas.',
+    };
+    return this.state.lang === 'es' ? es : en;
+  }
+
+  renderVals() {
+    const t = this.dict();
+    const es = this.state.lang === 'es';
+    const mm = Math.floor(this.state.secs / 60), ss = this.state.secs % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return {
+      t,
+      logoSrc: this.state.theme === 'dark' ? 'assets/logo-white.png' : 'assets/logo-color.png',
+      themeIcon: this.state.theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19',
+      toggleTheme: () => {
+        const th = this.state.theme === 'dark' ? 'light' : 'dark';
+        this.setState({ theme: th });
+        document.body.dataset.theme = th;
+        try { localStorage.setItem('fz_theme', th); } catch (e) {}
+      },
+      langLabel: es ? 'ES · EN' : 'EN · ES',
+      toggleLang: () => this.setState(s => ({ lang: s.lang === 'en' ? 'es' : 'en' })),
+      heroCountdown: pad(mm) + ':' + pad(ss),
+      heroBalance: this.state.bal.toLocaleString('en-US'),
+      howSteps: es ? [
+        { n: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email, verifica y protege tu cuenta en minutos.' },
+        { n: '02', title: 'Reclama y juega', desc: 'Usa el faucet, juega minijuegos y completa misiones diarias.' },
+        { n: '03', title: 'Gana y usa Zyxes', desc: 'Mejora mineros, compra boosts y participa en la economía interna.' },
+        { n: '04', title: 'Convierte lo elegible', desc: 'Convierte recompensas validadas en cripto soportada y retira a tu wallet.' },
+      ] : [
+        { n: '01', title: 'Create your account', desc: 'Sign up with your email, verify and secure your account in minutes.' },
+        { n: '02', title: 'Claim and play', desc: 'Use the faucet, play simple games and complete daily missions.' },
+        { n: '03', title: 'Earn and use Zyxes', desc: 'Upgrade miners, buy boosts and take part in the internal economy.' },
+        { n: '04', title: 'Convert eligible rewards', desc: 'Turn validated rewards into supported crypto and withdraw to your wallet.' },
+      ],
+      earnMethods: es ? [
+        { icon: '💧', bg: 'rgba(34,211,238,.12)', fg: 'var(--cyan)', img: 'assets/ic-faucet.png', title: 'Faucet', desc: 'Reclamos periódicos con cooldown, rachas y multiplicadores.' },
+        { icon: '🎮', bg: 'rgba(46,230,166,.12)', fg: 'var(--green)', img: 'assets/ic-games.png', title: 'Juegos', desc: 'Minijuegos cortos con recompensas validadas en servidor.' },
+        { icon: '⛏️', bg: 'rgba(46,230,166,.12)', fg: 'var(--green)', img: 'assets/ic-mining.png', title: 'Minería virtual', desc: 'Comparte un pool diario según tu hashpower válido.' },
+        { icon: '🎯', bg: 'rgba(34,211,238,.12)', fg: 'var(--cyan)', img: 'assets/ic-missions.png', title: 'Misiones', desc: 'Retos diarios, semanales y patrocinados con progreso claro.' },
+        { icon: '👥', bg: 'rgba(230,140,20,.14)', fg: 'var(--purple2)', img: 'assets/ic-crew.png', title: 'Mining Crew', desc: 'Comisiones de 4 niveles por actividad válida de tu red.' },
+        { icon: '🏆', bg: 'rgba(230,140,20,.14)', fg: 'var(--purple2)', img: 'assets/ic-events.png', title: 'Eventos', desc: 'Rankings, torneos y temporadas con premios de pool fijo.' },
+        { icon: '📺', bg: 'rgba(34,211,238,.12)', fg: 'var(--cyan)', img: 'assets/ic-ads.png', title: 'Actividades recompensadas', desc: 'Anuncios y ofertas voluntarias verificadas por el proveedor.' },
+      ] : [
+        { icon: '💧', bg: 'rgba(34,211,238,.12)', fg: 'var(--cyan)', img: 'assets/ic-faucet.png', title: 'Faucet', desc: 'Periodic claims with cooldowns, streaks and multipliers.' },
+        { icon: '🎮', bg: 'rgba(46,230,166,.12)', fg: 'var(--green)', img: 'assets/ic-games.png', title: 'Games', desc: 'Short skill games with server-validated rewards.' },
+        { icon: '⛏️', bg: 'rgba(46,230,166,.12)', fg: 'var(--green)', img: 'assets/ic-mining.png', title: 'Virtual mining', desc: 'Share a limited daily pool based on your valid hashpower.' },
+        { icon: '🎯', bg: 'rgba(34,211,238,.12)', fg: 'var(--cyan)', img: 'assets/ic-missions.png', title: 'Missions', desc: 'Daily, weekly and sponsored challenges with clear progress.' },
+        { icon: '👥', bg: 'rgba(230,140,20,.14)', fg: 'var(--purple2)', img: 'assets/ic-crew.png', title: 'Referral crew', desc: 'Four-level rewards from your crew\u2019s valid activity.' },
+        { icon: '🏆', bg: 'rgba(230,140,20,.14)', fg: 'var(--purple2)', img: 'assets/ic-events.png', title: 'Events', desc: 'Rankings, tournaments and seasons with fixed prize pools.' },
+        { icon: '📺', bg: 'rgba(34,211,238,.12)', fg: 'var(--cyan)', img: 'assets/ic-ads.png', title: 'Rewarded activities', desc: 'Voluntary ads and offers, verified by the provider before credit.' },
+      ],
+      zyxeUses: (es ? ['Comprar boosts', 'Comprar aceleradores', 'Mejorar mineros', 'Restaurar energía', 'Entrar a eventos', 'Misiones premium', 'Usar el Vault', 'Economía interna'] :
+        ['Buy boosts', 'Buy accelerators', 'Upgrade miners', 'Restore energy', 'Enter special events', 'Premium missions', 'Use the Vault', 'Internal economy']).map(label => ({ label })),
+      demoMiners: [
+        { icon: '🖥️', name: 'Drip Node', hash: '24 GH/s', border: 'rgba(34,211,238,.25)' },
+        { icon: '⚙️', name: 'Core Rig', hash: '46 GH/s', border: 'rgba(46,230,166,.25)' },
+        { icon: '🔮', name: 'Nova Rig', hash: '58 GH/s', border: 'rgba(230,140,20,.35)' },
+      ],
+      games: es ? [
+        { icon: '⛏️', bg: 'linear-gradient(135deg,rgba(46,230,166,.14),rgba(34,211,238,.08))', img: 'assets/game-tap.png', name: 'Tap Miner', diff: 'FÁCIL', diffColor: 'var(--green)', desc: 'Toca al ritmo y acumula puntos antes de que acabe el tiempo.', energy: '5 energía', reward: '5–25 ZYXE' },
+        { icon: '🃏', bg: 'linear-gradient(135deg,rgba(34,211,238,.14),rgba(230,140,20,.1))', img: 'assets/game-memory.png', name: 'Memory Drops', diff: 'MEDIO', diffColor: 'var(--cyan)', desc: 'Encuentra los pares. Bonus por tiempo y precisión.', energy: '8 energía', reward: '10–40 ZYXE' },
+        { icon: '🏃', bg: 'linear-gradient(135deg,rgba(230,140,20,.16),rgba(34,211,238,.08))', img: 'assets/game-runner.png', name: 'Hash Runner', diff: 'MEDIO', diffColor: 'var(--cyan)', desc: 'Esquiva obstáculos y multiplica tu puntuación.', energy: '10 energía', reward: '10–50 ZYXE' },
+        { icon: '💧', bg: 'linear-gradient(135deg,rgba(34,211,238,.16),rgba(46,230,166,.08))', img: 'assets/game-faucet.png', name: 'Faucet Rush', diff: 'FÁCIL', diffColor: 'var(--green)', desc: 'Recoge gotas a contrarreloj y mantén tu racha.', energy: '5 energía', reward: '5–30 ZYXE' },
+      ] : [
+        { icon: '⛏️', bg: 'linear-gradient(135deg,rgba(46,230,166,.14),rgba(34,211,238,.08))', img: 'assets/game-tap.png', name: 'Tap Miner', diff: 'EASY', diffColor: 'var(--green)', desc: 'Tap to the rhythm and stack points before time runs out.', energy: '5 energy', reward: '5–25 ZYXE' },
+        { icon: '🃏', bg: 'linear-gradient(135deg,rgba(34,211,238,.14),rgba(230,140,20,.1))', img: 'assets/game-memory.png', name: 'Memory Drops', diff: 'MEDIUM', diffColor: 'var(--cyan)', desc: 'Match the pairs. Time and accuracy bonuses.', energy: '8 energy', reward: '10–40 ZYXE' },
+        { icon: '🏃', bg: 'linear-gradient(135deg,rgba(230,140,20,.16),rgba(34,211,238,.08))', img: 'assets/game-runner.png', name: 'Hash Runner', diff: 'MEDIUM', diffColor: 'var(--cyan)', desc: 'Dodge obstacles and multiply your score.', energy: '10 energy', reward: '10–50 ZYXE' },
+        { icon: '💧', bg: 'linear-gradient(135deg,rgba(34,211,238,.16),rgba(46,230,166,.08))', img: 'assets/game-faucet.png', name: 'Faucet Rush', diff: 'EASY', diffColor: 'var(--green)', desc: 'Collect drops against the clock and keep your streak.', energy: '5 energy', reward: '5–30 ZYXE' },
+      ],
+      refLevels: es ? [
+        { level: 1, img: 'assets/lvl-1.png', pct: '5%', alpha: '.35', label: 'Invitados directos', note: 'Sobre actividad válida y monetizable' },
+        { level: 2, img: 'assets/lvl-2.png', pct: '2%', alpha: '.26', label: 'Crew de tu crew', note: 'Sobre actividad válida y monetizable' },
+        { level: 3, img: 'assets/lvl-3.png', pct: '1%', alpha: '.18', label: 'Tercer nivel', note: 'Sobre actividad válida y monetizable' },
+        { level: 4, img: 'assets/lvl-4.png', pct: '0.5%', alpha: '.12', label: 'Cuarto nivel', note: 'Sobre actividad válida y monetizable' },
+      ] : [
+        { level: 1, img: 'assets/lvl-1.png', pct: '5%', alpha: '.35', label: 'Direct invites', note: 'On valid, monetizable activity' },
+        { level: 2, img: 'assets/lvl-2.png', pct: '2%', alpha: '.26', label: 'Your crew\u2019s crew', note: 'On valid, monetizable activity' },
+        { level: 3, img: 'assets/lvl-3.png', pct: '1%', alpha: '.18', label: 'Third level', note: 'On valid, monetizable activity' },
+        { level: 4, img: 'assets/lvl-4.png', pct: '0.5%', alpha: '.12', label: 'Fourth level', note: 'On valid, monetizable activity' },
+      ],
+      vaultOptions: es ? [
+        { name: 'Flexible', note: 'Disponibilidad inmediata', mult: '1.00×', border: 'var(--line2)' },
+        { name: '7 días', note: 'Bloqueo corto', mult: '1.05×', border: 'rgba(230,140,20,.2)' },
+        { name: '30 días', note: 'Compromiso medio', mult: '1.15×', border: 'rgba(230,140,20,.3)' },
+        { name: '90 días', note: 'Mayor peso en el pool', mult: '1.35×', border: 'rgba(230,140,20,.45)' },
+      ] : [
+        { name: 'Flexible', note: 'Unlock anytime', mult: '1.00×', border: 'var(--line2)' },
+        { name: '7 days', note: 'Short lock', mult: '1.05×', border: 'rgba(230,140,20,.2)' },
+        { name: '30 days', note: 'Medium commitment', mult: '1.15×', border: 'rgba(230,140,20,.3)' },
+        { name: '90 days', note: 'Highest pool weight', mult: '1.35×', border: 'rgba(230,140,20,.45)' },
+      ],
+      cvPoints: (es ? [
+        'Solo los ZYXEs elegibles y validados pueden convertirse.',
+        'Mínimos, comisiones de red y de servicio visibles antes de confirmar.',
+        'Revisión de seguridad y antifraude en cada retiro.',
+        'Estado de confirmación blockchain con txid verificable.',
+      ] : [
+        'Only eligible, validated ZYXEs can be converted.',
+        'Minimums, network and service fees shown before you confirm.',
+        'Security and anti-fraud review on every withdrawal.',
+        'Blockchain confirmation status with a verifiable txid.',
+      ]).map(text => ({ text })),
+      cryptos: [
+        { img: 'assets/coin-ltc.png', noImg: false, name: 'Litecoin', status: es ? 'Fase 1' : 'Phase 1', statusColor: 'var(--green)' },
+        { img: 'assets/coin-doge.png', noImg: false, name: 'Dogecoin', status: es ? 'Fase 1' : 'Phase 1', statusColor: 'var(--green)' },
+        { img: 'assets/coin-bch.png', noImg: false, name: 'Bitcoin Cash', status: es ? 'Fase 2' : 'Phase 2', statusColor: 'var(--cyan)' },
+        { img: 'assets/coin-dash.png', noImg: false, name: 'Dash', status: es ? 'Fase 2' : 'Phase 2', statusColor: 'var(--cyan)' },
+        { img: 'assets/coin-btc.png', noImg: false, name: 'Bitcoin', status: es ? 'Pr\u00f3ximamente' : 'Later phase', statusColor: 'var(--muted)' },
+      ],
+      trustItems: es ? [
+        { icon: '🔐', img: 'assets/trust-2fa.png', title: 'Autenticación 2FA', desc: 'Obligatoria para retiros, cambios de wallet y acciones sensibles.' },
+        { icon: '🛡️', img: 'assets/trust-fraud.png', title: 'Monitoreo antifraude', desc: 'Risk score, detección de multicuentas y validación de actividad.' },
+        { icon: '📋', img: 'assets/trust-whitelist.png', title: 'Lista blanca de wallets', desc: 'Solo retiras a direcciones confirmadas, con periodo de enfriamiento.' },
+        { icon: '🔍', img: 'assets/trust-review.png', title: 'Revisión de retiros', desc: 'Cada retiro pasa validaciones automáticas y revisión cuando aplica.' },
+        { icon: '📒', img: 'assets/trust-history.png', title: 'Historial completo', desc: 'Cada movimiento de saldo queda registrado y es trazable.' },
+        { icon: '🚨', img: 'assets/trust-alert.png', title: 'Protección de cuenta', desc: 'Alertas de seguridad, gestión de dispositivos y congelación de emergencia.' },
+      ] : [
+        { icon: '🔐', img: 'assets/trust-2fa.png', title: 'Two-factor authentication', desc: 'Required for withdrawals, wallet changes and sensitive actions.' },
+        { icon: '🛡️', img: 'assets/trust-fraud.png', title: 'Anti-fraud monitoring', desc: 'Risk scoring, multi-account detection and activity validation.' },
+        { icon: '📋', img: 'assets/trust-whitelist.png', title: 'Wallet whitelist', desc: 'Withdraw only to confirmed addresses, with a security cooldown.' },
+        { icon: '🔍', img: 'assets/trust-review.png', title: 'Withdrawal review', desc: 'Every withdrawal passes automated checks and review when needed.' },
+        { icon: '📒', img: 'assets/trust-history.png', title: 'Full transaction history', desc: 'Every balance change is recorded and traceable.' },
+        { icon: '🚨', img: 'assets/trust-alert.png', title: 'Account protection', desc: 'Security alerts, device management and emergency freeze.' },
+      ],
+      faqs: es ? [
+        { q: '¿Qué es ZYXE?', a: 'ZYXE es la unidad interna de recompensa y utilidad de Fauzet. Se gana con actividad validada y se usa dentro de la plataforma. En su etapa inicial no tiene precio público ni convertibilidad automática, y no representa una inversión.' },
+        { q: '¿La minería es real?', a: 'No. La minería de Fauzet es una simulación económica y de juego dentro del ecosistema. No se ejecuta minería Proof-of-Work en tu dispositivo. Los usuarios comparten un pool diario limitado de ZYXE según su hashpower virtual válido.' },
+        { q: '¿Puedo retirar mis ZYXEs?', a: 'Solo el saldo elegible puede convertirse en criptomonedas soportadas, sujeto a mínimos, límites, comisiones y revisión de seguridad. Los bonos promocionales y saldos pendientes no son retirables.' },
+        { q: '¿Cómo funcionan las recompensas del Vault?', a: 'El Vault reparte un pool variable entre los participantes según su monto y plazo de bloqueo. No hay interés garantizado ni APY fijo; la recompensa depende del presupuesto disponible del periodo.' },
+        { q: '¿Cómo gana dinero mi Mining Crew?', a: 'Ganas un porcentaje sobre la actividad válida y monetizable de tu red, en cuatro niveles. No se paga por registros ni por depósitos, y las comisiones están sujetas a topes y verificación antifraude.' },
+        { q: '¿El trading es un exchange real?', a: 'No. El módulo de microtrading es simulado o controlado por la tesorería de Fauzet. No es un exchange público, no ofrece apalancamiento ni derivados, y muestra claramente su naturaleza en la interfaz.' },
+        { q: '¿Está disponible en mi país?', a: 'La disponibilidad de recompensas, conversiones y retiros puede variar según el país y la regulación local. Verás las condiciones aplicables al crear tu cuenta.' },
+      ] : [
+        { q: 'What is ZYXE?', a: 'ZYXE is Fauzet\u2019s internal reward and utility unit. You earn it through validated activity and use it inside the platform. In its initial stage it has no public price or automatic convertibility, and it is not an investment.' },
+        { q: 'Is the mining real?', a: 'No. Fauzet mining is an economic and game simulation inside the ecosystem. No real Proof-of-Work runs on your device. Users share a limited daily ZYXE pool based on their valid virtual hashpower.' },
+        { q: 'Can I withdraw my ZYXEs?', a: 'Only your eligible balance can be converted into supported cryptocurrencies, subject to minimums, limits, fees and security review. Promotional bonuses and pending balances are not withdrawable.' },
+        { q: 'How do Vault rewards work?', a: 'The Vault distributes a variable pool among participants based on their amount and lock period. There is no guaranteed interest or fixed APY; rewards depend on the period\u2019s available budget.' },
+        { q: 'How does my Mining Crew earn?', a: 'You earn a percentage of your network\u2019s valid, monetizable activity across four levels. Nothing is paid for registrations or deposits alone, and commissions are subject to caps and anti-fraud verification.' },
+        { q: 'Is the trading a real exchange?', a: 'No. The microtrading module is simulated or treasury-controlled. It is not a public exchange, offers no leverage or derivatives, and clearly labels its nature in the interface.' },
+        { q: 'Is Fauzet available in my country?', a: 'Availability of rewards, conversions and withdrawals may vary by country and local regulation. You will see the applicable conditions when creating your account.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

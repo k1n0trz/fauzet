@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fauzet — Admin</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080B12;color:#E5E7EB;font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#22D3EE;text-decoration:none}
+a:hover{color:#7ee6f5}
+input,select,button{font-family:'Manrope',sans-serif}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+::selection{background:#22D3EE;color:#080B12}
+.hnav{transition:background .15s ease}
+.hnav:hover{background:rgba(229,231,235,.05)}
+.hl{transition:transform .15s ease}
+.hl:hover{transform:translateY(-1px)}
+.inp{outline:none;transition:border-color .18s ease}
+.inp:focus{border-color:#22D3EE!important}
+.inp-p{outline:none;transition:border-color .18s ease}
+.inp-p:focus{border-color:#7C3AED!important}
+.inp-a{outline:none;transition:border-color .18s ease}
+.inp-a:focus{border-color:#f59e0b!important}
+</style>
+</head>
+<body>
+<div id="app" style="display:flex;min-height:100vh"></div>
+<div id="overlayRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(function(){
+"use strict";
+
+var MONO = "font-family:'JetBrains Mono',monospace";
+var GROT = "font-family:'Space Grotesk',sans-serif";
+var CARD = 'background:#111827;border:1px solid rgba(229,231,235,.08)';
+
+var S = { screen: 'overview', userOpen: false, adjustOpen: false, econConfirmOpen: false, ownerWdOpen: false, toast: null };
+var _t = null;
+
+var NAV = [
+  { h: 'PLATFORM' },
+  { id: 'overview', icon: '⬒', label: 'Overview' },
+  { id: 'users', icon: '👤', label: 'Users' },
+  { id: 'economy', icon: '⚖️', label: 'Economy' },
+  { id: 'faucetadm', icon: '💧', label: 'Faucet' },
+  { id: 'gamesadm', icon: '🎮', label: 'Games' },
+  { id: 'miningadm', icon: '⛏️', label: 'Mining' },
+  { id: 'referraladm', icon: '👥', label: 'Referrals' },
+  { id: 'vaultadm', icon: '🏦', label: 'Vault' },
+  { id: 'tradingadm', icon: '📈', label: 'Trading' },
+  { h: 'FINANCE' },
+  { id: 'withdrawals', icon: '📤', label: 'Withdrawals', badge: '7' },
+  { id: 'treasury', icon: '🏛️', label: 'Treasury' },
+  { id: 'ledger', icon: '📒', label: 'Ledger & Audit' },
+  { h: 'RISK' },
+  { id: 'fraud', icon: '🚨', label: 'Fraud & Risk', badge: '4' },
+  { h: 'OWNER' },
+  { id: 'owner', icon: '🔒', label: 'Owner Dashboard' },
+  { h: 'SYSTEM' },
+  { id: 'config', icon: '⚙️', label: 'Configuration' },
+  { id: 'roles', icon: '🛡️', label: 'Roles & Permissions' }
+];
+var TITLES = {
+  overview: 'Platform Overview', users: 'User Management', economy: 'Economy Controls',
+  withdrawals: 'Withdrawal Review Queue', treasury: 'Treasury', fraud: 'Fraud & Risk',
+  ledger: 'Ledger & Audit', owner: 'Owner Dashboard', faucetadm: 'Faucet Admin', gamesadm: 'Games Admin',
+  miningadm: 'Mining Admin', referraladm: 'Referral Admin', vaultadm: 'Vault Admin', tradingadm: 'Trading Admin',
+  config: 'System Configuration', roles: 'Roles & Permissions'
+};
+var BUILT = ['overview', 'users', 'economy', 'withdrawals', 'treasury', 'fraud', 'ledger', 'owner'];
+
+function toast(msg) {
+  S.toast = msg;
+  renderToast();
+  clearTimeout(_t);
+  _t = setTimeout(function(){ S.toast = null; renderToast(); }, 2400);
+}
+
+// ---------- screens ----------
+function vOverview() {
+  var kpis = [
+    { label: 'REGISTERED USERS', value: '48,210', delta: '+3.1%', deltaColor: '#2EE6A6', color: '#E5E7EB' },
+    { label: 'DAU / MAU', value: '9.2K / 31K', delta: '+1.8%', deltaColor: '#2EE6A6', color: '#E5E7EB' },
+    { label: 'ZYXE ISSUED (24H)', value: '1.24M', delta: '+0.6%', deltaColor: '#f59e0b', color: '#2EE6A6' },
+    { label: 'ZYXE BURNED (24H)', value: '410K', delta: '+4.2%', deltaColor: '#2EE6A6', color: '#f87171' },
+    { label: 'PENDING WITHDRAWALS', value: '7', delta: '-2', deltaColor: '#2EE6A6', color: '#f59e0b' },
+    { label: 'GROSS REVENUE (30D)', value: '$18.4K', delta: '+9.4%', deltaColor: '#2EE6A6', color: '#E5E7EB' },
+    { label: 'TREASURY BALANCE', value: '$52.1K', delta: '+2.2%', deltaColor: '#2EE6A6', color: '#22D3EE' },
+    { label: 'FRAUD ALERTS', value: '4', delta: '+1', deltaColor: '#f87171', color: '#f87171' }
+  ].map(function(k){
+    return `<div style="${CARD};border-radius:13px;padding:16px 18px"><div style="font-size:10.5px;color:#6B7280;font-weight:800;letter-spacing:.06em;margin-bottom:6px">${k.label}</div><div style="${MONO};font-size:20px;color:${k.color}">${k.value}</div><div style="font-size:11px;color:${k.deltaColor};margin-top:3px">${k.delta} <span style="color:#4B5563">vs 7d</span></div></div>`;
+  }).join('');
+  var bars = '';
+  for (var i = 0; i < 14; i++) {
+    var h1 = 60 + Math.round(Math.sin(i * 1.3) * 20 + 40);
+    var h2 = 20 + Math.round(Math.sin(i * 1.7 + 2) * 12 + 18);
+    bars += `<rect x="${20 + i * 41}" y="${170 - h1}" width="16" height="${h1}" fill="rgba(57,255,136,.7)" rx="2"></rect><rect x="${38 + i * 41}" y="${170 - h2}" width="16" height="${h2}" fill="rgba(248,113,113,.6)" rx="2"></rect>`;
+  }
+  var alerts = [
+    { accent: '#f87171', title: '4 fraud cases pending review', body: 'Multi-account cluster detected on 2 devices', go: 'fraud' },
+    { accent: '#f59e0b', title: '7 withdrawals in manual queue', body: 'Oldest waiting 3h 12m', go: 'withdrawals' },
+    { accent: '#22D3EE', title: 'Vault period ends in 2 days', body: '120K ZYXE pool · 8.4M locked', go: 'economy' },
+    { accent: '#2EE6A6', title: 'Hash Season 02 starts Jul 14', body: 'Event pool budgeted: 500K ZYXE', go: 'economy' }
+  ].map(function(oa){
+    return `<button data-act="nav" data-i="${oa.go}" style="background:#0A0E17;border:1px solid rgba(229,231,235,.06);border-left:3px solid ${oa.accent};border-radius:10px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;color:#E5E7EB"><div style="font-size:12.5px;font-weight:700">${oa.title}</div><div style="font-size:11px;color:#6B7280;margin-top:2px">${oa.body}</div></button>`;
+  }).join('');
+  var econ = [
+    { label: 'REWARD COSTS (24H)', rows: [ { k: 'Faucet', v: '182K', c: '#E5E7EB' }, { k: 'Mining pool', v: '250K', c: '#E5E7EB' }, { k: 'Games + missions', v: '198K', c: '#E5E7EB' } ] },
+    { label: 'REVENUE (24H)', rows: [ { k: 'Rewarded ads', v: '$310', c: '#2EE6A6' }, { k: 'Boost sales', v: '$204', c: '#2EE6A6' }, { k: 'Fees', v: '$88', c: '#2EE6A6' } ] },
+    { label: 'REFERRAL COSTS', rows: [ { k: 'L1 (5%)', v: '31K', c: '#E5E7EB' }, { k: 'L2-L4', v: '12K', c: '#E5E7EB' }, { k: 'Capped/blocked', v: '2.1K', c: '#f59e0b' } ] },
+    { label: 'ZYXE SUPPLY', rows: [ { k: 'Circulating', v: '94.2M', c: '#E5E7EB' }, { k: 'Locked (Vault)', v: '8.4M', c: '#c4a5f5' }, { k: 'Eligible', v: '21.7M', c: '#22D3EE' } ] }
+  ].map(function(ec){
+    var rows = ec.rows.map(function(er){ return `<div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#9CA3AF">${er.k}</span><span style="${MONO};color:${er.c}">${er.v}</span></div>`; }).join('');
+    return `<div style="${CARD};border-radius:13px;padding:16px 18px"><div style="font-size:10.5px;color:#6B7280;font-weight:800;letter-spacing:.06em;margin-bottom:8px">${ec.label}</div><div style="display:flex;flex-direction:column;gap:5px">${rows}</div></div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px">${kpis}</div>
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:18px">
+      <div style="${CARD};border-radius:16px;padding:20px 22px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280">ISSUANCE VS BURN · 14 DAYS</span>
+          <span style="font-size:11px;color:#6B7280"><span style="color:#2EE6A6">■</span> issued <span style="color:#f87171;margin-left:8px">■</span> burned</span>
+        </div>
+        <svg viewBox="0 0 600 180" style="width:100%;height:auto;display:block" aria-label="Issuance vs burn">${bars}</svg>
+        <div style="display:flex;justify-content:space-between;${MONO};font-size:10px;color:#4B5563;margin-top:6px"><span>Jun 28</span><span>Jul 11</span></div>
+      </div>
+      <div style="${CARD};border-radius:16px;padding:20px 22px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">NEEDS ATTENTION</div>
+        <div style="display:flex;flex-direction:column;gap:10px">${alerts}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${econ}</div>
+  </div>`;
+}
+
+function vUsers() {
+  if (S.userOpen) {
+    var signals = [
+      { rule: 'Multiple accounts / device', evidence: '3 accts · FP a81f', color: '#f87171' },
+      { rule: 'VPN / datacenter IP', evidence: 'AS14061 · 12 logins', color: '#f59e0b' },
+      { rule: 'Referral loop suspicion', evidence: 'L1 ↔ L3 overlap', color: '#f59e0b' },
+      { rule: 'Game score outliers', evidence: 'p99.8 · Tap Miner', color: '#22D3EE' }
+    ].map(function(rs){
+      return `<div style="display:flex;justify-content:space-between;background:#0A0E17;border-radius:9px;padding:9px 13px;font-size:12px;gap:10px"><span style="color:#9CA3AF">${rs.rule}</span><span style="${MONO};color:${rs.color};flex:none">${rs.evidence}</span></div>`;
+    }).join('');
+    var devices = [
+      { ip: '189.203.44.x', device: 'Chrome · Android 15 · FP a81f', flag: 'SHARED DEVICE ×3', flagColor: '#f87171', when: 'Jul 11' },
+      { ip: '45.133.18.x', device: 'Firefox · Windows · FP c202', flag: 'DATACENTER', flagColor: '#f59e0b', when: 'Jul 09' },
+      { ip: '189.203.44.x', device: 'Fauzet App · Android', flag: 'OK', flagColor: '#2EE6A6', when: 'Jul 05' }
+    ].map(function(ud){
+      return `<div style="display:flex;gap:14px;padding:8px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:12.5px;flex-wrap:wrap;align-items:center"><span style="${MONO};color:#9CA3AF;min-width:110px">${ud.ip}</span><span style="flex:1">${ud.device}</span><span style="font-size:10.5px;color:${ud.flagColor};font-weight:800">${ud.flag}</span><span style="color:#4B5563;font-size:11px">${ud.when}</span></div>`;
+    }).join('');
+    return `
+    <div style="animation:fadeUp .3s ease both">
+      <button data-act="closeUser" style="background:none;border:none;color:#22D3EE;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px">← Back to users</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="${CARD};border-radius:16px;padding:22px">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+            <span style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#22D3EE,#7C3AED);display:grid;place-items:center;font-size:18px;font-weight:800;color:#fff">K</span>
+            <div>
+              <div style="font-size:16px;font-weight:800">kripto_kai <span style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.1);padding:2px 8px;border-radius:5px;margin-left:6px">RISK 72</span></div>
+              <div style="font-size:11.5px;color:#6B7280;${MONO}">UID-100482 · kai@mail.com · MX · joined May 12</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+            <div style="background:#0A0E17;border-radius:9px;padding:10px 12px"><div style="font-size:10px;color:#6B7280">BALANCE</div><div style="${MONO};font-size:14px">8,412</div></div>
+            <div style="background:#0A0E17;border-radius:9px;padding:10px 12px"><div style="font-size:10px;color:#6B7280">ELIGIBLE</div><div style="${MONO};font-size:14px">3,100</div></div>
+            <div style="background:#0A0E17;border-radius:9px;padding:10px 12px"><div style="font-size:10px;color:#6B7280">Crew</div><div style="${MONO};font-size:14px">31 (L1-4)</div></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button data-act="toastAction" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">Freeze</button>
+            <button data-act="toastAction" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">Require verification</button>
+            <button data-act="toastAction" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#22D3EE;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">Reset security</button>
+            <button data-act="openAdjust" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);color:#c4a5f5;font-size:11.5px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer">± Adjust balance</button>
+          </div>
+        </div>
+        <div style="background:#111827;border:1px solid rgba(245,158,11,.25);border-radius:16px;padding:22px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#f59e0b;margin-bottom:12px">⚠ RISK SIGNALS</div>
+          <div style="display:flex;flex-direction:column;gap:8px">${signals}</div>
+        </div>
+      </div>
+      <div style="${CARD};border-radius:14px;padding:18px 22px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">DEVICE & IP HISTORY</div>
+        <div style="display:flex;flex-direction:column">${devices}</div>
+      </div>
+    </div>`;
+  }
+  var rows = [
+    { initial: 'M', name: 'mateo_dr', joined: 'Mar 2026', country: 'Colombia', balance: '3,520', eligible: '1,450', risk: '12', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+    { initial: 'A', name: 'satoshi_ana', joined: 'Apr 2026', country: 'México', balance: '9,104', eligible: '4,890', risk: '8', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+    { initial: 'K', name: 'kripto_kai', joined: 'May 2026', country: 'México', balance: '8,412', eligible: '3,100', risk: '72', riskColor: '#f59e0b', status: 'REVIEW', stColor: '#f59e0b' },
+    { initial: 'L', name: 'block_leo', joined: 'May 2026', country: 'España', balance: '1,220', eligible: '540', risk: '22', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' },
+    { initial: 'D', name: 'doge_dan', joined: 'Jun 2026', country: 'Argentina', balance: '140', eligible: '0', risk: '31', riskColor: '#22D3EE', status: 'ACTIVE', stColor: '#2EE6A6' },
+    { initial: 'F', name: 'farm_x22', joined: 'Jul 2026', country: 'Unknown (VPN)', balance: '4,880', eligible: '2,900', risk: '91', riskColor: '#f87171', status: 'FROZEN', stColor: '#f87171' },
+    { initial: 'H', name: 'hashqueen', joined: 'Feb 2026', country: 'Chile', balance: '22,410', eligible: '12,300', risk: '5', riskColor: '#2EE6A6', status: 'ACTIVE', stColor: '#2EE6A6' }
+  ].map(function(u){
+    return `
+    <div style="display:grid;grid-template-columns:1.4fr 1fr .8fr .8fr .7fr .7fr .8fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(229,231,235,.05);font-size:13px;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="width:28px;height:28px;flex:none;border-radius:50%;background:linear-gradient(135deg,#22D3EE,#7C3AED);display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff">${u.initial}</span>
+        <div style="min-width:0"><div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div><div style="font-size:10.5px;color:#6B7280">${u.joined}</div></div>
+      </div>
+      <span style="color:#9CA3AF">${u.country}</span>
+      <span style="${MONO}">${u.balance}</span>
+      <span style="${MONO};color:#9CA3AF">${u.eligible}</span>
+      <span style="${MONO};color:${u.riskColor}">${u.risk}</span>
+      <span style="font-size:10px;font-weight:800;color:${u.stColor}">${u.status}</span>
+      <button data-act="openUser" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#22D3EE;font-size:11px;font-weight:800;padding:6px 14px;border-radius:8px;cursor:pointer;justify-self:end">View</button>
+    </div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <input type="search" placeholder="Search by username, email, UID, IP or wallet…" class="inp" style="flex:1;min-width:220px;box-sizing:border-box;background:#111827;border:1px solid rgba(229,231,235,.1);border-radius:10px;padding:11px 16px;color:#E5E7EB;font-size:13.5px">
+      <select style="background:#111827;border:1px solid rgba(229,231,235,.1);border-radius:10px;padding:11px 12px;color:#9CA3AF;font-size:13px;outline:none">
+        <option>All statuses</option><option>Active</option><option>Frozen</option><option>Suspended</option><option>Under review</option>
+      </select>
+    </div>
+    <div style="${CARD};border-radius:14px;overflow-x:auto">
+      <div style="min-width:820px">
+        <div style="display:grid;grid-template-columns:1.4fr 1fr .8fr .8fr .7fr .7fr .8fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(229,231,235,.07);font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#6B7280">
+          <span>USER</span><span>COUNTRY</span><span>BALANCE</span><span>ELIGIBLE</span><span>RISK</span><span>STATUS</span><span></span>
+        </div>
+        ${rows}
+      </div>
+    </div>
+  </div>`;
+}
+
+function vEconomy() {
+  var groups = [
+    { title: 'DAILY ISSUANCE & POOLS', params: [ ['Daily issuance cap','1,400,000'], ['Faucet budget / day','200,000'], ['Mining pool / day','250,000'], ['Games + missions pools','220,000'], ['Vault pool / period','120,000'], ['Event pool','500,000'] ] },
+    { title: 'FAUCET', params: [ ['Claim cooldown (min)','15'], ['Reward range','5 – 25'], ['Daily claim limit','8'], ['Captcha after N claims','3'], ['Streak bonus @7d','+20%'] ] },
+    { title: 'REFERRALS (MINING CREW)', params: [ ['Level 1 %','5.0'], ['Level 2 %','2.0'], ['Level 3 %','1.0'], ['Level 4 %','0.5'], ['Monthly cap / referrer','50,000'] ] },
+    { title: 'CONVERSION & WITHDRAWALS', params: [ ['Min conversion (ZYXE)','500'], ['Min withdrawal (ZYXE)','1,000'], ['Daily withdrawal cap','50,000'], ['Spread %','1.0'], ['Processing fee %','1.0'], ['Burn / recycle / treasury','40 / 40 / 20'] ] }
+  ].map(function(eg){
+    var params = eg.params.map(function(p){
+      return `<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:12.5px;color:#9CA3AF">${p[0]}</span><input type="text" value="${p[1]}" readonly style="width:110px;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.1);border-radius:8px;padding:7px 10px;color:#E5E7EB;font-size:12.5px;${MONO};text-align:right;outline:none"></div>`;
+    }).join('');
+    return `<div style="${CARD};border-radius:16px;padding:20px 22px"><div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">${eg.title}</div><div style="display:flex;flex-direction:column;gap:10px">${params}</div><button data-act="openEconConfirm" style="margin-top:14px;width:100%;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#22D3EE;font-size:12px;font-weight:800;padding:9px;border-radius:9px;cursor:pointer">Save changes…</button></div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.18);border-radius:11px;padding:11px 16px;margin-bottom:18px;font-size:12px;color:#9CA3AF">Every parameter is configurable and versioned. Dangerous changes require confirmation and show an economic impact preview before saving.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">${groups}</div>
+  </div>`;
+}
+
+function vWithdrawals() {
+  var kpis = [
+    { label: 'IN QUEUE', value: '7', color: '#f59e0b' },
+    { label: 'AUTO-APPROVED (24H)', value: '132', color: '#2EE6A6' },
+    { label: 'REJECTED (24H)', value: '3', color: '#f87171' },
+    { label: 'AVG REVIEW TIME', value: '38 min', color: '#22D3EE' }
+  ].map(function(wk){
+    return `<div style="${CARD};border-radius:13px;padding:14px 18px"><div style="font-size:10.5px;color:#6B7280;font-weight:800;margin-bottom:5px">${wk.label}</div><div style="${MONO};font-size:18px;color:${wk.color}">${wk.value}</div></div>`;
+  }).join('');
+  var queue = [
+    { user: 'satoshi_ana', id: 'WD-2201', when: '12 min ago', amount: '0.21 LTC', dest: 'ltc1qa4…88x ✓', risk: '8', riskColor: '#2EE6A6', age: '3 months', border: 'rgba(229,231,235,.08)', flagged: false },
+    { user: 'kripto_kai', id: 'WD-2199', when: '44 min ago', amount: '940 DOGE', dest: 'D8kk1…2mq ⚠', risk: '72', riskColor: '#f59e0b', age: '2 months', border: 'rgba(245,158,11,.3)', flagged: true, flagNote: 'Destination wallet shared with 2 other accounts · VPN sessions detected' },
+    { user: 'hashqueen', id: 'WD-2195', when: '1h 20m ago', amount: '1.02 LTC', dest: 'ltc1qh9…z2p ✓', risk: '5', riskColor: '#2EE6A6', age: '5 months', border: 'rgba(229,231,235,.08)', flagged: false },
+    { user: 'farm_x22', id: 'WD-2188', when: '3h 12m ago', amount: '0.48 LTC', dest: 'ltc1qf0…31c ⚠', risk: '91', riskColor: '#f87171', age: '9 days', border: 'rgba(248,113,113,.35)', flagged: true, flagNote: 'Fast account-to-withdrawal pattern · device cluster ×3 · recommend reject + freeze' }
+  ].map(function(wq){
+    var flag = wq.flagged ? `<div style="margin-top:10px;font-size:11.5px;color:#f59e0b;background:rgba(245,158,11,.06);border-radius:8px;padding:8px 12px">⚠ ${wq.flagNote}</div>` : '';
+    return `
+    <div style="background:#111827;border:1px solid ${wq.border};border-radius:14px;padding:16px 20px">
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <div style="min-width:150px"><div style="font-weight:800;font-size:13.5px">${wq.user}</div><div style="font-size:10.5px;color:#6B7280;${MONO}">${wq.id} · ${wq.when}</div></div>
+        <div style="min-width:110px"><div style="font-size:10px;color:#6B7280">AMOUNT</div><div style="${MONO};font-size:14px">${wq.amount}</div></div>
+        <div style="min-width:150px"><div style="font-size:10px;color:#6B7280">DESTINATION</div><div style="${MONO};font-size:12px;color:#9CA3AF">${wq.dest}</div></div>
+        <div style="min-width:70px"><div style="font-size:10px;color:#6B7280">RISK</div><div style="${MONO};font-size:14px;color:${wq.riskColor}">${wq.risk}</div></div>
+        <div style="min-width:100px"><div style="font-size:10px;color:#6B7280">ACCOUNT AGE</div><div style="font-size:12px">${wq.age}</div></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button data-act="wdApprove" data-i="${wq.id}" style="background:rgba(57,255,136,.12);border:1px solid rgba(57,255,136,.35);color:#2EE6A6;font-size:11.5px;font-weight:800;padding:8px 16px;border-radius:8px;cursor:pointer">Approve</button>
+          <button data-act="wdReject" data-i="${wq.id}" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11.5px;font-weight:800;padding:8px 16px;border-radius:8px;cursor:pointer">Reject</button>
+          <button data-act="wdEscalate" data-i="${wq.id}" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:11.5px;font-weight:800;padding:8px 16px;border-radius:8px;cursor:pointer">Escalate</button>
+        </div>
+      </div>
+      ${flag}
+    </div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">${kpis}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">${queue}</div>
+  </div>`;
+}
+
+function vTreasury() {
+  var buckets = [
+    { label: 'USER REWARDS', value: '$14.2K', accent: '#2EE6A6', note: 'reserved · not owner funds' },
+    { label: 'WITHDRAWAL RESERVE', value: '$18.6K', accent: '#22D3EE', note: 'hot + cold wallets' },
+    { label: 'LIQUIDITY', value: '$8.3K', accent: '#22D3EE', note: 'conversion buffer' },
+    { label: 'OPERATIONS', value: '$4.1K', accent: '#E5E7EB', note: 'infra + providers' },
+    { label: 'VAULT OBLIGATIONS', value: '$2.9K', accent: '#7C3AED', note: 'current period' },
+    { label: 'EVENTS', value: '$1.2K', accent: '#7C3AED', note: 'Hash Season 02' },
+    { label: 'FRAUD RESERVE', value: '$0.8K', accent: '#f59e0b', note: 'chargebacks / reversals' },
+    { label: 'OWNER PROFIT', value: '$5.2K', accent: '#f59e0b', note: 'withdrawable by owner only' }
+  ].map(function(tb){
+    return `<div style="${CARD};border-top:2px solid ${tb.accent};border-radius:13px;padding:16px 18px"><div style="font-size:10.5px;color:#6B7280;font-weight:800;letter-spacing:.05em;margin-bottom:5px">${tb.label}</div><div style="${MONO};font-size:18px">${tb.value}</div><div style="font-size:10.5px;color:#4B5563;margin-top:3px">${tb.note}</div></div>`;
+  }).join('');
+  var coverage = [
+    { label: 'Coverage ratio (reserves ÷ obligations)', value: '168%', pct: '84%', color: '#2EE6A6' },
+    { label: 'Withdrawal runway at current pace', value: '41 days', pct: '68%', color: '#22D3EE' },
+    { label: 'Pending obligations vs liquid funds', value: '31%', pct: '31%', color: '#7C3AED' }
+  ].map(function(cr){
+    return `<div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:#9CA3AF">${cr.label}</span><span style="${MONO};color:${cr.color}">${cr.value}</span></div><div style="height:7px;background:rgba(229,231,235,.07);border-radius:4px;overflow:hidden"><div style="width:${cr.pct};height:100%;background:${cr.color};border-radius:4px"></div></div></div>`;
+  }).join('');
+  var cashflow = [
+    { label: 'Rewarded ads + offerwalls', value: '+$9,300', color: '#2EE6A6' },
+    { label: 'Boost & miner sales', value: '+$6,100', color: '#2EE6A6' },
+    { label: 'Fees (trading/conversion/withdrawal)', value: '+$3,000', color: '#2EE6A6' },
+    { label: 'Crypto payouts to users', value: '-$8,900', color: '#f87171' },
+    { label: 'Infrastructure & providers', value: '-$2,400', color: '#f87171' },
+    { label: 'Net', value: '+$7,100', color: '#22D3EE' }
+  ].map(function(cf){
+    return `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(229,231,235,.05)"><span style="color:#9CA3AF">${cf.label}</span><span style="${MONO};color:${cf.color}">${cf.value}</span></div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px">${buckets}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="${CARD};border-radius:16px;padding:20px 22px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">COVERAGE & RUNWAY</div>
+        <div style="display:flex;flex-direction:column;gap:14px">${coverage}</div>
+        <div style="margin-top:16px;font-size:11.5px;color:#6B7280;line-height:1.6">Owner profit is strictly separated from user balances, reward reserves, withdrawal reserves, Vault obligations and liquidity. Owner withdrawals can never draw from these buckets.</div>
+      </div>
+      <div style="${CARD};border-radius:16px;padding:20px 22px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">MONTHLY CASH FLOW</div>
+        <div style="display:flex;flex-direction:column;gap:8px">${cashflow}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vFraud() {
+  var kpis = [
+    { label: 'OPEN CASES', value: '4', color: '#f87171' },
+    { label: 'AUTO-BLOCKED (7D)', value: '61', color: '#f59e0b' },
+    { label: 'REVERSED REWARDS (7D)', value: '84K ZYXE', color: '#22D3EE' },
+    { label: 'FALSE POSITIVE RATE', value: '3.8%', color: '#2EE6A6' }
+  ].map(function(fk){
+    return `<div style="${CARD};border-radius:13px;padding:14px 18px"><div style="font-size:10.5px;color:#6B7280;font-weight:800;margin-bottom:5px">${fk.label}</div><div style="${MONO};font-size:18px;color:${fk.color}">${fk.value}</div></div>`;
+  }).join('');
+  var cases = [
+    { score: '91', scoreBg: 'rgba(248,113,113,.15)', scoreColor: '#f87171', user: 'farm_x22', id: 'CASE-118', summary: 'Account farming cluster: 3 accounts, one device fingerprint, sequential referral chain', recommended: 'SUSPEND + REVERSE', recColor: '#f87171', recBg: 'rgba(248,113,113,.1)', rules: ['device_cluster×3', 'self_referral', 'fast_withdrawal'] },
+    { score: '72', scoreBg: 'rgba(245,158,11,.15)', scoreColor: '#f59e0b', user: 'kripto_kai', id: 'CASE-117', summary: 'Shared withdrawal wallet across accounts + datacenter IP sessions', recommended: 'REQUEST VERIFICATION', recColor: '#f59e0b', recBg: 'rgba(245,158,11,.1)', rules: ['wallet_reuse×3', 'datacenter_ip'] },
+    { score: '64', scoreBg: 'rgba(245,158,11,.15)', scoreColor: '#f59e0b', user: 'tap_bot99', id: 'CASE-116', summary: 'Impossible Tap Miner scores (p99.9+) with uniform inter-tap intervals', recommended: 'INVALIDATE SCORES', recColor: '#f59e0b', recBg: 'rgba(245,158,11,.1)', rules: ['score_outlier', 'bot_cadence'] },
+    { score: '48', scoreBg: 'rgba(34,211,238,.12)', scoreColor: '#22D3EE', user: 'vpn_vera', id: 'CASE-114', summary: 'VPN use with otherwise normal behavior — monitor only', recommended: 'MONITOR', recColor: '#22D3EE', recBg: 'rgba(34,211,238,.1)', rules: ['vpn_proxy'] }
+  ].map(function(fc){
+    var rules = fc.rules.map(function(r){ return `<span style="font-size:10.5px;${MONO};color:#f59e0b;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);padding:3px 9px;border-radius:6px">${r}</span>`; }).join('');
+    return `
+    <div style="background:#111827;border:1px solid rgba(248,113,113,.18);border-radius:14px;padding:16px 20px">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <span style="width:40px;height:40px;flex:none;border-radius:10px;display:grid;place-items:center;${MONO};font-size:14px;font-weight:600;background:${fc.scoreBg};color:${fc.scoreColor}">${fc.score}</span>
+        <div style="flex:1;min-width:160px">
+          <div style="font-weight:800;font-size:13.5px">${fc.user} <span style="font-size:10px;color:#6B7280;${MONO};margin-left:6px">${fc.id}</span></div>
+          <div style="font-size:11.5px;color:#9CA3AF">${fc.summary}</div>
+        </div>
+        <span style="font-size:10.5px;font-weight:800;color:${fc.recColor};background:${fc.recBg};padding:4px 10px;border-radius:6px">${fc.recommended}</span>
+        <div style="display:flex;gap:8px">
+          <button data-act="toastAction" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:11px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer">Suspend</button>
+          <button data-act="toastAction" style="background:rgba(229,231,235,.05);border:1px solid rgba(229,231,235,.12);color:#9CA3AF;font-size:11px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer">Dismiss</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${rules}</div>
+    </div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">${kpis}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">${cases}</div>
+  </div>`;
+}
+
+function vLedger() {
+  var rows = [
+    { id: 'TX-88500', user: 'mateo_dr', type: 'withdrawal_request', amount: '-1,500', amtColor: '#f87171', prev: '2,950', next: '1,450', status: 'REVIEW', stColor: '#f59e0b', ts: 'Jul 11 14:28' },
+    { id: 'TX-88412', user: 'mateo_dr', type: 'faucet_claim', amount: '+18', amtColor: '#2EE6A6', prev: '2,932', next: '2,950', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 11 10:12' },
+    { id: 'TX-88399', user: 'mateo_dr', type: 'game_reward', amount: '+24', amtColor: '#2EE6A6', prev: '2,908', next: '2,932', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 11 09:58' },
+    { id: 'TX-88102', user: 'satoshi_ana', type: 'mining_payout', amount: '+412', amtColor: '#2EE6A6', prev: '8,692', next: '9,104', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 11 00:00' },
+    { id: 'TX-88016', user: 'farm_x22', type: 'reward_reversal', amount: '-2,140', amtColor: '#f87171', prev: '7,020', next: '4,880', status: 'REVERSED', stColor: '#f87171', ts: 'Jul 10 22:41' },
+    { id: 'TX-87981', user: 'kripto_kai', type: 'admin_adjustment', amount: '-500', amtColor: '#f87171', prev: '8,912', next: '8,412', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 10 19:02' },
+    { id: 'TX-87721', user: 'mateo_dr', type: 'boost_purchase', amount: '-150', amtColor: '#f87171', prev: '3,058', next: '2,908', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 10 14:02' },
+    { id: 'TX-87680', user: 'hashqueen', type: 'vault_lock', amount: '-5,000', amtColor: '#c4a5f5', prev: '27,410', next: '22,410', status: 'CONFIRMED', stColor: '#2EE6A6', ts: 'Jul 10 11:11' }
+  ].map(function(lr){
+    return `
+    <div style="display:grid;grid-template-columns:.9fr 1fr .9fr .7fr .8fr .8fr .7fr 1fr;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(229,231,235,.05);font-size:12px;align-items:center">
+      <span style="${MONO};color:#22D3EE">${lr.id}</span>
+      <span style="font-weight:700">${lr.user}</span>
+      <span style="color:#9CA3AF">${lr.type}</span>
+      <span style="${MONO};color:${lr.amtColor}">${lr.amount}</span>
+      <span style="${MONO};color:#6B7280">${lr.prev}</span>
+      <span style="${MONO}">${lr.next}</span>
+      <span style="font-size:10px;font-weight:800;color:${lr.stColor}">${lr.status}</span>
+      <span style="${MONO};color:#4B5563;font-size:11px">${lr.ts}</span>
+    </div>`;
+  }).join('');
+  var audit = [
+    { ts: 'Jul 11 14:02', admin: 'owner', action: 'Approved withdrawal WD-2190 after manual review', ref: 'WD-2190' },
+    { ts: 'Jul 10 19:02', admin: 'admin.rosa', action: 'Balance adjustment -500 ZYXE · reason: "duplicate mission reward"', ref: 'TX-87981' },
+    { ts: 'Jul 10 16:44', admin: 'fraud.luis', action: 'Suspended referral network of farm_x22 (11 accounts)', ref: 'CASE-118' },
+    { ts: 'Jul 09 09:15', admin: 'owner', action: 'Changed faucet reward range 5–20 → 5–25 (impact preview accepted)', ref: 'CFG-441' },
+    { ts: 'Jul 08 21:30', admin: 'admin.rosa', action: 'Security reset for user block_leo (support ticket #4801)', ref: 'SEC-902' }
+  ].map(function(ar){
+    return `<div style="display:flex;gap:14px;padding:8px 0;border-bottom:1px solid rgba(229,231,235,.05);font-size:12px;flex-wrap:wrap;align-items:center"><span style="${MONO};color:#4B5563;min-width:120px">${ar.ts}</span><span style="font-weight:700;color:#c4a5f5;min-width:100px">${ar.admin}</span><span style="flex:1;color:#9CA3AF">${ar.action}</span><span style="${MONO};color:#6B7280;font-size:11px">${ar.ref}</span></div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.18);border-radius:11px;padding:11px 16px;margin-bottom:16px;font-size:12px;color:#9CA3AF">Balances are never a mutable field — every change is a ledger entry with previous/new balance, source, status and metadata. Admin adjustments always carry reason + identity.</div>
+    <div style="${CARD};border-radius:14px;overflow-x:auto">
+      <div style="min-width:900px">
+        <div style="display:grid;grid-template-columns:.9fr 1fr .9fr .7fr .8fr .8fr .7fr 1fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(229,231,235,.07);font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#6B7280">
+          <span>TX ID</span><span>USER</span><span>TYPE</span><span>AMOUNT</span><span>PREV</span><span>NEW</span><span>STATUS</span><span>TIMESTAMP</span>
+        </div>
+        ${rows}
+      </div>
+    </div>
+    <div style="margin-top:16px;${CARD};border-radius:14px;padding:18px 22px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:12px">ADMIN AUDIT LOG</div>
+      <div style="display:flex;flex-direction:column">${audit}</div>
+    </div>
+  </div>`;
+}
+
+function vOwner() {
+  var kpis = [
+    { label: 'GROSS REVENUE (30D)', value: '$18.4K', color: '#E5E7EB', note: 'all sources' },
+    { label: 'NET REVENUE (30D)', value: '$7.1K', color: '#2EE6A6', note: 'after costs' },
+    { label: 'REWARD + REFERRAL COSTS', value: '$8.9K', color: '#f87171', note: 'paid to users' },
+    { label: 'OPERATING COSTS', value: '$2.4K', color: '#f87171', note: 'infra + services' },
+    { label: 'OWNER AVAILABLE', value: '$4.1K', color: '#f59e0b', note: 'after 20% retained' },
+    { label: 'RETAINED EARNINGS', value: '$12.3K', color: '#22D3EE', note: 'cumulative' }
+  ].map(function(ok){
+    return `<div style="${CARD};border-radius:13px;padding:16px 18px"><div style="font-size:10.5px;color:#6B7280;font-weight:800;margin-bottom:5px">${ok.label}</div><div style="${MONO};font-size:19px;color:${ok.color}">${ok.value}</div><div style="font-size:10.5px;color:#4B5563;margin-top:3px">${ok.note}</div></div>`;
+  }).join('');
+  var sources = [
+    { label: 'Rewarded ads', value: '$5,020', pct: '100%', color: '#2EE6A6' },
+    { label: 'Offerwalls', value: '$4,280', pct: '85%', color: '#2EE6A6' },
+    { label: 'Boost sales', value: '$3,400', pct: '68%', color: '#7C3AED' },
+    { label: 'Miner sales', value: '$2,700', pct: '54%', color: '#7C3AED' },
+    { label: 'Conversion fees', value: '$1,180', pct: '24%', color: '#22D3EE' },
+    { label: 'Withdrawal fees', value: '$860', pct: '17%', color: '#22D3EE' },
+    { label: 'Trading fees', value: '$540', pct: '11%', color: '#22D3EE' },
+    { label: 'Sponsored missions', value: '$420', pct: '8%', color: '#f59e0b' }
+  ].map(function(rv){
+    return `<div style="display:flex;align-items:center;gap:12px"><span style="flex:1;font-size:12.5px;color:#9CA3AF;min-width:130px">${rv.label}</span><div style="flex:2;height:8px;background:rgba(229,231,235,.06);border-radius:4px;overflow:hidden"><div style="width:${rv.pct};height:100%;background:${rv.color};border-radius:4px"></div></div><span style="${MONO};font-size:12px;min-width:70px;text-align:right">${rv.value}</span></div>`;
+  }).join('');
+  return `
+  <div style="animation:fadeUp .3s ease both">
+    <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.25);border-radius:11px;padding:11px 16px;margin-bottom:18px;font-size:12px;color:#9CA3AF;display:flex;gap:10px;align-items:center">
+      <span>🔒</span> Owner-only area. Re-authentication + 2FA required. Owner withdrawals draw exclusively from the Owner Profit bucket — never from user balances, reward reserves, withdrawal reserves, Vault obligations or liquidity.
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px">${kpis}</div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+      <div style="${CARD};border-radius:16px;padding:20px 22px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#6B7280;margin-bottom:14px">PROFIT BY SOURCE · 30 DAYS</div>
+        <div style="display:flex;flex-direction:column;gap:11px">${sources}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(245,158,11,.08),#111827);border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:22px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#f59e0b;margin-bottom:14px">OWNER PROFIT WITHDRAWAL</div>
+        <div style="font-size:11px;color:#6B7280;margin-bottom:4px">Available owner balance</div>
+        <div style="${MONO};font-size:28px;margin-bottom:14px">$4,120 <span style="font-size:13px;color:#6B7280">USD eq.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Retained reserve</span><span style="${MONO}">$1,030 (20%)</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">DESTINATION</span><span style="${MONO};color:#9CA3AF">ltc1qow…9k2 ✓</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Security waiting period</span><span>24h</span></div>
+        </div>
+        <button data-act="openOwnerWd" class="hl" style="width:100%;background:#f59e0b;color:#1a1002;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">Withdraw owner profit…</button>
+        <div style="margin-top:12px;font-size:10.5px;color:#6B7280;line-height:1.6">Blocked sources: user balances, reward reserves, withdrawal reserves, Vault obligations, liquidity reserves. This rule is enforced at ledger level.</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vPlaceholder() {
+  return `<div style="text-align:center;padding:80px 20px;color:#6B7280"><div style="font-size:36px;margin-bottom:12px">🛠️</div><div style="font-size:14px">This admin module shares the same table/control patterns — parameters are configurable here in the full build.</div></div>`;
+}
+
+function vScreen() {
+  switch (S.screen) {
+    case 'overview': return vOverview();
+    case 'users': return vUsers();
+    case 'economy': return vEconomy();
+    case 'withdrawals': return vWithdrawals();
+    case 'treasury': return vTreasury();
+    case 'fraud': return vFraud();
+    case 'ledger': return vLedger();
+    case 'owner': return vOwner();
+    default: return vPlaceholder();
+  }
+}
+
+// ---------- shell ----------
+function render() {
+  var navHtml = NAV.map(function(n){
+    if (n.h) return `<div style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#4B5563;padding:14px 12px 5px">${n.h}</div>`;
+    var active = S.screen === n.id;
+    var badge = n.badge ? `<span style="margin-left:auto;background:rgba(248,113,113,.15);color:#f87171;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px">${n.badge}</span>` : '';
+    return `<button data-act="nav" data-i="${n.id}" class="hnav" style="display:flex;align-items:center;gap:11px;background:${active ? 'rgba(34,211,238,.1)' : 'transparent'};border:none;border-radius:9px;padding:8px 12px;color:${active ? '#22D3EE' : '#9CA3AF'};font-size:13px;font-weight:700;cursor:pointer;text-align:left;width:100%"><span style="font-size:14px;width:18px;text-align:center">${n.icon}</span> ${n.label}${badge}</button>`;
+  }).join('');
+  document.getElementById('app').innerHTML = `
+  <aside style="width:224px;flex:none;background:#0A0E17;border-right:1px solid rgba(229,231,235,.06);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column">
+    <div style="padding:18px 20px 10px;display:flex;align-items:center;gap:10px">
+      <a href="index.html"><img src="assets/logo-white.png" alt="Fauzet" style="height:30px"></a>
+      <span style="font-size:10px;font-weight:800;letter-spacing:.1em;color:#22D3EE;background:rgba(34,211,238,.1);padding:3px 8px;border-radius:6px">ADMIN</span>
+    </div>
+    <nav style="flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:1px" aria-label="Admin">${navHtml}</nav>
+    <div style="padding:14px 16px;border-top:1px solid rgba(229,231,235,.06);display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#7C3AED);display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff">O</div>
+      <div style="flex:1"><div style="font-size:12.5px;font-weight:800">owner@fauzet</div><div style="font-size:10.5px;color:#f59e0b">Owner · 2FA ✓</div></div>
+      <a href="app.html" title="Exit admin" style="color:#6B7280;font-size:14px">⏻</a>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="position:sticky;top:0;z-index:40;background:rgba(8,11,18,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(229,231,235,.06);padding:0 24px;height:56px;display:flex;align-items:center;gap:14px">
+      <span style="${GROT};font-size:15px;font-weight:700">${TITLES[S.screen] || 'Admin'}</span>
+      <div style="flex:1"></div>
+      <span style="font-size:11px;color:#6B7280">MOCK DATA · Jul 11, 2026 14:32 UTC</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#2EE6A6;font-weight:700"><span style="width:6px;height:6px;border-radius:50%;background:#2EE6A6"></span>All systems healthy</span>
+    </header>
+    <main style="flex:1;padding:26px 26px 48px;max-width:1240px;width:100%;margin:0 auto;box-sizing:border-box">${vScreen()}</main>
+  </div>`;
+  renderOverlays();
+}
+
+function renderOverlays() {
+  var html = '';
+  if (S.adjustOpen) {
+    html += `
+    <div data-act="closeAdjust" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(400px,94vw);background:#0D1220;border:1px solid rgba(124,58,237,.3);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+      <div style="${GROT};font-size:17px;font-weight:700;margin-bottom:6px">Audited balance adjustment</div>
+      <div style="font-size:12px;color:#6B7280;margin-bottom:16px">kripto_kai · UID-100482</div>
+      <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">AMOUNT (± ZYXE)</label>
+      <input type="number" placeholder="-500" class="inp-p" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:11px 14px;color:#E5E7EB;font-size:14px;${MONO};margin-bottom:12px">
+      <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">Reason *</label>
+      <input type="text" placeholder="e.g. duplicate mission reward" class="inp-p" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(229,231,235,.12);border-radius:10px;padding:11px 14px;color:#E5E7EB;font-size:13px;margin-bottom:14px">
+      <div style="font-size:11px;color:#6B7280;margin-bottom:16px;line-height:1.6">This adjustment creates a ledger entry with your admin identity, timestamp, reason and previous/new balances. It cannot be deleted.</div>
+      <div style="display:flex;gap:10px">
+        <button data-act="closeAdjust" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">Cancel</button>
+        <button data-act="confirmAdjust" style="flex:1;background:#7C3AED;color:#fff;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">Apply</button>
+      </div>
+    </div>`;
+  }
+  if (S.econConfirmOpen) {
+    html += `
+    <div data-act="closeEconConfirm" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(420px,94vw);background:#0D1220;border:1px solid rgba(245,158,11,.35);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+      <div style="${GROT};font-size:17px;font-weight:700;margin-bottom:6px">⚠ Confirm economic change</div>
+      <div style="font-size:12.5px;color:#9CA3AF;margin-bottom:16px;line-height:1.6">You are changing live economy parameters. Review the projected impact before applying. This action is logged with your identity and requires 2FA.</div>
+      <div style="background:#111827;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+        <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Projected issuance</span><span style="${MONO};color:#f59e0b">+4.2% / day</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Withdrawal runway</span><span style="${MONO};color:#f59e0b">41d → 37d</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Coverage ratio</span><span style="${MONO};color:#2EE6A6">168% → 161%</span></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button data-act="closeEconConfirm" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">Cancel</button>
+        <button data-act="confirmEcon" style="flex:1;background:#f59e0b;color:#1a1002;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">Apply</button>
+      </div>
+    </div>`;
+  }
+  if (S.ownerWdOpen) {
+    html += `
+    <div data-act="closeOwnerWd" style="position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:70;animation:fadeUp .2s ease both"></div>
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:71;width:min(400px,94vw);background:#0D1220;border:1px solid rgba(245,158,11,.35);border-radius:18px;padding:26px;animation:popIn .25s ease both">
+      <div style="${GROT};font-size:17px;font-weight:700;margin-bottom:14px">🔒 Confirm owner withdrawal</div>
+      <div style="background:#111827;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+        <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">AMOUNT</span><span style="${MONO}">$4,120 USD eq. (LTC)</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">DESTINATION</span><span style="${MONO};color:#9CA3AF">ltc1qow…9k2</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#6B7280">Security waiting period</span><span>24h</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#f59e0b;background:rgba(245,158,11,.06);border-radius:9px;padding:10px 13px;margin-bottom:16px;line-height:1.6">Liability check passed: coverage ratio remains 168% → 154% after this withdrawal. A 24h security waiting period applies before broadcast.</div>
+      <label style="display:block;font-size:12px;color:#9CA3AF;margin-bottom:6px">2FA</label>
+      <input type="text" inputmode="numeric" maxlength="6" placeholder="000000" class="inp-a" style="width:100%;box-sizing:border-box;background:#0A0E17;border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:12px;color:#E5E7EB;font-size:17px;${MONO};text-align:center;letter-spacing:.25em;margin-bottom:16px">
+      <div style="display:flex;gap:10px">
+        <button data-act="closeOwnerWd" style="flex:1;background:none;border:1px solid rgba(229,231,235,.14);color:#9CA3AF;font-size:13px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer">Cancel</button>
+        <button data-act="confirmOwnerWd" style="flex:1;background:#f59e0b;color:#1a1002;border:none;font-size:13px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer">Confirm</button>
+      </div>
+    </div>`;
+  }
+  document.getElementById('overlayRoot').innerHTML = html;
+}
+
+function renderToast() {
+  document.getElementById('toastRoot').innerHTML = S.toast
+    ? `<div style="position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:80;background:#111827;border:1px solid rgba(34,211,238,.35);border-radius:12px;padding:12px 22px;font-size:13px;font-weight:700;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:popIn .25s ease both;display:flex;align-items:center;gap:10px"><span style="color:#22D3EE">✓</span> ${S.toast}</div>`
+    : '';
+}
+
+var ACTIONS = {
+  nav: function(i){ S.screen = i; S.userOpen = false; render(); window.scrollTo(0, 0); },
+  openUser: function(){ S.userOpen = true; render(); },
+  closeUser: function(){ S.userOpen = false; render(); },
+  toastAction: function(){ toast('Action recorded — reason + admin identity + ledger entry required'); },
+  openAdjust: function(){ S.adjustOpen = true; renderOverlays(); },
+  closeAdjust: function(){ S.adjustOpen = false; renderOverlays(); },
+  confirmAdjust: function(){ S.adjustOpen = false; renderOverlays(); toast('Adjustment applied — ledger TX + audit record created'); },
+  openEconConfirm: function(){ S.econConfirmOpen = true; renderOverlays(); },
+  closeEconConfirm: function(){ S.econConfirmOpen = false; renderOverlays(); },
+  confirmEcon: function(){ S.econConfirmOpen = false; renderOverlays(); toast('Parameters saved — audit log entry created'); },
+  openOwnerWd: function(){ S.ownerWdOpen = true; renderOverlays(); },
+  closeOwnerWd: function(){ S.ownerWdOpen = false; renderOverlays(); },
+  confirmOwnerWd: function(){ S.ownerWdOpen = false; renderOverlays(); toast('Owner withdrawal scheduled — 24h waiting period started, audit entry created'); },
+  wdApprove: function(i){ toast(i + ' approved — treasury liquidity check queued'); },
+  wdReject: function(i){ toast(i + ' rejected — user notified, funds returned to eligible balance'); },
+  wdEscalate: function(i){ toast(i + ' escalated to fraud review'); }
+};
+
+document.addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]');
+  if (!el) return;
+  var fn = ACTIONS[el.getAttribute('data-act')];
+  if (fn) fn(el.getAttribute('data-i'));
+});
+
+render();
+})();
+</script>
+</body>
+</html>

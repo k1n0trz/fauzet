@@ -1,0 +1,516 @@
+FICHA TÉCNICA DE FUNCIONAMIENTO
+CICLO COMPLETO DEL USUARIO
+Desde el primer ingreso hasta el retiro de dinero real a una wallet externa
+Versión 0.1  •  10 de julio de 2026
+Estado: especificación funcional inicial para diseño, desarrollo y pruebas
+1. Propósito y alcance
+Esta ficha define cómo debe operar Fauzet de extremo a extremo: adquisición, registro, verificación, obtención de ZYXEs, consumo interno, minería virtual, referidos, Vault, microtrading, conversión y retiro de valor real. Está escrita para orientar UX/UI, backend, seguridad, economía, QA y panel administrativo.
+Principio rectorEl saldo mostrado al usuario no equivale automáticamente a dinero retirable. Fauzet debe separar saldo total, saldo validado, saldo bloqueado, saldo promocional y saldo elegible para conversión.
+Elemento
+Definición
+Plataforma
+Fauzet
+Unidad interna
+Zyxe / ZYXEs
+Ticker previsto
+ZYXE
+Modelo inicial
+Ledger interno centralizado; sin token público durante MVP
+Objetivo del flujo
+Permitir que un usuario produzca valor, gane ZYXEs, los use dentro del ecosistema y convierta una fracción elegible a una criptomoneda externa.
+Retiros iniciales
+Una sola red/cripto de bajo costo; ampliación posterior bajo control de tesorería.
+2. Actores del sistema
+Actor
+Responsabilidad
+Visitante
+Explora la propuesta y decide registrarse.
+Usuario verificado
+Participa en faucet, juegos, misiones, minería, referidos, Vault y conversiones.
+Owner
+Consulta rentabilidad, fondos, reservas y retira únicamente ganancias disponibles del propietario.
+Administrador
+Gestiona contenido, usuarios, reglas y ajustes auditados.
+Finanzas
+Concilia ingresos, tesorería, retiros y liquidez.
+Antifraude
+Revisa alertas, dispositivos, cuentas vinculadas y retiros.
+Sistema económico
+Calcula emisiones, pools, sinks, elegibilidad y límites.
+Proveedor externo
+Ads, offerwalls, captcha, correo, blockchain, datos de mercado o KYC.
+3. Estados principales del saldo
+Saldo
+Puede gastarse
+Puede retirarse
+Descripción
+Pendiente
+No
+No
+Recompensa aún sujeta a validación, callback, cooldown o revisión.
+Disponible
+Sí
+No necesariamente
+ZYXEs utilizables en boosts, energía, mineros y compras internas.
+Bloqueado
+No
+No
+ZYXEs depositados en Vault, torneos, órdenes u otros compromisos.
+Promocional
+Sí, con límites
+No
+Bonos de bienvenida, campañas y recompensas sin valor convertible.
+Elegible
+Sí
+Sí
+Saldo validado que cumple antigüedad, origen, límites y requisitos de retiro.
+En conversión
+No
+No
+Saldo reservado durante cotización y procesamiento.
+Retirado
+No
+Ya fue pagado
+Movimiento finalizado hacia wallet externa.
+4. Flujo de funcionamiento paso a paso
+1. Ingreso y landing
+El visitante llega por tráfico orgánico, referido, anuncio o enlace directo. La landing debe explicar qué puede ganar, qué es ZYXE, que la minería es virtual y que los retiros dependen de elegibilidad y controles.
+Actor / capa
+Acción obligatoria
+Usuario
+Revisa beneficios, riesgos, reglas y CTA.
+Sistema
+Carga idioma, país aproximado, campaña y estado de servicios.
+Control
+No se crean saldos ni promesas antes del registro.
+Resultado
+Visitante informado con opción de registrarse.
+Estados y eventos: visit_landed, campaign_attributed, referral_cookie_created
+2. Registro de cuenta
+El usuario crea una cuenta mediante email y contraseña o proveedor social. Debe aceptar términos, privacidad, reglas de recompensas y declaración de edad/país.
+Actor / capa
+Acción obligatoria
+Usuario
+Entrega datos mínimos y acepta políticas.
+Sistema
+Crea user_id, wallet interna, código de referido y perfil económico vacío.
+Control
+Rate limit, captcha, email único, bloqueo de dominios desechables y validación de país.
+Resultado
+Cuenta creada en estado pending_verification.
+Estados y eventos: user_created, email_pending, referral_linked
+3. Verificación y seguridad inicial
+El usuario confirma email y configura controles básicos. Para funciones sensibles se exige 2FA; el KYC se solicita cuando lo determinen los límites, riesgo o jurisdicción.
+Actor / capa
+Acción obligatoria
+Usuario
+Confirma email y, cuando aplique, 2FA/KYC.
+Sistema
+Asigna nivel de verificación y límites operativos.
+Control
+Detección de VPN, datacenter, dispositivo duplicado, identidad repetida y listas de riesgo.
+Resultado
+Cuenta active o restricted.
+Estados y eventos: email_verified, risk_scored, account_activated
+4. Onboarding y wallet interna
+Fauzet muestra un tutorial breve sobre faucet, juegos, minería, ZYXEs, saldos y retiro. Se crea la wallet interna como ledger, no como wallet blockchain del usuario.
+Actor / capa
+Acción obligatoria
+Usuario
+Completa tutorial y conoce los tipos de saldo.
+Sistema
+Entrega bono promocional opcional no retirable y habilita misiones iniciales.
+Control
+El bono debe etiquetarse como promotional y tener reglas de uso.
+Resultado
+Dashboard inicial listo.
+Estados y eventos: onboarding_completed, promo_bonus_posted
+5. Dashboard de usuario
+El dashboard centraliza saldo, ZYXEs elegibles, hashpower, energía, próximo claim, misiones, Vault, crew, trading y alertas.
+Actor / capa
+Acción obligatoria
+Usuario
+Consulta métricas y elige actividad.
+Sistema
+Calcula datos desde ledger y servicios económicos, no desde valores manipulables del frontend.
+Control
+Toda cifra debe ser reconciliable con transacciones.
+Resultado
+Vista única del estado económico.
+Estados y eventos: dashboard_viewed, balance_reconciled
+6. Claim del faucet
+El usuario reclama una recompensa después del cooldown. El faucet entrega una cantidad variable dentro de un rango y presupuesto diario.
+Actor / capa
+Acción obligatoria
+Usuario
+Completa captcha/acción y pulsa Claim.
+Sistema
+Valida cooldown, riesgo, IP, dispositivo y presupuesto; crea transacción pending o available.
+Control
+Un claim por ventana; límites por cuenta, dispositivo e IP; recompensa decreciente si hay abuso.
+Resultado
+ZYXEs acreditados con origen faucet.
+Estados y eventos: claim_requested, claim_validated, faucet_reward_posted
+7. Juegos y misiones
+El usuario juega o completa retos. Cada sesión tiene identificador, reglas, score máximo y comprobación server-side.
+Actor / capa
+Acción obligatoria
+Usuario
+Inicia juego, completa objetivo y envía resultado.
+Sistema
+Firma la sesión, valida eventos, calcula recompensa y evita replays.
+Control
+No aceptar puntajes calculados únicamente por cliente; límites por juego y día.
+Resultado
+Recompensa validada o intento rechazado.
+Estados y eventos: game_session_created, score_validated, game_reward_posted
+8. Actividad monetizable
+El usuario visualiza rewarded ads o completa ofertas. Fauzet acredita solo después de callback verificable del proveedor.
+Actor / capa
+Acción obligatoria
+Usuario
+Acepta una acción patrocinada.
+Sistema
+Registra click_id, callback, payout real, reversos y reparto económico.
+Control
+Recompensa queda pending durante ventana antifraude; un evento no puede acreditarse dos veces.
+Resultado
+Ingreso real y recompensa vinculados.
+Estados y eventos: offer_started, callback_received, reward_released
+9. Minería virtual
+El usuario adquiere mineros virtuales, asigna energía y participa en un pool diario. No se ejecuta minería blockchain real.
+Actor / capa
+Acción obligatoria
+Usuario
+Configura mineros, energía y boosts.
+Sistema
+Calcula hashpower válido y reparte un pool limitado en proporción al peso del usuario.
+Control
+Vida útil, mantenimiento, caps, rendimientos decrecientes y detección de automatización.
+Resultado
+ZYXEs de pool minero registrados.
+Estados y eventos: miner_activated, hashpower_snapshot, mining_pool_settled
+10. Uso de ZYXEs
+El usuario gasta ZYXEs en boosts, aceleradores, energía, mineros, eventos o mejoras.
+Actor / capa
+Acción obligatoria
+Usuario
+Selecciona producto y confirma compra.
+Sistema
+Reserva saldo, ejecuta compra y divide importe entre quema, reciclaje y tesorería.
+Control
+Precio versionado, idempotencia, comprobante y reverso controlado.
+Resultado
+Utilidad entregada y sink económico aplicado.
+Estados y eventos: purchase_reserved, purchase_completed, zyxe_burned
+11. Red de referidos - cuatro niveles
+Cada usuario tiene un código. Las comisiones se generan por actividad válida y monetizable de su red, no por registro ni depósito.
+Actor / capa
+Acción obligatoria
+Usuario
+Invita usuarios y desarrolla su Mining Crew.
+Sistema
+Vincula árbol inmutable de hasta 4 niveles y calcula comisiones sobre base elegible.
+Control
+Sin comisión sobre comisión; sin autocuentas; topes; clawback por reversos; solo usuarios activos.
+Resultado
+Comisiones pending y luego available.
+Estados y eventos: referral_attributed, activity_qualified, referral_commission_posted
+12. Vault / staking
+El usuario bloquea ZYXEs en un producto de duración flexible o fija y participa en un pool variable de recompensas.
+Actor / capa
+Acción obligatoria
+Usuario
+Elige plazo, monto y acepta bloqueo.
+Sistema
+Mueve saldo a locked, calcula peso y distribuye pool según reglas vigentes.
+Control
+Sin rentabilidad garantizada; pool limitado; penalidad o pérdida de bonus por salida anticipada.
+Resultado
+Posición Vault activa y auditable.
+Estados y eventos: vault_position_opened, vault_reward_accrued, vault_released
+13. Microtrading interno
+El usuario opera saldos internos mediante gráficas y pares soportados. En MVP se usa simulación o tesorería controlada, no un exchange abierto.
+Actor / capa
+Acción obligatoria
+Usuario
+Selecciona par, monto y tipo de operación.
+Sistema
+Obtiene precio, aplica spread/fee, reserva saldo y liquida operación.
+Control
+Límites, circuit breaker, precios externos auditables, prevención de wash trading y saldo negativo.
+Resultado
+Operación liquidada en ledger.
+Estados y eventos: quote_created, order_submitted, trade_settled
+14. Elegibilidad para convertir
+Antes de mostrar retiro, el sistema determina qué parte del saldo es convertible.
+Actor / capa
+Acción obligatoria
+Usuario
+Consulta saldo elegible.
+Sistema
+Evalúa origen de fondos, antigüedad, verificación, riesgo, límites, reservas y reglas de campaña.
+Control
+Bonos promocionales y saldos pendientes quedan excluidos; no hay convertibilidad automática.
+Resultado
+Monto máximo de conversión calculado.
+Estados y eventos: eligibility_calculated, withdrawal_limit_set
+15. Solicitud de conversión
+El usuario escoge cripto/red, monto y recibe una cotización temporal con fee y valor neto.
+Actor / capa
+Acción obligatoria
+Usuario
+Selecciona activo, red y monto.
+Sistema
+Bloquea ZYXEs, consulta tasa, spread, comisión de red y disponibilidad de tesorería.
+Control
+La cotización expira; recalcular si cambia precio; validar mínimo y máximo.
+Resultado
+Conversión creada en awaiting_wallet o quoted.
+Estados y eventos: conversion_quote_created, zyxe_reserved
+16. Registro de wallet externa
+El usuario agrega una dirección de retiro y la confirma.
+Actor / capa
+Acción obligatoria
+Usuario
+Ingresa dirección, red y etiqueta; confirma 2FA.
+Sistema
+Valida formato, checksum, red, blacklist y lista blanca.
+Control
+Advertencia irreversible; cooldown para nueva wallet; bloqueo de cambio reciente de credenciales.
+Resultado
+Wallet whitelisted.
+Estados y eventos: wallet_added, wallet_verified, security_cooldown_started
+17. Solicitud formal de retiro
+El usuario confirma monto neto, wallet y fee. El sistema crea un retiro inmutable.
+Actor / capa
+Acción obligatoria
+Usuario
+Confirma el retiro con 2FA.
+Sistema
+Genera withdrawal_id, reserva fondos, congela cotización según reglas y registra auditoría.
+Control
+No permitir doble gasto; límites diarios/mensuales; origen trazable.
+Resultado
+Retiro en pending_review.
+Estados y eventos: withdrawal_requested, funds_locked
+18. Revisión antifraude y financiera
+El retiro pasa por reglas automáticas y, cuando corresponda, revisión humana.
+Actor / capa
+Acción obligatoria
+Usuario
+Espera o aporta verificación adicional.
+Sistema
+Calcula score: antigüedad, dispositivos, IP, referidos, callbacks, velocidad, monto y historial.
+Control
+Estados approve, hold, reject; toda decisión debe tener código de razón.
+Resultado
+Retiro aprobado, retenido o rechazado.
+Estados y eventos: risk_review_started, withdrawal_approved_or_held
+19. Ejecución blockchain
+Un servicio de pagos o hot wallet autorizada envía la criptomoneda externa.
+Actor / capa
+Acción obligatoria
+Usuario
+No realiza acciones adicionales salvo confirmar.
+Sistema
+Construye transacción, firma en entorno seguro, transmite y guarda txid.
+Control
+Llaves fuera de la app; límites de hot wallet; multisig/approval; idempotencia; monitoreo de gas/fee.
+Resultado
+Retiro en broadcasted.
+Estados y eventos: transaction_signed, transaction_broadcasted, txid_recorded
+20. Confirmación y cierre
+Fauzet monitoriza la red hasta el número requerido de confirmaciones y cierra el movimiento.
+Actor / capa
+Acción obligatoria
+Usuario
+Verifica recepción en su wallet.
+Sistema
+Actualiza estado, liquida ZYXEs reservados y emite comprobante.
+Control
+Si falla, reintento controlado o devolución al saldo elegible; nunca duplicar pago.
+Resultado
+Retiro completed o failed_refunded.
+Estados y eventos: confirmations_reached, withdrawal_completed
+21. Post-retiro y soporte
+El usuario consulta historial, comprobante, txid y abre ticket si existe incidencia.
+Actor / capa
+Acción obligatoria
+Usuario
+Consulta o reporta problema.
+Sistema
+Muestra trazabilidad completa sin revelar datos sensibles.
+Control
+Soporte no modifica saldos manualmente sin asiento compensatorio auditado.
+Resultado
+Caso resuelto y métricas actualizadas.
+Estados y eventos: receipt_generated, support_case_linked
+5. Reglas económicas mínimas del retiro
+Regla
+Funcionamiento recomendado
+Monto mínimo
+Configurable por activo/red y suficiente para superar fees y costo antifraude.
+Monto máximo
+Por operación, día y mes según nivel de verificación y riesgo.
+Comisión
+Fee de red + fee de servicio/spread, mostrado antes de confirmar.
+Cobertura
+Solo se aprueba si la tesorería mantiene reservas y umbral de cobertura.
+Ventana de revisión
+Automática para bajo riesgo; manual para cuentas nuevas, montos altos o señales de abuso.
+Reversos
+Un retiro no transmitido puede cancelarse; transmitido en blockchain es irreversible.
+Conversión
+Se descuenta ZYXE solo al liquidar; durante el proceso permanece reservado.
+Prueba beta
+Inicialmente retiros manuales y límites bajos con lista de usuarios autorizados.
+6. Fórmulas funcionales orientativas
+Pool de mineríaRecompensa del usuario = (hashpower válido / hashpower total válido) × pool diario. El pool nunca debe depender de una emisión ilimitada.
+Comisión de referidosComisión = base elegible de actividad × porcentaje del nivel. Propuesta inicial: L1 5%, L2 2%, L3 1%, L4 0,5%, sujetos a topes, actividad y reversos.
+Saldo elegibleSaldo elegible = recompensas validadas - saldos promocionales - bloqueos - reservas - sanciones - importes en revisión.
+Ganancia del propietarioDisponible Owner = ingresos conciliados - recompensas - referidos - retiros/reservas - operación - impuestos/provisiones - colchón de liquidez.
+7. Ledger y eventos contables obligatorios
+Campo
+Requisito
+transaction_id
+Único e idempotente.
+user_id
+Titular del movimiento.
+type
+claim, game, offer, mining, referral, purchase, burn, vault, trade, conversion, withdrawal, adjustment.
+amount
+Importe con precisión definida; nunca float binario para dinero.
+bucket
+pending, available, promotional, locked, eligible, reserved, withdrawn.
+source_id
+Sesión, callback, orden, pool, retiro o campaña que origina el movimiento.
+balance_after
+Snapshot para auditoría, sin sustituir el cálculo contable.
+status
+pending, posted, reversed, rejected, completed.
+metadata
+Regla, versión, IP hash, proveedor, tasa y razón.
+created_at / posted_at
+Tiempos de creación y firmeza.
+8. Estados del retiro
+Estado
+Significado
+Siguiente estado permitido
+draft
+Cotización aún no confirmada.
+pending_review / expired
+pending_review
+Fondos reservados y revisión en curso.
+approved / held / rejected
+held
+Requiere revisión o información adicional.
+approved / rejected / cancelled
+approved
+Autorizado para ejecución.
+signing / cancelled
+signing
+Preparando y firmando transacción.
+broadcasted / failed
+broadcasted
+TX enviada; existe txid.
+confirming / failed
+confirming
+Esperando confirmaciones.
+completed / failed
+completed
+Pago finalizado.
+Final
+rejected
+No autorizado; fondos liberados según reglas.
+Final
+failed_refunded
+Falló sin pago y se devolvió saldo.
+Final
+9. Panel administrativo y Owner Wallet
+Módulo
+Debe mostrar / permitir
+Usuarios
+Búsqueda, estado, verificación, referidos, saldos, historial, dispositivos y alertas.
+Economía ZYXE
+Emitidos, gastados, quemados, bloqueados, elegibles, retirados, inflación neta y concentración.
+Ingresos
+Ads, offerwalls, ventas, premium, fees, afiliados y patrocinadores conciliados.
+Tesorería
+Fondos de recompensas, retiros, liquidez, operación, fraude y reservas.
+Retiros de usuarios
+Cola, score, wallet, monto, fee, txid, revisión y estados.
+Owner Wallet
+Ganancia acumulada, retenida y disponible; historial y retiro del propietario con 2FA y lista blanca.
+Reglas
+Cooldowns, pools, precios, porcentajes, límites, campañas y versiones.
+Auditoría
+Quién cambió qué, cuándo, motivo, antes/después y aprobación.
+Separación obligatoriaEl Owner nunca retira fondos desde el pool de recompensas, la reserva de usuarios o la liquidez. Solo puede retirar el saldo calculado como ganancia disponible del propietario.
+10. Seguridad y antifraude
+2FA obligatorio para retiros, cambios de wallet, Owner Wallet y acciones administrativas sensibles.
+Llaves blockchain en servicio aislado, HSM o proveedor custodial; nunca dentro del repositorio ni base de datos de la app.
+Rate limits por usuario, IP, dispositivo y endpoint; captcha adaptativo.
+Detección de multicuentas, emuladores, VPN/proxy/datacenter, patrones repetidos y árbol de referidos circular.
+Callbacks firmados y deduplicados para offerwalls y rewarded ads.
+Lista blanca y periodo de enfriamiento para nuevas wallets.
+Aprobación dual para retiros altos y movimientos del Owner.
+Backups cifrados, logs inmutables, alertas y conciliación diaria.
+Kill switch para faucet, retiros, trading, Vault y minería sin apagar toda la plataforma.
+11. Criterios de aceptación para la primera beta
+Prueba
+Criterio de aprobación
+Registro
+Mateo puede registrarse, verificar email y entrar sin soporte.
+Faucet
+Un claim válido suma una sola vez y respeta cooldown.
+Juego
+El resultado se valida en servidor y no se duplica con refresh.
+Ledger
+Cada cambio de saldo tiene transacción visible en admin.
+Minería
+El pool diario reparte exactamente el total configurado.
+Referidos
+La relación se asigna una vez y las comisiones siguen 4 niveles sin ciclos.
+Vault
+Bloquea saldo, impide gastarlo y libera correctamente.
+Trading demo
+Cotización, fee y liquidación no producen saldo negativo.
+Retiro sandbox
+El flujo completo funciona contra testnet o simulador con txid ficticio marcado como prueba.
+Seguridad
+2FA y wallet whitelist bloquean retiros no autorizados.
+Owner
+El panel diferencia ingresos, reservas y ganancia disponible.
+12. Orden concreto de implementación
+Fase
+Entregable
+1. Núcleo
+Auth, perfiles, ledger, buckets de saldo, admin básico y auditoría.
+2. Recompensas
+Faucet, juegos, misiones, callbacks y límites.
+3. Economía
+Compras, sinks, quema, minería virtual y referidos de 4 niveles.
+4. Retención
+Vault, niveles, energía, boosts y eventos.
+5. Mercado
+Gráficas y microtrading simulado/controlado.
+6. Conversión
+Elegibilidad, cotización, tesorería y retiros sandbox.
+7. Dinero real
+Una cripto/red, KYC/riesgo según necesidad, hot wallet limitada y retiros manuales.
+8. Escala
+Automatización, más activos, auditoría, token público y revisión regulatoria.
+13. Decisiones aún configurables
+La ficha define el mecanismo, pero no congela prematuramente parámetros que deben validarse con datos reales:
+Valor de referencia de ZYXE y tasa de conversión.
+Pool diario de faucet, juegos, minería y Vault.
+Criptomoneda y red inicial de retiro.
+Mínimos, máximos, fees y tiempos de espera.
+Porcentajes definitivos de quema, reciclaje y tesorería.
+Criterios exactos de KYC y niveles de cuenta.
+Límites de comisiones de referidos y boosts.
+Red blockchain futura para token público.
+14. Resultado esperado
+Al finalizar este flujo, Fauzet debe poder demostrar que cada unidad retirada por un usuario tiene un origen trazable, pasó por validaciones, fue convertida bajo reglas conocidas, estuvo cubierta por la tesorería y produjo un movimiento blockchain verificable. De forma paralela, el propietario debe ver su rentabilidad real sin mezclarla con obligaciones hacia los usuarios.
+Definición de éxitoEl sistema funciona correctamente cuando un usuario puede pasar de cero a una recompensa validada, usar ZYXEs, construir actividad económica y retirar un monto permitido; y cuando Fauzet puede explicar contablemente cada paso sin emitir más valor del que puede sostener.
