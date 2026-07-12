@@ -1,6 +1,11 @@
 import type { RegisterRequest } from "@fauzet/contracts";
-import { getDatabase, type PrismaClient } from "@fauzet/database";
-import type { AuthStore, SessionContext, StoredUser } from "../domain/auth.js";
+import { getDatabase, Prisma, type PrismaClient } from "@fauzet/database";
+import {
+  AuthStoreConflictError,
+  type AuthStore,
+  type SessionContext,
+  type StoredUser,
+} from "../domain/auth.js";
 
 const buckets = [
   "PENDING",
@@ -27,41 +32,52 @@ export class PrismaAuthStore implements AuthStore {
     input: RegisterRequest & { passwordHash: string },
   ): Promise<StoredUser> {
     const now = new Date();
-    const user = await this.database.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: {
-          email: input.email,
-          passwordHash: input.passwordHash,
-          displayName: input.displayName,
-          locale: input.locale,
-          countryCode: input.countryCode,
-          acceptedTermsAt: now,
-          adultDeclaredAt: now,
-          roles: { create: { role: "USER" } },
-        },
-        include: { roles: true },
+    const user = await this.database
+      .$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: {
+            email: input.email,
+            passwordHash: input.passwordHash,
+            displayName: input.displayName,
+            locale: input.locale,
+            countryCode: input.countryCode,
+            acceptedTermsAt: now,
+            adultDeclaredAt: now,
+            roles: { create: { role: "USER" } },
+          },
+          include: { roles: true },
+        });
+        await tx.ledgerAccount.createMany({
+          data: buckets.map((bucket) => ({
+            code: `user:${created.id}:zyxe:${bucket.toLowerCase()}`,
+            name: `${created.email} ${bucket.toLowerCase()} ZYXE`,
+            kind: "LIABILITY" as const,
+            asset: "ZYXE",
+            bucket,
+            userId: created.id,
+          })),
+        });
+        await tx.auditEvent.create({
+          data: {
+            action: "user.registered",
+            targetType: "user",
+            targetId: created.id,
+            requestId: crypto.randomUUID(),
+            after: { status: created.status },
+          },
+        });
+        return created;
+      })
+      .catch((error: unknown) => {
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          error.code === "P2002"
+        )
+          throw new AuthStoreConflictError();
+        throw error;
       });
-      await tx.ledgerAccount.createMany({
-        data: buckets.map((bucket) => ({
-          code: `user:${created.id}:zyxe:${bucket.toLowerCase()}`,
-          name: `${created.email} ${bucket.toLowerCase()} ZYXE`,
-          kind: "LIABILITY" as const,
-          asset: "ZYXE",
-          bucket,
-          userId: created.id,
-        })),
-      });
-      await tx.auditEvent.create({
-        data: {
-          action: "user.registered",
-          targetType: "user",
-          targetId: created.id,
-          requestId: crypto.randomUUID(),
-          after: { status: created.status },
-        },
-      });
-      return created;
-    });
     return this.toStoredUser(user);
   }
 
@@ -70,15 +86,28 @@ export class PrismaAuthStore implements AuthStore {
     tokenHash: string,
     expiresAt: Date,
     context: SessionContext,
-  ): Promise<void> {
-    await this.database.session.create({
-      data: {
-        userId,
-        tokenHash,
-        expiresAt,
-        deviceId: context.deviceId ?? null,
-        ipHash: context.ipHash ?? null,
-      },
+    credentialVersion: number,
+  ): Promise<boolean> {
+    return this.database.$transaction(async (tx) => {
+      const locked = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+        SELECT "id"
+        FROM "User"
+        WHERE "id" = ${userId}
+          AND "credentialVersion" = ${credentialVersion}
+        FOR UPDATE
+      `);
+      if (locked.length !== 1) return false;
+      await tx.session.create({
+        data: {
+          userId,
+          tokenHash,
+          expiresAt,
+          credentialVersion,
+          deviceId: context.deviceId ?? null,
+          ipHash: context.ipHash ?? null,
+        },
+      });
+      return true;
     });
   }
 
@@ -87,8 +116,16 @@ export class PrismaAuthStore implements AuthStore {
       where: { tokenHash, revokedAt: null, expiresAt: { gt: now } },
       include: { user: { include: { roles: true } } },
     });
-    if (!session) return null;
-    const { passwordHash: _, ...user } = this.toStoredUser(session.user);
+    if (
+      !session ||
+      session.credentialVersion !== session.user.credentialVersion
+    )
+      return null;
+    const {
+      passwordHash: _,
+      credentialVersion: _credentialVersion,
+      ...user
+    } = this.toStoredUser(session.user);
     return { user, expiresAt: session.expiresAt };
   }
 
@@ -107,6 +144,7 @@ export class PrismaAuthStore implements AuthStore {
     locale: string;
     countryCode: string | null;
     status: string;
+    credentialVersion: number;
     roles: { role: string }[];
   }): StoredUser {
     return {
@@ -118,6 +156,7 @@ export class PrismaAuthStore implements AuthStore {
       countryCode: user.countryCode,
       status: user.status,
       roles: user.roles.map(({ role }) => role),
+      credentialVersion: user.credentialVersion,
     };
   }
 }

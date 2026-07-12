@@ -6,8 +6,15 @@ export class PrismaBalanceStore implements BalanceStore {
   constructor(private readonly database: PrismaClient = getDatabase()) {}
   async forUser(userId: string) {
     const accounts = await this.database.ledgerAccount.findMany({
-      where: { userId, active: true, bucket: { not: null } },
-      include: { postings: { select: { amount: true } } },
+      where: { userId, bucket: { not: null } },
+      include: {
+        postings: {
+          where: {
+            transaction: { status: { in: ["POSTED", "REVERSED"] } },
+          },
+          select: { amount: true },
+        },
+      },
       orderBy: [{ asset: "asc" }, { bucket: "asc" }],
     });
     return accounts.map((account) => ({

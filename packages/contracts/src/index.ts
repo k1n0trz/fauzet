@@ -50,6 +50,16 @@ export const loginRequestSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
+export const emailRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+});
+export const tokenRequestSchema = z.object({
+  token: z.string().min(32).max(256),
+});
+export const passwordResetRequestSchema = tokenRequestSchema.extend({
+  password: registerRequestSchema.shape.password,
+});
+
 export const publicUserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),

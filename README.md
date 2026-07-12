@@ -4,7 +4,7 @@ Plataforma gamificada de micro-recompensas con una economía interna auditable. 
 
 ## Estado
 
-La construcción parte de los prototipos en `frontend/` y de los documentos canónicos en `data/`. El diagnóstico y la secuencia completa están en `DIAGNOSTICO-Y-ROADMAP.md`.
+La fundación ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, verificación de email, recuperación de contraseña, siete buckets por usuario y ledger de doble partida con idempotencia y reversos. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
 
 ## Inicio local
 
@@ -16,6 +16,7 @@ docker compose up -d
 corepack pnpm install
 corepack pnpm db:generate
 corepack pnpm db:migrate
+corepack pnpm db:seed
 corepack pnpm dev
 ```
 
@@ -25,6 +26,8 @@ corepack pnpm dev
 - Mailpit: http://localhost:8025
 - PostgreSQL: localhost:55432 (aislado para no colisionar con otras instancias locales)
 
+El navegador consume `/api/v1/*` en el mismo origen del frontend; Next.js lo reenvía a `API_ORIGIN`. En Vercel esta variable debe apuntar a la URL HTTPS de la API en Cloud Run.
+
 ## Verificación
 
 ```powershell
@@ -33,7 +36,19 @@ corepack pnpm lint
 corepack pnpm typecheck
 corepack pnpm test
 corepack pnpm build
+corepack pnpm audit --prod --audit-level high
 ```
+
+La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=true`; CI crea una base aislada, aplica migraciones, carga las cuentas del sistema y cubre registro, verificación, bono promocional, contabilización, reverso y restablecimiento de contraseña.
+
+## Capacidades actuales
+
+- Sesiones opacas en cookie HttpOnly, revocación y rechazo de cuentas suspendidas/cerradas.
+- Verificación de email y restablecimiento de contraseña mediante tokens HMAC de un solo uso.
+- Emails locales visibles en Mailpit; transporte SMTP configurable por entorno.
+- Bono de bienvenida promocional idempotente al verificar la cuenta.
+- Ledger transaccional `SERIALIZABLE`, balanceado por activo, con clave de idempotencia y reversos compensatorios.
+- Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica
 

@@ -13,7 +13,9 @@
     "format:check": "prettier --check .",
     "db:generate": "corepack pnpm --filter @fauzet/database generate",
     "db:migrate": "corepack pnpm --filter @fauzet/database migrate",
-    "db:studio": "corepack pnpm --filter @fauzet/database studio"
+    "db:migrate:deploy": "corepack pnpm --filter @fauzet/database exec prisma migrate deploy",
+    "db:studio": "corepack pnpm --filter @fauzet/database studio",
+    "db:seed": "corepack pnpm --filter @fauzet/database seed"
   },
   "devDependencies": {
     "cross-env": "7.0.3",

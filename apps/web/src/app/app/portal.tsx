@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { API_BASE } from "../../lib/api";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/v1";
 type User = { email: string; displayName: string | null; status: string };
 type Balance = { bucket: string; minorUnits: string };
+type ApiError = { error?: { message?: string } };
 
 export function AuthPortal() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -12,11 +13,62 @@ export function AuthPortal() {
   const [balances, setBalances] = useState<Balance[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [balancesLoading, setBalancesLoading] = useState(false);
+  const [balanceError, setBalanceError] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function restoreSession() {
+      try {
+        const response = await fetch(`${API_BASE}/me`, {
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        if (response.status === 401 || response.status === 403) return;
+
+        const result = (await response.json()) as ApiError & { user?: User };
+        if (!response.ok || !result.user) {
+          throw new Error(
+            result.error?.message ?? "No fue posible restaurar tu sesión",
+          );
+        }
+
+        setUser(result.user);
+
+        try {
+          setBalances(await fetchBalances(controller.signal));
+        } catch (caught) {
+          if (!controller.signal.aborted) {
+            setBalanceError(balanceErrorMessage(caught));
+          }
+        }
+      } catch (caught) {
+        if (!controller.signal.aborted) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "No fue posible restaurar tu sesión",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setSessionLoading(false);
+      }
+    }
+
+    void restoreSession();
+    return () => controller.abort();
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
+    setBalanceError("");
     const form = new FormData(event.currentTarget);
     const body =
       mode === "login"
@@ -31,7 +83,7 @@ export function AuthPortal() {
             isAdult: form.get("isAdult") === "on",
           };
     try {
-      const response = await fetch(`${API}/auth/${mode}`, {
+      const response = await fetch(`${API_BASE}/auth/${mode}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -40,15 +92,35 @@ export function AuthPortal() {
         },
         body: JSON.stringify(body),
       });
-      const result = await response.json();
-      if (!response.ok)
+      const result = (await response.json()) as ApiError & { user?: User };
+      if (!response.ok || !result.user)
         throw new Error(result.error?.message ?? "No fue posible autenticarte");
-      const balanceResponse = await fetch(`${API}/balances`, {
-        credentials: "include",
-      });
-      const balanceResult = await balanceResponse.json();
+
       setUser(result.user);
-      setBalances(balanceResult.balances ?? []);
+      setBalances([]);
+
+      if (mode === "register") {
+        const verification = await fetch(
+          `${API_BASE}/auth/email-verification/request`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "content-type": "application/json" },
+            body: "{}",
+          },
+        );
+        setAccountMessage(
+          verification.ok
+            ? "Te enviamos el enlace de verificación."
+            : "La cuenta fue creada, pero no pudimos enviar el email.",
+        );
+      }
+
+      try {
+        setBalances(await fetchBalances());
+      } catch (caught) {
+        setBalanceError(balanceErrorMessage(caught));
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Error inesperado");
     } finally {
@@ -57,13 +129,74 @@ export function AuthPortal() {
   }
 
   async function logout() {
-    await fetch(`${API}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-    setUser(null);
-    setBalances([]);
+    try {
+      const response = await fetch(`${API_BASE}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("logout_failed");
+      setUser(null);
+      setBalances([]);
+      setBalanceError("");
+      setAccountMessage("");
+    } catch {
+      setAccountMessage("No fue posible cerrar la sesión. Inténtalo de nuevo.");
+    }
   }
+
+  async function retryBalances() {
+    setBalancesLoading(true);
+    setBalanceError("");
+    try {
+      setBalances(await fetchBalances());
+    } catch (caught) {
+      setBalanceError(balanceErrorMessage(caught));
+    } finally {
+      setBalancesLoading(false);
+    }
+  }
+
+  async function requestVerification() {
+    if (verificationLoading) return;
+    setVerificationLoading(true);
+    setAccountMessage("Enviando verificación…");
+    try {
+      const response = await fetch(
+        `${API_BASE}/auth/email-verification/request`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: "{}",
+        },
+      );
+      setAccountMessage(
+        response.ok
+          ? "Te enviamos un nuevo enlace de verificación."
+          : "No fue posible enviar el email. Inténtalo de nuevo.",
+      );
+    } catch {
+      setAccountMessage("No fue posible enviar el email. Inténtalo de nuevo.");
+    } finally {
+      setVerificationLoading(false);
+    }
+  }
+
+  if (sessionLoading)
+    return (
+      <main className="authShell" aria-busy="true">
+        <Link className="brand authBrand" href="/">
+          Fau<span>zet</span>
+        </Link>
+        <section className="authCard" aria-live="polite">
+          <div className="eyebrow">Acceso seguro</div>
+          <h1 className="authTitle">Cargando tu sesión…</h1>
+          <p className="authCopy">
+            Estamos recuperando tu cuenta y tus balances.
+          </p>
+        </section>
+      </main>
+    );
 
   if (user)
     return (
@@ -92,10 +225,42 @@ export function AuthPortal() {
               </article>
             ))}
           </div>
+          {balanceError && (
+            <div className="notice" role="alert">
+              <strong>{balanceError}</strong>{" "}
+              <button
+                className="textButton"
+                type="button"
+                disabled={balancesLoading}
+                onClick={retryBalances}
+              >
+                {balancesLoading ? "Reintentando…" : "Reintentar"}
+              </button>
+            </div>
+          )}
           <div className="notice">
-            Tu cuenta está en estado <strong>{user.status}</strong>. El faucet
-            se habilitará después de verificar el correo.
+            Tu cuenta está en estado <strong>{user.status}</strong>.{" "}
+            {user.status === "PENDING_VERIFICATION" ? (
+              <>
+                Verifica el correo para activar las recompensas.
+                <button
+                  className="textButton"
+                  type="button"
+                  disabled={verificationLoading}
+                  onClick={requestVerification}
+                >
+                  {verificationLoading ? "Enviando…" : "Reenviar verificación"}
+                </button>
+              </>
+            ) : (
+              "Tu email está verificado; las recompensas se habilitarán por fases."
+            )}
           </div>
+          {accountMessage && (
+            <div className="notice" role="status">
+              {accountMessage}
+            </div>
+          )}
         </section>
       </main>
     );
@@ -118,12 +283,16 @@ export function AuthPortal() {
         <div className="authTabs">
           <button
             className={mode === "login" ? "active" : ""}
+            type="button"
+            aria-pressed={mode === "login"}
             onClick={() => setMode("login")}
           >
             Ingresar
           </button>
           <button
             className={mode === "register" ? "active" : ""}
+            type="button"
+            aria-pressed={mode === "register"}
             onClick={() => setMode("register")}
           >
             Registro
@@ -191,6 +360,11 @@ export function AuthPortal() {
                 ? "Ingresar"
                 : "Crear cuenta"}
           </button>
+          {mode === "login" && (
+            <Link className="authLegal" href="/app/forgot">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          )}
         </form>
         <p className="authLegal">
           ZYXE es una unidad interna de utilidad y no representa una inversión.
@@ -198,6 +372,30 @@ export function AuthPortal() {
       </section>
     </main>
   );
+}
+
+async function fetchBalances(signal?: AbortSignal): Promise<Balance[]> {
+  const response = await fetch(`${API_BASE}/balances`, {
+    credentials: "include",
+    signal: signal ?? null,
+  });
+  const result = (await response.json()) as ApiError & {
+    balances?: Balance[];
+  };
+
+  if (!response.ok || !Array.isArray(result.balances)) {
+    throw new Error(
+      result.error?.message ?? "No fue posible cargar tus balances",
+    );
+  }
+
+  return result.balances;
+}
+
+function balanceErrorMessage(caught: unknown) {
+  return caught instanceof Error
+    ? caught.message
+    : "No fue posible cargar tus balances";
 }
 
 function getDeviceId() {

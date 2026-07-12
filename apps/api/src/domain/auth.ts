@@ -1,5 +1,5 @@
 import {
-  createHash,
+  createHmac,
   randomBytes,
   scrypt as scryptCallback,
   timingSafeEqual,
@@ -20,6 +20,7 @@ export interface SessionContext {
 
 export interface StoredUser extends PublicUser {
   passwordHash: string;
+  credentialVersion: number;
 }
 
 export interface StoredSession {
@@ -38,7 +39,8 @@ export interface AuthStore {
     tokenHash: string,
     expiresAt: Date,
     context: SessionContext,
-  ): Promise<void>;
+    credentialVersion: number,
+  ): Promise<boolean>;
   findSession(
     tokenHash: string,
     now: Date,
@@ -59,6 +61,8 @@ export class AuthError extends Error {
     super(message);
   }
 }
+
+export class AuthStoreConflictError extends Error {}
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
@@ -82,7 +86,7 @@ export async function verifyPassword(
 }
 
 export function hashSessionToken(token: string, secret: string): string {
-  return createHash("sha256").update(`${secret}:${token}`).digest("hex");
+  return createHmac("sha256", secret).update(token).digest("hex");
 }
 
 export class AuthService {
@@ -103,10 +107,21 @@ export class AuthService {
         409,
       );
     }
-    const user = await this.store.createUser({
-      ...input,
-      passwordHash: await hashPassword(input.password),
-    });
+    let user: StoredUser;
+    try {
+      user = await this.store.createUser({
+        ...input,
+        passwordHash: await hashPassword(input.password),
+      });
+    } catch (error) {
+      if (error instanceof AuthStoreConflictError)
+        throw new AuthError(
+          "An account with this email already exists",
+          "EMAIL_TAKEN",
+          409,
+        );
+      throw error;
+    }
     return this.issueSession(user, context);
   }
 
@@ -115,7 +130,10 @@ export class AuthService {
     context: SessionContext = {},
   ): Promise<StoredSession> {
     const user = await this.store.findUserByEmail(input.email);
-    if (!user || !(await verifyPassword(input.password, user.passwordHash))) {
+    const valid = user
+      ? await verifyPassword(input.password, user.passwordHash)
+      : await verifyMissingUserPassword(input.password);
+    if (!user || !valid) {
       throw new AuthError(
         "Invalid email or password",
         "INVALID_CREDENTIALS",
@@ -141,6 +159,12 @@ export class AuthService {
     );
     if (!found)
       throw new AuthError("Session is invalid or expired", "UNAUTHORIZED", 401);
+    if (["SUSPENDED", "CLOSED"].includes(found.user.status))
+      throw new AuthError(
+        "Account access is restricted",
+        "ACCOUNT_RESTRICTED",
+        403,
+      );
     return found.user;
   }
 
@@ -158,13 +182,35 @@ export class AuthService {
   ): Promise<StoredSession> {
     const token = randomBytes(32).toString("base64url");
     const expiresAt = new Date(Date.now() + this.sessionTtlDays * 86_400_000);
-    await this.store.createSession(
+    const created = await this.store.createSession(
       user.id,
       hashSessionToken(token, this.sessionSecret),
       expiresAt,
       context,
+      user.credentialVersion,
     );
-    const { passwordHash: _, ...publicUser } = user;
+    if (!created)
+      throw new AuthError(
+        "Credentials changed during authentication",
+        "INVALID_CREDENTIALS",
+        401,
+      );
+    const {
+      passwordHash: _,
+      credentialVersion: _credentialVersion,
+      ...publicUser
+    } = user;
     return { token, expiresAt, user: publicUser };
   }
+}
+
+async function verifyMissingUserPassword(password: string): Promise<boolean> {
+  const expected = Buffer.alloc(64, 0);
+  const actual = (await scrypt(
+    password,
+    Buffer.from("fauzet-auth-dummy-salt"),
+    expected.length,
+  )) as Buffer;
+  timingSafeEqual(actual, expected);
+  return false;
 }

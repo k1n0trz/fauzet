@@ -43,6 +43,10 @@
   font-size: 14px;
   line-height: 1.6;
 }
+.authAction {
+  display: inline-block;
+  margin-top: 24px;
+}
 .authTabs {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -12,7 +12,8 @@ export async function registerBalanceRoutes(
   auth: AuthService,
   balances: BalanceService,
 ) {
-  app.get("/v1/balances", async (request) => {
+  app.get("/v1/balances", async (request, reply) => {
+    reply.header("cache-control", "no-store");
     const user = await auth.authenticate(tokenFrom(request));
     return {
       balances: await balances.forUser(user.id),
