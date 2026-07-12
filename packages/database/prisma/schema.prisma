@@ -52,6 +52,20 @@ enum LedgerTransactionStatus {
   REJECTED
 }
 
+enum GameKind {
+  TAP_MINER
+  MEMORY_DROPS
+}
+
+enum GameSessionStatus {
+  ACTIVE
+  COMPLETED
+  HELD
+  REJECTED
+  EXPIRED
+  ABORTED
+}
+
 model User {
   id                      String                   @id @default(uuid())
   email                   String                   @unique
@@ -72,6 +86,9 @@ model User {
   accounts                LedgerAccount[]
   faucetChallenges        FaucetChallenge[]
   faucetClaims            FaucetClaim[]
+  gameEnergy              GameEnergy?
+  gameSessions            GameSession[]
+  missionClaims           MissionClaim[]
   auditEvents             AuditEvent[]             @relation("AuditActor")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
@@ -160,6 +177,8 @@ model LedgerTransaction {
   reverses       LedgerTransaction?      @relation("Reversal")
   config         EconomicConfigVersion   @relation(fields: [configVersion], references: [id], onDelete: Restrict)
   faucetClaim    FaucetClaim?
+  gameSession    GameSession?
+  missionClaim   MissionClaim?
 
   @@unique([sourceType, sourceId, type])
 }
@@ -178,16 +197,19 @@ model LedgerPosting {
 }
 
 model EconomicConfigVersion {
-  id           Int                 @id @default(autoincrement())
-  status       String              @default("DRAFT")
-  parameters   Json
-  reason       String
-  createdById  String
-  approvedById String?
-  effectiveAt  DateTime?
-  createdAt    DateTime            @default(now())
-  transactions LedgerTransaction[]
-  faucetClaims FaucetClaim[]
+  id            Int                 @id @default(autoincrement())
+  status        String              @default("DRAFT")
+  parameters    Json
+  reason        String
+  createdById   String
+  approvedById  String?
+  effectiveAt   DateTime?
+  createdAt     DateTime            @default(now())
+  transactions  LedgerTransaction[]
+  faucetClaims  FaucetClaim[]
+  gameEnergy    GameEnergy[]
+  gameSessions  GameSession[]
+  missionClaims MissionClaim[]
 }
 
 model FaucetChallenge {
@@ -232,6 +254,92 @@ model FaucetClaim {
   @@index([budgetDate, status])
   @@index([deviceId, budgetDate, status])
   @@index([ipHash, budgetDate, status])
+}
+
+model GameEnergy {
+  userId        String                @id
+  current       Int
+  regeneratedAt DateTime
+  ruleVersion   Int
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config        EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+}
+
+model GameSession {
+  id            String                @id @default(uuid())
+  userId        String
+  game          GameKind
+  status        GameSessionStatus     @default(ACTIVE)
+  creationKey   String                @unique
+  completionKey String?               @unique
+  nonce         String                @unique
+  tokenHash     String                @unique
+  ruleVersion   Int
+  budgetDate    DateTime              @db.Date
+  energyCost    Int
+  nextSequence  Int                   @default(1)
+  lastEventAtMs Int                   @default(-1)
+  eventCount    Int                   @default(0)
+  score         Int                   @default(0)
+  state         Json                  @default("{}")
+  layout        Json?
+  rewardMinor   Decimal?              @db.Decimal(36, 0)
+  transactionId String?               @unique
+  reasonCode    String?
+  deviceId      String
+  ipHash        String
+  startedAt     DateTime
+  expiresAt     DateTime
+  completedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config        EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction   LedgerTransaction?    @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  events        GameEvent[]
+
+  @@index([userId, game, budgetDate, status])
+  @@index([deviceId, budgetDate, status])
+  @@index([ipHash, budgetDate, status])
+  @@index([budgetDate, status])
+}
+
+model GameEvent {
+  id         String      @id @default(uuid())
+  sessionId  String
+  sequence   Int
+  eventId    String
+  type       String
+  atMs       Int
+  payload    Json        @default("{}")
+  acceptedAt DateTime    @default(now())
+  session    GameSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, sequence])
+  @@unique([sessionId, eventId])
+  @@index([sessionId, acceptedAt])
+}
+
+model MissionClaim {
+  id             String                @id @default(uuid())
+  userId         String
+  missionId      String
+  periodKey      String
+  idempotencyKey String                @unique
+  status         String
+  progress       Decimal               @db.Decimal(36, 0)
+  target         Decimal               @db.Decimal(36, 0)
+  rewardMinor    Decimal               @db.Decimal(36, 0)
+  ruleVersion    Int
+  transactionId  String?               @unique
+  createdAt      DateTime              @default(now())
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config         EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction    LedgerTransaction?    @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, missionId, periodKey])
+  @@index([ruleVersion, periodKey, status])
 }
 
 model AuditEvent {

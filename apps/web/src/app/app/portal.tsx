@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { API_BASE } from "../../lib/api";
@@ -236,6 +237,36 @@ export function AuthPortal() {
                 <small>
                   Consulta tu cooldown y reclama recompensas validadas.
                 </small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link className="faucetShortcut" href="/app/games">
+              <span className="faucetShortcutIcon">
+                <Image
+                  src="/rewards/ic-games.png"
+                  width={30}
+                  height={30}
+                  alt=""
+                />
+              </span>
+              <span>
+                <strong>Centro de juegos</strong>
+                <small>Juega sesiones firmadas con score validado.</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link className="faucetShortcut" href="/app/missions">
+              <span className="faucetShortcutIcon">
+                <Image
+                  src="/rewards/ic-missions.png"
+                  width={30}
+                  height={30}
+                  alt=""
+                />
+              </span>
+              <span>
+                <strong>Centro de misiones</strong>
+                <small>Consulta progreso y reclama metas confirmadas.</small>
               </span>
               <span aria-hidden="true">→</span>
             </Link>

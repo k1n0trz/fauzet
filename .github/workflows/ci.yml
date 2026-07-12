@@ -48,4 +48,18 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Smoke production API artifact
+        shell: bash
+        run: |
+          pnpm --filter @fauzet/api start > /tmp/fauzet-api.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error http://127.0.0.1:4000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          cat /tmp/fauzet-api.log
+          exit 1
       - run: pnpm audit --prod --audit-level high

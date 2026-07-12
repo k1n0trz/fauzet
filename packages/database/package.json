@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
-    "build": "prisma generate",
+    "build": "prisma generate && tsc -p tsconfig.json",
     "lint": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate",
-    "typecheck": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate",
+    "typecheck": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate && tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",

@@ -209,6 +209,14 @@ describe("PrismaLedgerStore", () => {
       where: { id: original.id, status: "POSTED", reversedById: null },
       data: { status: "REVERSED", reversedById: reversal.id },
     });
+    expect(tx.faucetClaim.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: original.sourceId,
+        transactionId: original.id,
+        status: "POSTED",
+      },
+      data: { status: "REJECTED" },
+    });
     expect(result.original.status).toBe("REVERSED");
     expect(result.reversal.postings.map(({ amount }) => amount)).toEqual([
       25n,
@@ -246,6 +254,59 @@ describe("PrismaLedgerStore", () => {
     expect(tx.ledgerTransaction.create).not.toHaveBeenCalled();
     expect(tx.ledgerTransaction.updateMany).not.toHaveBeenCalled();
   });
+
+  it.each([
+    [
+      "game_session",
+      "gameSession",
+      "COMPLETED",
+      { status: "REJECTED", reasonCode: "REWARD_REVERSED" },
+    ],
+    ["mission_claim", "missionClaim", "POSTED", { status: "REJECTED" }],
+  ] as const)(
+    "rejects the %s reward projection in the reversal transaction",
+    async (sourceType, delegate, status, data) => {
+      const original = transactionRecord({ sourceType, sourceId: "source-1" });
+      const reversal = transactionRecord({
+        id: "transaction-reversal",
+        idempotencyKey: "reversal:transaction-1",
+        type: `${original.type}_REVERSAL`,
+        sourceType: "ledger_transaction",
+        sourceId: original.id,
+        metadata: {},
+        postings: [
+          postingRecord("reversal-posting-1", "treasury", "EQUITY", 25n),
+          postingRecord("reversal-posting-2", "user", "LIABILITY", -25n),
+        ],
+      });
+      const reversedOriginal = transactionRecord({
+        ...original,
+        status: "REVERSED",
+        reversedById: reversal.id,
+      });
+      const { database, tx } = fakeDatabase();
+      tx.ledgerTransaction.findUnique
+        .mockResolvedValueOnce(original)
+        .mockResolvedValueOnce(reversedOriginal);
+      tx.ledgerTransaction.findMany.mockResolvedValue([]);
+      tx.ledgerTransaction.create.mockResolvedValue(reversal);
+      tx.ledgerTransaction.updateMany.mockResolvedValue({ count: 1 });
+
+      await new PrismaLedgerStore(database).reverse({
+        transactionId: original.id,
+        idempotencyKey: reversal.idempotencyKey,
+      });
+
+      expect(tx[delegate].updateMany).toHaveBeenCalledWith({
+        where: {
+          id: original.sourceId,
+          transactionId: original.id,
+          status,
+        },
+        data,
+      });
+    },
+  );
 });
 
 function fakeDatabase() {
@@ -273,6 +334,9 @@ function fakeDatabase() {
         },
       ]),
     },
+    gameSession: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    missionClaim: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    faucetClaim: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
   };
   const database = {
     ...tx,

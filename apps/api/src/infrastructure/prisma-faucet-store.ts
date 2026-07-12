@@ -83,7 +83,7 @@ export class PrismaFaucetStore implements FaucetStore {
     context: FaucetRequestContext,
     now: Date,
   ): Promise<FaucetChallenge> {
-    return this.withSerializableRetry(async (tx) => {
+    return this.database.$transaction(async (tx) => {
       const user = await requireEligibleUser(tx, userId, true);
       const availability = await readAvailability(
         tx,

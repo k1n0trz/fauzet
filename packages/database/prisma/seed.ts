@@ -19,6 +19,22 @@ const faucetPoolFundingMinor = positiveIntegerEnv(
   "FAUCET_POOL_FUNDING_MINOR",
   faucetDailyBudgetMinor * 30,
 );
+const gamesDailyBudgetMinor = positiveIntegerEnv(
+  "GAMES_DAILY_BUDGET_MINOR",
+  200_000,
+);
+const gamesPoolFundingMinor = positiveIntegerEnv(
+  "GAMES_POOL_FUNDING_MINOR",
+  gamesDailyBudgetMinor * 30,
+);
+const missionsDailyBudgetMinor = positiveIntegerEnv(
+  "MISSIONS_DAILY_BUDGET_MINOR",
+  100_000,
+);
+const missionsPoolFundingMinor = positiveIntegerEnv(
+  "MISSIONS_POOL_FUNDING_MINOR",
+  missionsDailyBudgetMinor * 30,
+);
 if (welcomeBonusBudgetMinor < welcomeBonusMinor) {
   throw new Error("WELCOME_BONUS_BUDGET_MINOR must cover at least one bonus");
 }
@@ -42,6 +58,16 @@ const systemAccounts: Array<{
   {
     code: "platform:zyxe:promotional-pool",
     name: "ZYXE promotional pool",
+    kind: "EQUITY",
+  },
+  {
+    code: "platform:zyxe:game-reward-pool",
+    name: "ZYXE game reward pool",
+    kind: "EQUITY",
+  },
+  {
+    code: "platform:zyxe:mission-reward-pool",
+    name: "ZYXE mission reward pool",
     kind: "EQUITY",
   },
   { code: "platform:zyxe:burn", name: "ZYXE burned", kind: "CONTRA" },
@@ -97,6 +123,102 @@ async function seed() {
     challengeTtlSeconds: 5 * 60,
     creditBucket: "AVAILABLE",
   } as const;
+  const gamesParameters = {
+    enabled: true,
+    dailyBudgetMinor: gamesDailyBudgetMinor,
+    maxRiskLevel: 50,
+    dailySessionLimitPerGame: 10,
+    deviceDailySessionLimit: 20,
+    ipDailySessionLimit: 60,
+    completionGraceSeconds: 30,
+    clientLeadToleranceMs: 750,
+    energy: { max: 100, initial: 100, regenIntervalSeconds: 300 },
+    tapMiner: {
+      enabled: true,
+      energyCost: 5,
+      durationSeconds: 10,
+      rewardMinMinor: 5,
+      rewardMaxMinor: 25,
+      rewardStepTaps: 4,
+      maxTaps: 100,
+      minTapIntervalMs: 80,
+      maxBatchSize: 25,
+    },
+    memoryDrops: {
+      enabled: true,
+      energyCost: 8,
+      durationSeconds: 45,
+      rewardMinMinor: 10,
+      rewardMaxMinor: 40,
+      symbols: ["💧", "⛏️", "💠", "🚀", "🔋", "🏆"],
+      mismatchLockMs: 700,
+      minFlipIntervalMs: 120,
+      completionBaseReward: 15,
+      partialBaseReward: 5,
+      rewardPerPair: 3,
+      timeBonusDivisorSeconds: 2,
+      scorePerPair: 10,
+    },
+  } as const;
+  const missionsParameters = {
+    enabled: true,
+    dailyBudgetMinor: missionsDailyBudgetMinor,
+    maxRiskLevel: 50,
+    definitions: [
+      {
+        id: "m1",
+        title: "Reclama 3 veces hoy",
+        category: "daily",
+        source: "FAUCET_POSTED",
+        target: 3,
+        rewardMinor: 30,
+      },
+      {
+        id: "m2",
+        title: "Gana 50 ZYXE en juegos",
+        category: "daily",
+        source: "GAME_REWARDS_POSTED",
+        target: 50,
+        rewardMinor: 40,
+      },
+      {
+        id: "m3",
+        title: "Mantén 100+ GH/s por 24h",
+        category: "mining",
+        source: "LOCKED",
+        target: 24,
+        rewardMinor: 60,
+        lockedReason: "MINING_NOT_AVAILABLE",
+      },
+      {
+        id: "m4",
+        title: "Racha de 7 días",
+        category: "weekly",
+        source: "LOCKED",
+        target: 7,
+        rewardMinor: 100,
+        lockedReason: "WEEKLY_MISSIONS_NOT_AVAILABLE",
+      },
+      {
+        id: "m5",
+        title: "Un miembro de crew activo",
+        category: "referral",
+        source: "LOCKED",
+        target: 1,
+        rewardMinor: 50,
+        lockedReason: "REFERRALS_NOT_AVAILABLE",
+      },
+      {
+        id: "m6",
+        title: "Misión patrocinada: encuesta",
+        category: "premium",
+        source: "LOCKED",
+        target: 1,
+        rewardMinor: 200,
+        lockedReason: "PROVIDER_NOT_AVAILABLE",
+      },
+    ],
+  } as const;
   let activeConfig = await database.economicConfigVersion.findFirst({
     where: { status: "ACTIVE" },
     orderBy: { id: "desc" },
@@ -113,6 +235,8 @@ async function seed() {
           welcomeBonusMinor,
           welcomeBonusBudgetMinor,
           faucet: faucetParameters,
+          games: gamesParameters,
+          missions: missionsParameters,
           purchaseSplit: { burn: 40, recycle: 40, treasury: 20 },
           referralsEnabled: false,
           withdrawalsEnabled: false,
@@ -120,7 +244,7 @@ async function seed() {
         },
       },
     });
-  } else if (!hasFaucetParameters(activeConfig.parameters)) {
+  } else if (!hasRuntimeParameters(activeConfig.parameters)) {
     activeConfig = await database.$transaction(async (tx) => {
       await tx.economicConfigVersion.updateMany({
         where: { status: "ACTIVE" },
@@ -129,12 +253,14 @@ async function seed() {
       return tx.economicConfigVersion.create({
         data: {
           status: "ACTIVE",
-          reason: "Add server-authoritative closed beta faucet",
+          reason: "Add server-authoritative closed beta runtime modules",
           createdById: "system",
           effectiveAt: new Date(),
           parameters: {
             ...asParameterRecord(activeConfig!.parameters),
             faucet: faucetParameters,
+            games: gamesParameters,
+            missions: missionsParameters,
           },
         },
       });
@@ -148,7 +274,13 @@ async function seed() {
     )
   `;
 
-  const [issuance, promotionalPool, rewardPool] = await Promise.all([
+  const [
+    issuance,
+    promotionalPool,
+    rewardPool,
+    gameRewardPool,
+    missionRewardPool,
+  ] = await Promise.all([
     database.ledgerAccount.findUniqueOrThrow({
       where: { code: "platform:zyxe:issuance" },
     }),
@@ -157,6 +289,12 @@ async function seed() {
     }),
     database.ledgerAccount.findUniqueOrThrow({
       where: { code: "platform:zyxe:reward-pool" },
+    }),
+    database.ledgerAccount.findUniqueOrThrow({
+      where: { code: "platform:zyxe:game-reward-pool" },
+    }),
+    database.ledgerAccount.findUniqueOrThrow({
+      where: { code: "platform:zyxe:mission-reward-pool" },
     }),
   ]);
   await database.ledgerTransaction.upsert({
@@ -215,10 +353,71 @@ async function seed() {
       },
     },
   });
+  await fundPool({
+    idempotencyKey: "seed:closed-beta:game-reward-pool",
+    type: "GAME_REWARD_POOL_FUNDED",
+    sourceId: `${activeConfig.id}:game-reward-pool`,
+    configVersion: activeConfig.id,
+    amount: gamesPoolFundingMinor,
+    issuanceId: issuance.id,
+    poolId: gameRewardPool.id,
+    metadata: {
+      dailyBudgetMinor: String(gamesDailyBudgetMinor),
+      fundedMinor: String(gamesPoolFundingMinor),
+    },
+  });
+  await fundPool({
+    idempotencyKey: "seed:closed-beta:mission-reward-pool",
+    type: "MISSION_REWARD_POOL_FUNDED",
+    sourceId: `${activeConfig.id}:mission-reward-pool`,
+    configVersion: activeConfig.id,
+    amount: missionsPoolFundingMinor,
+    issuanceId: issuance.id,
+    poolId: missionRewardPool.id,
+    metadata: {
+      dailyBudgetMinor: String(missionsDailyBudgetMinor),
+      fundedMinor: String(missionsPoolFundingMinor),
+    },
+  });
 }
 
-function hasFaucetParameters(value: unknown): boolean {
-  return "faucet" in asParameterRecord(value);
+async function fundPool(input: {
+  idempotencyKey: string;
+  type: string;
+  sourceId: string;
+  configVersion: number;
+  amount: number;
+  issuanceId: string;
+  poolId: string;
+  metadata: Record<string, string>;
+}) {
+  await database.ledgerTransaction.upsert({
+    where: { idempotencyKey: input.idempotencyKey },
+    update: {},
+    create: {
+      idempotencyKey: input.idempotencyKey,
+      type: input.type,
+      sourceType: "economic_config",
+      sourceId: input.sourceId,
+      status: "POSTED",
+      configVersion: input.configVersion,
+      postedAt: new Date(),
+      metadata: { seeded: true, ...input.metadata },
+      postings: {
+        create: [
+          { accountId: input.issuanceId, amount: String(-input.amount) },
+          { accountId: input.poolId, amount: String(input.amount) },
+        ],
+      },
+    },
+  });
+}
+
+function hasRuntimeParameters(value: unknown): boolean {
+  const parameters = asParameterRecord(value);
+  return (
+    "faucet" in parameters && "games" in parameters && "missions" in parameters
+  );
 }
 
 function asParameterRecord(value: unknown): Record<string, unknown> {

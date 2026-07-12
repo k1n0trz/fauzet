@@ -4,7 +4,7 @@ Plataforma gamificada de micro-recompensas con una economía interna auditable. 
 
 ## Estado
 
-La fundación ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, verificación de email, recuperación de contraseña, siete buckets por usuario, ledger de doble partida y faucet server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
+La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, Tap Miner, Memory Drops y misiones diarias server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
 
 ## Inicio local
 
@@ -41,7 +41,7 @@ corepack pnpm build
 corepack pnpm audit --prod --audit-level high
 ```
 
-La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=true`; CI crea una base aislada, aplica migraciones, carga las cuentas del sistema y cubre registro, verificación, bono promocional, contabilización, reverso y restablecimiento de contraseña.
+La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=true`; CI crea una base aislada, aplica migraciones, carga las cuentas del sistema y cubre registro, verificación, bono promocional, contabilización, reverso, restablecimiento de contraseña, faucet, juegos firmados y claims de misiones.
 
 ## Capacidades actuales
 
@@ -51,6 +51,8 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Bono de bienvenida promocional idempotente al verificar la cuenta.
 - Ledger transaccional `SERIALIZABLE`, balanceado por activo, con clave de idempotencia y reversos compensatorios.
 - Faucet con challenges de un solo uso, cooldown, dispositivo vinculado a sesión, límites de cuenta/dispositivo/IP, presupuesto UTC, racha y acreditación atómica al ledger.
+- Tap Miner y Memory Drops con energía regenerable, sesiones firmadas, secuencia e idempotencia de eventos, validación temporal y recompensas calculadas exclusivamente por el servidor.
+- Misiones derivadas de claims y recompensas realmente posteadas, con períodos UTC, claim explícito e idempotente, presupuesto propio y acreditación atómica.
 - Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica

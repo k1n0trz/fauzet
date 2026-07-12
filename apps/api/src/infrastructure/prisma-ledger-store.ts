@@ -146,6 +146,7 @@ export class PrismaLedgerStore implements LedgerPostingStore {
       },
     });
     if (updated.count !== 1) throw new ConcurrentLedgerReversalError();
+    await rejectRewardProjection(tx, original);
 
     const reversedOriginal = await tx.ledgerTransaction.findUnique({
       where: { id: original.id },
@@ -176,6 +177,44 @@ export class PrismaLedgerStore implements LedgerPostingStore {
     const reversal = await findExisting(this.database, reversalInput);
     if (!reversal) return null;
     return linkedReversalResult(original, reversal);
+  }
+}
+
+async function rejectRewardProjection(
+  tx: Prisma.TransactionClient,
+  transaction: { id: string; sourceType: string; sourceId: string },
+): Promise<void> {
+  if (transaction.sourceType === "game_session") {
+    await tx.gameSession.updateMany({
+      where: {
+        id: transaction.sourceId,
+        transactionId: transaction.id,
+        status: "COMPLETED",
+      },
+      data: { status: "REJECTED", reasonCode: "REWARD_REVERSED" },
+    });
+    return;
+  }
+  if (transaction.sourceType === "mission_claim") {
+    await tx.missionClaim.updateMany({
+      where: {
+        id: transaction.sourceId,
+        transactionId: transaction.id,
+        status: "POSTED",
+      },
+      data: { status: "REJECTED" },
+    });
+    return;
+  }
+  if (transaction.sourceType === "faucet_claim") {
+    await tx.faucetClaim.updateMany({
+      where: {
+        id: transaction.sourceId,
+        transactionId: transaction.id,
+        status: "POSTED",
+      },
+      data: { status: "REJECTED" },
+    });
   }
 }
 
