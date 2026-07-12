@@ -17,4 +17,47 @@ describe("API", () => {
     });
     await app.close();
   });
+
+  it("registers a user and protects the current-user endpoint", async () => {
+    const app = await createApp(loadConfig({ NODE_ENV: "test" }));
+    const anonymous = await app.inject({ method: "GET", url: "/v1/me" });
+    expect(anonymous.statusCode).toBe(401);
+    const registration = await app.inject({
+      method: "POST",
+      url: "/v1/auth/register",
+      payload: {
+        email: "mateo@example.com",
+        password: "ValidPassword123",
+        displayName: "Mateo",
+        countryCode: "CO",
+        locale: "es",
+        acceptedTerms: true,
+        isAdult: true,
+      },
+    });
+    expect(registration.statusCode).toBe(201);
+    const cookie = registration.cookies.find(
+      ({ name }) => name === "fz_session",
+    );
+    const me = await app.inject({
+      method: "GET",
+      url: "/v1/me",
+      cookies: { fz_session: cookie!.value },
+    });
+    expect(me.json().user.email).toBe("mateo@example.com");
+    const balances = await app.inject({
+      method: "GET",
+      url: "/v1/balances",
+      cookies: { fz_session: cookie!.value },
+    });
+    expect(balances.json().balances).toHaveLength(7);
+    expect(
+      balances
+        .json()
+        .balances.every(
+          ({ minorUnits }: { minorUnits: string }) => minorUnits === "0",
+        ),
+    ).toBe(true);
+    await app.close();
+  });
 });

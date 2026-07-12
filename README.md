@@ -23,6 +23,7 @@ corepack pnpm dev
 - API: http://localhost:4000
 - Health: http://localhost:4000/health
 - Mailpit: http://localhost:8025
+- PostgreSQL: localhost:55432 (aislado para no colisionar con otras instancias locales)
 
 ## Verificación
 
