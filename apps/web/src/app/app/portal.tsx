@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { API_BASE } from "../../lib/api";
+import { getDeviceId } from "../../lib/device";
 
 type User = { email: string; displayName: string | null; status: string };
 type Balance = { bucket: string; minorUnits: string };
@@ -225,6 +226,20 @@ export function AuthPortal() {
               </article>
             ))}
           </div>
+          <nav className="dashboardActions" aria-label="Acciones principales">
+            <Link className="faucetShortcut" href="/app/faucet">
+              <span className="faucetShortcutIcon" aria-hidden="true">
+                💧
+              </span>
+              <span>
+                <strong>Ir al faucet</strong>
+                <small>
+                  Consulta tu cooldown y reclama recompensas validadas.
+                </small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </nav>
           {balanceError && (
             <div className="notice" role="alert">
               <strong>{balanceError}</strong>{" "}
@@ -398,14 +413,6 @@ function balanceErrorMessage(caught: unknown) {
     : "No fue posible cargar tus balances";
 }
 
-function getDeviceId() {
-  const key = "fz_device_id";
-  const current = localStorage.getItem(key);
-  if (current) return current;
-  const created = crypto.randomUUID();
-  localStorage.setItem(key, created);
-  return created;
-}
 function bucketLabel(bucket: string) {
   return (
     (

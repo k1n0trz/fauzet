@@ -25,6 +25,71 @@ export const claimRequestSchema = z.object({
   challengeId: z.string().uuid(),
 });
 
+export const idempotencyKeySchema = z
+  .string()
+  .trim()
+  .min(8)
+  .max(128)
+  .regex(/^[A-Za-z0-9._:-]+$/);
+
+export const faucetStateSchema = z.enum([
+  "READY",
+  "COOLDOWN",
+  "DAILY_LIMIT",
+  "DEVICE_LIMIT",
+  "IP_LIMIT",
+  "CAPTCHA_REQUIRED",
+  "RISK_BLOCKED",
+  "BUDGET_EXHAUSTED",
+  "DISABLED",
+]);
+
+export const faucetStatusResponseSchema = z.object({
+  faucet: z.object({
+    state: faucetStateSchema,
+    canClaim: z.boolean(),
+    captchaRequired: z.boolean(),
+    nextClaimAt: z.string().datetime().nullable(),
+    claimsToday: z.number().int().nonnegative(),
+    dailyClaimLimit: z.number().int().positive(),
+    cooldownSeconds: z.number().int().positive(),
+    streakDays: z.number().int().nonnegative(),
+    bonusMultiplier: z.string().regex(/^\d+(?:\.\d+)?$/),
+    reward: z.object({
+      asset: z.literal("ZYXE"),
+      minMinorUnits: z.string().regex(/^\d+$/),
+      maxMinorUnits: z.string().regex(/^\d+$/),
+      bucket: z.literal("AVAILABLE"),
+    }),
+    configVersion: z.number().int().positive(),
+  }),
+});
+
+export const faucetChallengeResponseSchema = z.object({
+  challenge: z.object({
+    id: z.string().uuid(),
+    expiresAt: z.string().datetime(),
+  }),
+});
+
+export const faucetClaimResponseSchema = z.object({
+  claim: z.object({
+    id: z.string().uuid(),
+    status: z.literal("POSTED"),
+    reward: z.object({
+      asset: z.literal("ZYXE"),
+      minorUnits: z.string().regex(/^\d+$/),
+      bucket: z.literal("AVAILABLE"),
+    }),
+    nextClaimAt: z.string().datetime(),
+    transactionId: z.string().uuid(),
+    configVersion: z.number().int().positive(),
+    streakDays: z.number().int().positive(),
+    bonusMultiplier: z.string().regex(/^\d+(?:\.\d+)?$/),
+  }),
+  replayed: z.boolean(),
+});
+
 export const registerRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z
@@ -86,3 +151,8 @@ export type Balance = z.infer<typeof balanceSchema>;
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type PublicUser = z.infer<typeof publicUserSchema>;
+export type FaucetStatusResponse = z.infer<typeof faucetStatusResponseSchema>;
+export type FaucetChallengeResponse = z.infer<
+  typeof faucetChallengeResponseSchema
+>;
+export type FaucetClaimResponse = z.infer<typeof faucetClaimResponseSchema>;

@@ -12,23 +12,28 @@ import {
   type TransactionalMailer,
 } from "./domain/account-security.js";
 import { BalanceService, type BalanceStore } from "./domain/balances.js";
+import { FaucetService, type FaucetStore } from "./domain/faucet.js";
 import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
 import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
+import { MemoryFaucetStore } from "./infrastructure/memory-faucet-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
 import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
 import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
+import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { SmtpMailer } from "./infrastructure/smtp-mailer.js";
 import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
 import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
 import { registerAccountSecurityRoutes } from "./routes/account-security.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerBalanceRoutes } from "./routes/balances.js";
+import { registerFaucetRoutes } from "./routes/faucet.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
   balanceStore?: BalanceStore;
+  faucetStore?: FaucetStore;
   accountSecurityStore?: AccountSecurityStore;
   mailer?: TransactionalMailer;
   welcomeBonus?: WelcomeBonusIssuer;
@@ -86,6 +91,17 @@ export async function createApp(
     welcomeBonus,
   );
   await registerBalanceRoutes(app, auth, new BalanceService(balanceStore));
+  const faucetStore =
+    dependencies.faucetStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryFaucetStore()
+      : new PrismaFaucetStore());
+  await registerFaucetRoutes(
+    app,
+    auth,
+    new FaucetService(faucetStore),
+    config.sessionSecret,
+  );
 
   app.get("/health", async () => ({
     status: "ok" as const,

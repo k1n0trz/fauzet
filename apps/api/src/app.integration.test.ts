@@ -8,6 +8,7 @@ import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaLedgerStore } from "./infrastructure/prisma-ledger-store.js";
 import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
+import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 
 const integration = process.env.RUN_INTEGRATION === "true";
 
@@ -26,6 +27,7 @@ describe.runIf(integration)("persistent auth vertical", () => {
       accountSecurityStore: new PrismaAccountSecurityStore(database),
       mailer,
       welcomeBonus: new PrismaWelcomeBonusIssuer(database),
+      faucetStore: new PrismaFaucetStore(database, () => 5),
     },
   );
 
@@ -86,6 +88,359 @@ describe.runIf(integration)("persistent auth vertical", () => {
     await expect(
       database.user.findUniqueOrThrow({ where: { email } }),
     ).resolves.toMatchObject({ status: "SUSPENDED" });
+  });
+
+  it("posts exactly one funded faucet reward under concurrent retries", async () => {
+    const app = await appPromise;
+    const email = `faucet-${crypto.randomUUID()}@fauzet.local`;
+    const deviceId = crypto.randomUUID();
+    const registration = await app.inject({
+      method: "POST",
+      url: "/v1/auth/register",
+      headers: { "x-device-id": deviceId },
+      payload: {
+        email,
+        password: "ValidPassword123",
+        displayName: "Faucet User",
+        countryCode: "CO",
+        locale: "es",
+        acceptedTerms: true,
+        isAdult: true,
+      },
+    });
+    const cookie = registration.cookies.find(
+      ({ name }) => name === "fz_session",
+    )!;
+    await app.inject({
+      method: "POST",
+      url: "/v1/auth/email-verification/request",
+      cookies: { fz_session: cookie.value },
+    });
+    const verification = mailer.verification.at(-1)!;
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/v1/auth/email-verification/confirm",
+          payload: { token: verification.token },
+        })
+      ).statusCode,
+    ).toBe(200);
+
+    const missingDevice = await app.inject({
+      method: "POST",
+      url: "/v1/faucet/challenges",
+      cookies: { fz_session: cookie.value },
+    });
+    expect(missingDevice.statusCode).toBe(400);
+    expect(missingDevice.json().error.code).toBe("FAUCET_DEVICE_REQUIRED");
+
+    const rotatedDevice = await app.inject({
+      method: "POST",
+      url: "/v1/faucet/challenges",
+      headers: { "x-device-id": crypto.randomUUID() },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(rotatedDevice.statusCode).toBe(400);
+    expect(rotatedDevice.json().error.code).toBe("FAUCET_DEVICE_REQUIRED");
+
+    const status = await app.inject({
+      method: "GET",
+      url: "/v1/faucet/status",
+      headers: { "x-device-id": deviceId },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(status.statusCode).toBe(200);
+    expect(status.json().faucet).toMatchObject({
+      state: "READY",
+      canClaim: true,
+      reward: {
+        minMinorUnits: "5",
+        maxMinorUnits: "25",
+        bucket: "AVAILABLE",
+      },
+    });
+
+    const challengeResponse = await app.inject({
+      method: "POST",
+      url: "/v1/faucet/challenges",
+      headers: { "x-device-id": deviceId },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(challengeResponse.statusCode).toBe(201);
+    const challengeId = challengeResponse.json().challenge.id as string;
+    const idempotencyKey = `claim-${crypto.randomUUID()}`;
+    const attempts = await Promise.all(
+      [0, 1].map(() =>
+        app.inject({
+          method: "POST",
+          url: "/v1/faucet/claims",
+          headers: {
+            "x-device-id": deviceId,
+            "idempotency-key": idempotencyKey,
+          },
+          cookies: { fz_session: cookie.value },
+          payload: { challengeId },
+        }),
+      ),
+    );
+    expect(attempts.map(({ statusCode }) => statusCode)).toEqual([200, 200]);
+    expect(attempts.map((attempt) => attempt.json().replayed).sort()).toEqual([
+      false,
+      true,
+    ]);
+    const firstClaim = attempts[0]!.json().claim;
+    expect(firstClaim.reward).toEqual({
+      asset: "ZYXE",
+      minorUnits: "5",
+      bucket: "AVAILABLE",
+    });
+
+    const userId = registration.json().user.id as string;
+    const claims = await database.faucetClaim.findMany({
+      where: { userId },
+      include: { transaction: { include: { postings: true } } },
+    });
+    expect(claims).toHaveLength(1);
+    expect(claims[0]!.transaction!.configVersion).toBe(
+      status.json().faucet.configVersion,
+    );
+    expect(
+      claims[0]!.transaction!.postings.reduce(
+        (sum, posting) => sum + BigInt(posting.amount.toFixed(0)),
+        0n,
+      ),
+    ).toBe(0n);
+
+    const balances = await app.inject({
+      method: "GET",
+      url: "/v1/balances",
+      cookies: { fz_session: cookie.value },
+    });
+    expect(
+      balances
+        .json()
+        .balances.find(
+          ({ bucket }: { bucket: string }) => bucket === "AVAILABLE",
+        ).minorUnits,
+    ).toBe("5");
+    const cooling = await app.inject({
+      method: "GET",
+      url: "/v1/faucet/status",
+      headers: { "x-device-id": deviceId },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(cooling.json().faucet.state).toBe("COOLDOWN");
+
+    await database.user.update({
+      where: { id: userId },
+      data: { riskLevel: 99 },
+    });
+    const blocked = await app.inject({
+      method: "GET",
+      url: "/v1/faucet/status",
+      headers: { "x-device-id": deviceId },
+      cookies: { fz_session: cookie.value },
+    });
+    expect(blocked.json().faucet.state).toBe("RISK_BLOCKED");
+  });
+
+  it("never exceeds the global daily budget under concurrent users", async () => {
+    const app = await appPromise;
+
+    async function registerVerifiedUser(label: string) {
+      const email = `${label}-${crypto.randomUUID()}@fauzet.local`;
+      const deviceId = crypto.randomUUID();
+      const registration = await app.inject({
+        method: "POST",
+        url: "/v1/auth/register",
+        headers: { "x-device-id": deviceId },
+        payload: {
+          email,
+          password: "ValidPassword123",
+          displayName: `Budget ${label}`,
+          countryCode: "CO",
+          locale: "es",
+          acceptedTerms: true,
+          isAdult: true,
+        },
+      });
+      expect(registration.statusCode).toBe(201);
+      const cookie = registration.cookies.find(
+        ({ name }) => name === "fz_session",
+      )!;
+      await app.inject({
+        method: "POST",
+        url: "/v1/auth/email-verification/request",
+        cookies: { fz_session: cookie.value },
+      });
+      const verification = mailer.verification.at(-1)!;
+      const confirmation = await app.inject({
+        method: "POST",
+        url: "/v1/auth/email-verification/confirm",
+        payload: { token: verification.token },
+      });
+      expect(confirmation.statusCode).toBe(200);
+      return {
+        cookie: cookie.value,
+        deviceId,
+        userId: registration.json().user.id as string,
+      };
+    }
+
+    const actors = [
+      await registerVerifiedUser("alpha"),
+      await registerVerifiedUser("beta"),
+    ];
+    const originalActive = await database.economicConfigVersion.findMany({
+      where: { status: "ACTIVE" },
+      select: { id: true },
+    });
+    const now = new Date();
+    const budgetDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
+    const spentToday = await database.faucetClaim.aggregate({
+      where: { budgetDate, status: "POSTED" },
+      _sum: { rewardMinor: true },
+    });
+    const dailyBudgetMinor = Number(
+      BigInt(spentToday._sum.rewardMinor?.toFixed(0) ?? "0") + 5n,
+    );
+    expect(Number.isSafeInteger(dailyBudgetMinor)).toBe(true);
+    const budgetConfig = await database.economicConfigVersion.create({
+      data: {
+        status: "DRAFT",
+        reason: "Integration test: one globally funded faucet reward",
+        createdById: "integration-test",
+        parameters: {
+          welcomeBonusMinor: 100,
+          welcomeBonusBudgetMinor: 1_000_000,
+          faucet: {
+            enabled: true,
+            rewardMinMinor: 5,
+            rewardMaxMinor: 5,
+            dailyBudgetMinor,
+            cooldownSeconds: 900,
+            dailyClaimLimit: 8,
+            deviceDailyClaimLimit: 8,
+            ipDailyClaimLimit: 1_000,
+            captchaAfterClaims: 3,
+            captchaProviderEnabled: false,
+            maxRiskLevel: 50,
+            streakBonusAfterDays: 7,
+            streakBonusPercent: 20,
+            challengeTtlSeconds: 300,
+            creditBucket: "AVAILABLE",
+          },
+        },
+      },
+    });
+
+    try {
+      await database.$transaction(async (tx) => {
+        await tx.economicConfigVersion.updateMany({
+          where: { status: "ACTIVE" },
+          data: { status: "SUPERSEDED" },
+        });
+        await tx.economicConfigVersion.update({
+          where: { id: budgetConfig.id },
+          data: { status: "ACTIVE", effectiveAt: new Date() },
+        });
+      });
+
+      const challenges = await Promise.all(
+        actors.map((actor) =>
+          app.inject({
+            method: "POST",
+            url: "/v1/faucet/challenges",
+            headers: { "x-device-id": actor.deviceId },
+            cookies: { fz_session: actor.cookie },
+          }),
+        ),
+      );
+      expect(
+        challenges.map((response) => ({
+          statusCode: response.statusCode,
+          body: response.json(),
+        })),
+      ).toEqual([
+        {
+          statusCode: 201,
+          body: {
+            challenge: {
+              id: expect.any(String),
+              expiresAt: expect.any(String),
+            },
+          },
+        },
+        {
+          statusCode: 201,
+          body: {
+            challenge: {
+              id: expect.any(String),
+              expiresAt: expect.any(String),
+            },
+          },
+        },
+      ]);
+
+      const claims = await Promise.all(
+        actors.map((actor, index) =>
+          app.inject({
+            method: "POST",
+            url: "/v1/faucet/claims",
+            headers: {
+              "x-device-id": actor.deviceId,
+              "idempotency-key": `budget-race-${crypto.randomUUID()}`,
+            },
+            cookies: { fz_session: actor.cookie },
+            payload: { challengeId: challenges[index]!.json().challenge.id },
+          }),
+        ),
+      );
+      expect(claims.map(({ statusCode }) => statusCode).sort()).toEqual([
+        200, 503,
+      ]);
+      const rejected = claims.find(({ statusCode }) => statusCode === 503)!;
+      expect(rejected.json().error.code).toBe("FAUCET_BUDGET_EXHAUSTED");
+
+      const [persistedClaims, ledgerTransactions] = await Promise.all([
+        database.faucetClaim.findMany({
+          where: {
+            ruleVersion: budgetConfig.id,
+            userId: { in: actors.map(({ userId }) => userId) },
+          },
+        }),
+        database.ledgerTransaction.findMany({
+          where: {
+            configVersion: budgetConfig.id,
+            type: "FAUCET_REWARD",
+          },
+          include: { postings: true },
+        }),
+      ]);
+      expect(persistedClaims).toHaveLength(1);
+      expect(persistedClaims[0]!.rewardMinor.toFixed(0)).toBe("5");
+      expect(ledgerTransactions).toHaveLength(1);
+      expect(
+        ledgerTransactions[0]!.postings.reduce(
+          (sum, posting) => sum + BigInt(posting.amount.toFixed(0)),
+          0n,
+        ),
+      ).toBe(0n);
+    } finally {
+      await database.$transaction(async (tx) => {
+        await tx.economicConfigVersion.update({
+          where: { id: budgetConfig.id },
+          data: { status: "SUPERSEDED" },
+        });
+        await tx.economicConfigVersion.updateMany({
+          where: { id: { in: originalActive.map(({ id }) => id) } },
+          data: { status: "ACTIVE" },
+        });
+      });
+    }
   });
 
   it("registers, verifies, resets password and revokes the old session", async () => {

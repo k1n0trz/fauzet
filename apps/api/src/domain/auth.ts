@@ -29,6 +29,12 @@ export interface StoredSession {
   user: PublicUser;
 }
 
+export interface AuthenticatedSession {
+  user: PublicUser;
+  expiresAt: Date;
+  context: SessionContext;
+}
+
 export interface AuthStore {
   findUserByEmail(email: string): Promise<StoredUser | null>;
   createUser(
@@ -44,7 +50,7 @@ export interface AuthStore {
   findSession(
     tokenHash: string,
     now: Date,
-  ): Promise<{ user: PublicUser; expiresAt: Date } | null>;
+  ): Promise<AuthenticatedSession | null>;
   revokeSession(tokenHash: string, now: Date): Promise<void>;
 }
 
@@ -151,6 +157,12 @@ export class AuthService {
   }
 
   async authenticate(token: string | undefined): Promise<PublicUser> {
+    return (await this.authenticateSession(token)).user;
+  }
+
+  async authenticateSession(
+    token: string | undefined,
+  ): Promise<AuthenticatedSession> {
     if (!token)
       throw new AuthError("Authentication required", "UNAUTHORIZED", 401);
     const found = await this.store.findSession(
@@ -165,7 +177,7 @@ export class AuthService {
         "ACCOUNT_RESTRICTED",
         403,
       );
-    return found.user;
+    return found;
   }
 
   async logout(token: string | undefined): Promise<void> {

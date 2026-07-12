@@ -70,6 +70,7 @@ model User {
   sessions                Session[]
   roles                   UserRole[]
   accounts                LedgerAccount[]
+  faucetChallenges        FaucetChallenge[]
   faucetClaims            FaucetClaim[]
   auditEvents             AuditEvent[]             @relation("AuditActor")
   emailVerificationTokens EmailVerificationToken[]
@@ -158,6 +159,7 @@ model LedgerTransaction {
   reversedBy     LedgerTransaction?      @relation("Reversal", fields: [reversedById], references: [id])
   reverses       LedgerTransaction?      @relation("Reversal")
   config         EconomicConfigVersion   @relation(fields: [configVersion], references: [id], onDelete: Restrict)
+  faucetClaim    FaucetClaim?
 
   @@unique([sourceType, sourceId, type])
 }
@@ -185,23 +187,51 @@ model EconomicConfigVersion {
   effectiveAt  DateTime?
   createdAt    DateTime            @default(now())
   transactions LedgerTransaction[]
+  faucetClaims FaucetClaim[]
+}
+
+model FaucetChallenge {
+  id         String       @id @default(uuid())
+  userId     String
+  status     String       @default("ISSUED")
+  expiresAt  DateTime
+  consumedAt DateTime?
+  ipHash     String
+  deviceId   String?
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  claim      FaucetClaim?
+
+  @@index([userId, status, expiresAt])
 }
 
 model FaucetClaim {
-  id            String   @id @default(uuid())
-  userId        String
-  challengeId   String   @unique
-  rewardMinor   Decimal  @db.Decimal(36, 0)
-  status        String
-  ruleVersion   Int
-  nextClaimAt   DateTime
-  transactionId String?  @unique
-  ipHash        String?
-  deviceId      String?
-  createdAt     DateTime @default(now())
-  user          User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  id             String                @id @default(uuid())
+  userId         String
+  challengeId    String                @unique
+  idempotencyKey String                @unique
+  rewardMinor    Decimal               @db.Decimal(36, 0)
+  status         String
+  ruleVersion    Int
+  budgetDate     DateTime              @db.Date
+  streakDays     Int                   @default(1)
+  bonusPercent   Int                   @default(0)
+  nextClaimAt    DateTime
+  transactionId  String?               @unique
+  ipHash         String?
+  deviceId       String?
+  createdAt      DateTime              @default(now())
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  challenge      FaucetChallenge       @relation(fields: [challengeId], references: [id], onDelete: Restrict)
+  transaction    LedgerTransaction?    @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  config         EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
 
   @@index([userId, createdAt])
+  @@index([userId, budgetDate, status])
+  @@index([ruleVersion, budgetDate, status])
+  @@index([budgetDate, status])
+  @@index([deviceId, budgetDate, status])
+  @@index([ipHash, budgetDate, status])
 }
 
 model AuditEvent {

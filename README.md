@@ -4,7 +4,7 @@ Plataforma gamificada de micro-recompensas con una economía interna auditable. 
 
 ## Estado
 
-La fundación ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, verificación de email, recuperación de contraseña, siete buckets por usuario y ledger de doble partida con idempotencia y reversos. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
+La fundación ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, verificación de email, recuperación de contraseña, siete buckets por usuario, ledger de doble partida y faucet server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
 
 ## Inicio local
 
@@ -28,6 +28,8 @@ corepack pnpm dev
 
 El navegador consume `/api/v1/*` en el mismo origen del frontend; Next.js lo reenvía a `API_ORIGIN`. En Vercel esta variable debe apuntar a la URL HTTPS de la API en Cloud Run.
 
+`TRUST_PROXY_HOPS` queda en `0` por defecto. En un despliegue debe configurarse con el número exacto de proxies confiables verificado para esa topología; la API nunca confía de forma abierta en cualquier `X-Forwarded-For`.
+
 ## Verificación
 
 ```powershell
@@ -48,6 +50,7 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Emails locales visibles en Mailpit; transporte SMTP configurable por entorno.
 - Bono de bienvenida promocional idempotente al verificar la cuenta.
 - Ledger transaccional `SERIALIZABLE`, balanceado por activo, con clave de idempotencia y reversos compensatorios.
+- Faucet con challenges de un solo uso, cooldown, dispositivo vinculado a sesión, límites de cuenta/dispositivo/IP, presupuesto UTC, racha y acreditación atómica al ledger.
 - Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica

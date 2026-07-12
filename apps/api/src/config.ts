@@ -12,7 +12,7 @@ const envSchema = z.object({
   SMTP_HOST: z.string().default("localhost"),
   SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(1025),
   EMAIL_FROM: z.string().default("Fauzet <no-reply@fauzet.local>"),
-  TRUST_PROXY: z.enum(["true", "false"]).default("false"),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
   REAL_MONEY_ENABLED: z.enum(["true", "false"]).default("false"),
   WITHDRAWALS_ENABLED: z.enum(["true", "false"]).default("false"),
   TRADING_ENABLED: z.enum(["true", "false"]).default("false"),
@@ -37,7 +37,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       port: parsed.SMTP_PORT,
       from: parsed.EMAIL_FROM,
     },
-    trustProxy: parsed.TRUST_PROXY === "true",
+    trustProxy: parsed.TRUST_PROXY_HOPS === 0 ? false : parsed.TRUST_PROXY_HOPS,
     features: {
       realMoney: parsed.REAL_MONEY_ENABLED === "true",
       withdrawals: parsed.WITHDRAWALS_ENABLED === "true",

@@ -3,6 +3,13 @@ import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 
 describe("API", () => {
+  it("trusts no forwarded proxy by default and accepts an exact hop count", () => {
+    expect(loadConfig({ NODE_ENV: "test" }).trustProxy).toBe(false);
+    expect(
+      loadConfig({ NODE_ENV: "test", TRUST_PROXY_HOPS: "2" }).trustProxy,
+    ).toBe(2);
+  });
+
   it("reports health and keeps value-external features disabled", async () => {
     const app = await createApp(loadConfig({ NODE_ENV: "test" }));
     const health = await app.inject({ method: "GET", url: "/health" });

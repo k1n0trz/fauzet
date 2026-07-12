@@ -188,12 +188,314 @@
   color: #bae6fd;
   font-size: 13px;
 }
+.dashboardActions {
+  margin-top: 18px;
+}
+.faucetShortcut {
+  max-width: 540px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid rgba(57, 255, 136, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(
+    120deg,
+    rgba(34, 211, 238, 0.08),
+    rgba(57, 255, 136, 0.04)
+  );
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+.faucetShortcut:hover {
+  border-color: rgba(57, 255, 136, 0.45);
+  transform: translateY(-1px);
+}
+.faucetShortcut:focus-visible,
+.appNav a:focus-visible,
+.faucetBackButton:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.55);
+  outline-offset: 3px;
+}
+.faucetShortcutIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(34, 211, 238, 0.1);
+  font-size: 22px;
+}
+.faucetShortcut strong,
+.faucetShortcut small {
+  display: block;
+}
+.faucetShortcut small {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.appNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.appNav a,
+.appNav span {
+  padding: 9px 12px;
+  border-radius: 9px;
+}
+.appNav a:hover,
+.appNav span[aria-current="page"] {
+  background: rgba(229, 231, 235, 0.06);
+  color: var(--text);
+}
+.faucetPage {
+  max-width: 820px;
+  margin: auto;
+  padding: 64px 28px 80px;
+}
+.faucetTitle {
+  max-width: none;
+  margin: 14px 0 12px;
+  font-size: clamp(40px, 7vw, 58px);
+  line-height: 1;
+}
+.faucetClaimCard {
+  min-height: 310px;
+  display: grid;
+  place-items: center;
+  margin-top: 38px;
+  padding: 36px;
+  border: 1px solid rgba(57, 255, 136, 0.22);
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(34, 211, 238, 0.08),
+      transparent 48%
+    ),
+    var(--surface);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+}
+.faucetCentered {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.faucetCentered small {
+  max-width: 510px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.faucetStateLabel {
+  color: var(--muted);
+  font: 800 12px var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.faucetStateReady {
+  color: var(--green);
+}
+.faucetReward,
+.faucetCountdown {
+  color: var(--text);
+  font: 650 clamp(36px, 8vw, 52px) var(--font-display);
+  letter-spacing: -0.045em;
+}
+.faucetReward span {
+  color: var(--green);
+  font-size: 0.42em;
+  letter-spacing: 0;
+}
+.faucetCountdown {
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+.faucetClaimButton {
+  min-width: 220px;
+  margin-top: 14px;
+  border: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+.faucetClaimButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.faucetValidationNote {
+  margin: 2px 0 0;
+  color: var(--cyan);
+  font-size: 12px;
+}
+.faucetSpinner {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 8px;
+  border: 3px solid rgba(57, 255, 136, 0.18);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: faucetSpin 900ms linear infinite;
+}
+.faucetDrop {
+  font-size: 40px;
+}
+.faucetSuccess strong {
+  color: var(--green);
+}
+.faucetBackButton {
+  margin-top: 12px;
+}
+.faucetDisabledIcon {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  margin: 8px 0;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 36px;
+}
+.faucetError {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 7px;
+  margin: 18px auto 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.08);
+  color: #fca5a5;
+  font-size: 13px;
+  text-align: left;
+}
+.faucetError .textButton {
+  width: max-content;
+  padding-left: 0;
+  color: #fecaca;
+  text-decoration: underline;
+}
+.faucetStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.faucetStatCard {
+  min-height: 160px;
+  padding: 20px;
+  border: 1px solid rgba(229, 231, 235, 0.08);
+  border-radius: 15px;
+  background: var(--surface);
+}
+.faucetStatCard > span {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.faucetStatCard strong,
+.faucetStatCard small {
+  display: block;
+}
+.faucetStatCard strong {
+  margin-top: 12px;
+  font: 650 22px var(--font-display);
+}
+.faucetStatCard small {
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.faucetStatCard progress {
+  width: 100%;
+  height: 8px;
+  margin-top: 14px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(229, 231, 235, 0.08);
+}
+.faucetStatCard progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: rgba(229, 231, 235, 0.08);
+}
+.faucetStatCard progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+}
+.faucetStatCard progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+}
+.faucetPolicy {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(34, 211, 238, 0.14);
+  border-radius: 12px;
+  background: rgba(34, 211, 238, 0.05);
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.faucetPolicy strong {
+  color: #bae6fd;
+}
+@keyframes faucetSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @media (max-width: 820px) {
   .balanceGrid {
     grid-template-columns: repeat(2, 1fr);
   }
   .dashboardTitle {
     font-size: 38px;
+  }
+  .faucetPage {
+    padding-top: 48px;
+  }
+  .faucetClaimCard {
+    min-height: 290px;
+    padding: 28px 18px;
+  }
+  .faucetStats {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .appHeader {
+    padding: 0 18px;
+  }
+  .appNav a,
+  .appNav span {
+    padding: 8px;
+  }
+  .faucetPage {
+    padding-inline: 18px;
+  }
+  .faucetShortcut {
+    grid-template-columns: auto 1fr;
+  }
+  .faucetShortcut > span:last-child {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .faucetSpinner {
+    animation-duration: 1800ms;
+  }
+  .faucetShortcut {
+    transition: none;
   }
 }
 

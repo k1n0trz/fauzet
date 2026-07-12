@@ -9,6 +9,7 @@ export class MemoryAuthStore implements AuthStore {
       userId: string;
       expiresAt: Date;
       credentialVersion: number;
+      context: SessionContext;
       revokedAt?: Date;
     }
   >();
@@ -35,12 +36,17 @@ export class MemoryAuthStore implements AuthStore {
     userId: string,
     tokenHash: string,
     expiresAt: Date,
-    _context: SessionContext,
+    context: SessionContext,
     credentialVersion: number,
   ) {
     const user = [...this.users.values()].find(({ id }) => id === userId);
     if (!user || user.credentialVersion !== credentialVersion) return false;
-    this.sessions.set(tokenHash, { userId, expiresAt, credentialVersion });
+    this.sessions.set(tokenHash, {
+      userId,
+      expiresAt,
+      credentialVersion,
+      context,
+    });
     return true;
   }
   async findSession(tokenHash: string, now: Date) {
@@ -56,7 +62,7 @@ export class MemoryAuthStore implements AuthStore {
       credentialVersion: _credentialVersion,
       ...user
     } = stored;
-    return { user, expiresAt: session.expiresAt };
+    return { user, expiresAt: session.expiresAt, context: session.context };
   }
   async revokeSession(tokenHash: string, now: Date) {
     const session = this.sessions.get(tokenHash);

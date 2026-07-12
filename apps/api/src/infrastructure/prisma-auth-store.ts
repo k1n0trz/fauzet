@@ -126,7 +126,14 @@ export class PrismaAuthStore implements AuthStore {
       credentialVersion: _credentialVersion,
       ...user
     } = this.toStoredUser(session.user);
-    return { user, expiresAt: session.expiresAt };
+    return {
+      user,
+      expiresAt: session.expiresAt,
+      context: {
+        ...(session.deviceId === null ? {} : { deviceId: session.deviceId }),
+        ...(session.ipHash === null ? {} : { ipHash: session.ipHash }),
+      },
+    };
   }
 
   async revokeSession(tokenHash: string, now: Date): Promise<void> {

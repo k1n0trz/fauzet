@@ -11,6 +11,14 @@ const welcomeBonusBudgetMinor = positiveIntegerEnv(
   "WELCOME_BONUS_BUDGET_MINOR",
   1_000_000,
 );
+const faucetDailyBudgetMinor = positiveIntegerEnv(
+  "FAUCET_DAILY_BUDGET_MINOR",
+  200_000,
+);
+const faucetPoolFundingMinor = positiveIntegerEnv(
+  "FAUCET_POOL_FUNDING_MINOR",
+  faucetDailyBudgetMinor * 30,
+);
 if (welcomeBonusBudgetMinor < welcomeBonusMinor) {
   throw new Error("WELCOME_BONUS_BUDGET_MINOR must cover at least one bonus");
 }
@@ -72,25 +80,66 @@ async function seed() {
     });
   }
 
-  await database.economicConfigVersion.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      id: 1,
-      status: "ACTIVE",
-      reason: "Closed beta baseline",
-      createdById: "system",
-      effectiveAt: new Date(),
-      parameters: {
-        welcomeBonusMinor,
-        welcomeBonusBudgetMinor,
-        purchaseSplit: { burn: 40, recycle: 40, treasury: 20 },
-        referralsEnabled: false,
-        withdrawalsEnabled: false,
-        tradingEnabled: false,
-      },
-    },
+  const faucetParameters = {
+    enabled: true,
+    rewardMinMinor: 5,
+    rewardMaxMinor: 25,
+    dailyBudgetMinor: faucetDailyBudgetMinor,
+    cooldownSeconds: 15 * 60,
+    dailyClaimLimit: 8,
+    deviceDailyClaimLimit: 8,
+    ipDailyClaimLimit: 24,
+    captchaAfterClaims: 3,
+    captchaProviderEnabled: false,
+    maxRiskLevel: 50,
+    streakBonusAfterDays: 7,
+    streakBonusPercent: 20,
+    challengeTtlSeconds: 5 * 60,
+    creditBucket: "AVAILABLE",
+  } as const;
+  let activeConfig = await database.economicConfigVersion.findFirst({
+    where: { status: "ACTIVE" },
+    orderBy: { id: "desc" },
   });
+  if (!activeConfig) {
+    activeConfig = await database.economicConfigVersion.create({
+      data: {
+        id: 1,
+        status: "ACTIVE",
+        reason: "Closed beta baseline",
+        createdById: "system",
+        effectiveAt: new Date(),
+        parameters: {
+          welcomeBonusMinor,
+          welcomeBonusBudgetMinor,
+          faucet: faucetParameters,
+          purchaseSplit: { burn: 40, recycle: 40, treasury: 20 },
+          referralsEnabled: false,
+          withdrawalsEnabled: false,
+          tradingEnabled: false,
+        },
+      },
+    });
+  } else if (!hasFaucetParameters(activeConfig.parameters)) {
+    activeConfig = await database.$transaction(async (tx) => {
+      await tx.economicConfigVersion.updateMany({
+        where: { status: "ACTIVE" },
+        data: { status: "SUPERSEDED" },
+      });
+      return tx.economicConfigVersion.create({
+        data: {
+          status: "ACTIVE",
+          reason: "Add server-authoritative closed beta faucet",
+          createdById: "system",
+          effectiveAt: new Date(),
+          parameters: {
+            ...asParameterRecord(activeConfig!.parameters),
+            faucet: faucetParameters,
+          },
+        },
+      });
+    });
+  }
 
   await database.$queryRaw`
     SELECT setval(
@@ -99,12 +148,15 @@ async function seed() {
     )
   `;
 
-  const [issuance, promotionalPool] = await Promise.all([
+  const [issuance, promotionalPool, rewardPool] = await Promise.all([
     database.ledgerAccount.findUniqueOrThrow({
       where: { code: "platform:zyxe:issuance" },
     }),
     database.ledgerAccount.findUniqueOrThrow({
       where: { code: "platform:zyxe:promotional-pool" },
+    }),
+    database.ledgerAccount.findUniqueOrThrow({
+      where: { code: "platform:zyxe:reward-pool" },
     }),
   ]);
   await database.ledgerTransaction.upsert({
@@ -116,7 +168,7 @@ async function seed() {
       sourceType: "economic_config",
       sourceId: "1:welcome-bonus-budget",
       status: "POSTED",
-      configVersion: 1,
+      configVersion: activeConfig.id,
       postedAt: new Date(),
       metadata: { seeded: true, budgetMinor: String(welcomeBonusBudgetMinor) },
       postings: {
@@ -133,6 +185,46 @@ async function seed() {
       },
     },
   });
+  await database.ledgerTransaction.upsert({
+    where: { idempotencyKey: "seed:closed-beta:faucet-pool" },
+    update: {},
+    create: {
+      idempotencyKey: "seed:closed-beta:faucet-pool",
+      type: "FAUCET_POOL_FUNDED",
+      sourceType: "economic_config",
+      sourceId: `${activeConfig.id}:faucet-pool`,
+      status: "POSTED",
+      configVersion: activeConfig.id,
+      postedAt: new Date(),
+      metadata: {
+        seeded: true,
+        dailyBudgetMinor: String(faucetDailyBudgetMinor),
+        fundedMinor: String(faucetPoolFundingMinor),
+      },
+      postings: {
+        create: [
+          {
+            accountId: issuance.id,
+            amount: String(-faucetPoolFundingMinor),
+          },
+          {
+            accountId: rewardPool.id,
+            amount: String(faucetPoolFundingMinor),
+          },
+        ],
+      },
+    },
+  });
+}
+
+function hasFaucetParameters(value: unknown): boolean {
+  return "faucet" in asParameterRecord(value);
+}
+
+function asParameterRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function positiveIntegerEnv(name: string, fallback: number): number {

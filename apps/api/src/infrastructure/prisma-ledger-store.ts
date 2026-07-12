@@ -47,32 +47,7 @@ export class PrismaLedgerStore implements LedgerPostingStore {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         return await this.database.$transaction(
-          async (tx) => {
-            const existing = await findExisting(tx, input);
-            if (existing) return toPersistedTransaction(existing);
-
-            const resolvedInput = await resolveAccounts(tx, input);
-            const created = await tx.ledgerTransaction.create({
-              data: {
-                idempotencyKey: resolvedInput.idempotencyKey,
-                type: resolvedInput.type,
-                sourceType: resolvedInput.sourceType,
-                sourceId: resolvedInput.sourceId,
-                status: "POSTED",
-                configVersion: resolvedInput.configVersion,
-                metadata: toPrismaJson(resolvedInput.metadata ?? {}),
-                postedAt: new Date(),
-                postings: {
-                  create: resolvedInput.postings.map((posting) => ({
-                    accountId: posting.account.id,
-                    amount: posting.amount.toString(),
-                  })),
-                },
-              },
-              include: transactionInclude,
-            });
-            return toPersistedTransaction(created);
-          },
+          async (tx) => postLedgerTransactionInTransaction(tx, input),
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
       } catch (error) {
@@ -202,6 +177,37 @@ export class PrismaLedgerStore implements LedgerPostingStore {
     if (!reversal) return null;
     return linkedReversalResult(original, reversal);
   }
+}
+
+export async function postLedgerTransactionInTransaction(
+  tx: Prisma.TransactionClient,
+  input: PostLedgerTransactionInput,
+): Promise<PersistedLedgerTransaction> {
+  validatePostInput(input);
+  const existing = await findExisting(tx, input);
+  if (existing) return toPersistedTransaction(existing);
+
+  const resolvedInput = await resolveAccounts(tx, input);
+  const created = await tx.ledgerTransaction.create({
+    data: {
+      idempotencyKey: resolvedInput.idempotencyKey,
+      type: resolvedInput.type,
+      sourceType: resolvedInput.sourceType,
+      sourceId: resolvedInput.sourceId,
+      status: "POSTED",
+      configVersion: resolvedInput.configVersion,
+      metadata: toPrismaJson(resolvedInput.metadata ?? {}),
+      postedAt: new Date(),
+      postings: {
+        create: resolvedInput.postings.map((posting) => ({
+          accountId: posting.account.id,
+          amount: posting.amount.toString(),
+        })),
+      },
+    },
+    include: transactionInclude,
+  });
+  return toPersistedTransaction(created);
 }
 
 async function resolveAccounts(
