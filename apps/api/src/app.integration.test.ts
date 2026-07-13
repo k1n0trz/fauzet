@@ -14,6 +14,8 @@ import {
   referralTreeResponseSchema,
   storeCatalogResponseSchema,
   storePurchaseResponseSchema,
+  fiatCatalogResponseSchema,
+  fiatInventoryResponseSchema,
   adminAuditResponseSchema,
   adminOverviewResponseSchema,
   adminRiskResponseSchema,
@@ -33,6 +35,7 @@ import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
+import { PrismaFiatCommerceStore } from "./infrastructure/prisma-fiat-commerce-store.js";
 import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
 
 const integration = process.env.RUN_INTEGRATION === "true";
@@ -63,6 +66,10 @@ describe.runIf(integration)("persistent auth vertical", () => {
       missionStore: new PrismaMissionStore(database, () => new Date(gameNow)),
       referralStore: new PrismaReferralStore(database, () => new Date(gameNow)),
       commerceStore: new PrismaCommerceStore(database, () => new Date(gameNow)),
+      fiatCommerceStore: new PrismaFiatCommerceStore(
+        database,
+        () => new Date(gameNow),
+      ),
       adminStore: new PrismaAdminStore(database),
     },
   );
@@ -128,6 +135,61 @@ describe.runIf(integration)("persistent auth vertical", () => {
       acceptedTermsVersion: "beta-2026-07-13",
       acceptedPrivacyVersion: "beta-2026-07-13",
     });
+  });
+
+  it("serves the persisted fiat catalog and an empty authoritative inventory", async () => {
+    const app = await appPromise;
+    const email = `fiat-${crypto.randomUUID()}@fauzet.local`;
+    const registration = await app.inject({
+      method: "POST",
+      url: "/v1/auth/register",
+      payload: {
+        email,
+        password: "ValidPassword123",
+        displayName: "Fiat Catalog User",
+        countryCode: "CO",
+        locale: "es",
+        acceptedTerms: true,
+        isAdult: true,
+      },
+    });
+    expect(registration.statusCode).toBe(201);
+    const cookie = registration.cookies.find(
+      ({ name }) => name === "fz_session",
+    )!;
+    await app.inject({
+      method: "POST",
+      url: "/v1/auth/email-verification/request",
+      cookies: { fz_session: cookie.value },
+    });
+    const verification = mailer.verification.at(-1)!;
+    const confirmation = await app.inject({
+      method: "POST",
+      url: "/v1/auth/email-verification/confirm",
+      payload: { token: verification.token },
+    });
+    expect(confirmation.statusCode).toBe(200);
+
+    const fiatCatalog = await app.inject({
+      method: "GET",
+      url: "/v1/fiat/catalog",
+      cookies: { fz_session: cookie.value },
+    });
+    const fiatInventory = await app.inject({
+      method: "GET",
+      url: "/v1/fiat/entitlements",
+      cookies: { fz_session: cookie.value },
+    });
+
+    expect(fiatCatalog.statusCode).toBe(200);
+    expect(fiatCatalog.headers["cache-control"]).toBe("no-store");
+    expect(
+      fiatCatalogResponseSchema.parse(fiatCatalog.json()).products,
+    ).toHaveLength(13);
+    expect(fiatInventory.statusCode).toBe(200);
+    expect(
+      fiatInventoryResponseSchema.parse(fiatInventory.json()).items,
+    ).toEqual([]);
   });
 
   it("posts exactly one funded faucet reward under concurrent retries", async () => {

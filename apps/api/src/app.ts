@@ -24,6 +24,10 @@ import {
   StoreService,
   type CommerceStore,
 } from "./domain/commerce.js";
+import {
+  FiatCommerceService,
+  type FiatCommerceStore,
+} from "./domain/fiat-commerce.js";
 import { ReferralService, type ReferralStore } from "./domain/referrals.js";
 import { AdminService, type AdminStore } from "./domain/admin.js";
 import {
@@ -38,6 +42,7 @@ import { MemoryFaucetStore } from "./infrastructure/memory-faucet-store.js";
 import { MemoryGameStore } from "./infrastructure/memory-game-store.js";
 import { MemoryMissionStore } from "./infrastructure/memory-mission-store.js";
 import { MemoryCommerceStore } from "./infrastructure/memory-commerce-store.js";
+import { MemoryFiatCommerceStore } from "./infrastructure/memory-fiat-commerce-store.js";
 import { MemoryReferralStore } from "./infrastructure/memory-referral-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
@@ -48,6 +53,7 @@ import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
+import { PrismaFiatCommerceStore } from "./infrastructure/prisma-fiat-commerce-store.js";
 import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
 import { PrismaSandboxWithdrawalStore } from "./infrastructure/prisma-sandbox-withdrawal-store.js";
@@ -62,6 +68,7 @@ import { registerFaucetRoutes } from "./routes/faucet.js";
 import { registerGameRoutes } from "./routes/games.js";
 import { registerMissionRoutes } from "./routes/missions.js";
 import { registerCommerceRoutes } from "./routes/commerce.js";
+import { registerFiatCommerceRoutes } from "./routes/fiat-commerce.js";
 import { registerReferralRoutes } from "./routes/referrals.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerSandboxWithdrawalRoutes } from "./routes/sandbox-withdrawals.js";
@@ -75,6 +82,7 @@ export interface AppDependencies {
   gameStore?: GameStore;
   missionStore?: MissionStore;
   commerceStore?: CommerceStore;
+  fiatCommerceStore?: FiatCommerceStore;
   referralStore?: ReferralStore;
   adminStore?: AdminStore;
   sandboxWithdrawalStore?: SandboxWithdrawalStore;
@@ -195,6 +203,20 @@ export async function createApp(
     new StoreService(commerceStore),
     new MiningService(commerceStore),
     config.sessionSecret,
+  );
+  const fiatCommerceStore =
+    dependencies.fiatCommerceStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryFiatCommerceStore()
+      : new PrismaFiatCommerceStore());
+  await registerFiatCommerceRoutes(
+    app,
+    auth,
+    new FiatCommerceService(fiatCommerceStore, {
+      catalogEnabled: config.features.fiatCatalog,
+      checkoutEnabled: config.features.fiatSandboxCheckout,
+      activationEnabled: config.features.fiatSandboxActivation,
+    }),
   );
   const referralStore =
     dependencies.referralStore ??

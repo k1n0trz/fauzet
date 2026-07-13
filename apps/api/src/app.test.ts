@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
+import {
+  fiatCatalogResponseSchema,
+  fiatInventoryResponseSchema,
+} from "@fauzet/contracts";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
+import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 
 describe("API", () => {
   it("trusts no forwarded proxy by default and accepts an exact hop count", () => {
@@ -22,6 +27,9 @@ describe("API", () => {
       withdrawals: false,
       trading: false,
       sandboxWithdrawals: true,
+      fiatCatalog: true,
+      fiatSandboxCheckout: false,
+      fiatSandboxActivation: false,
     });
     await app.close();
   });
@@ -74,6 +82,60 @@ describe("API", () => {
     expect(activity.statusCode).toBe(200);
     expect(activity.headers["cache-control"]).toBe("no-store");
     expect(activity.json()).toEqual({ items: [], nextCursor: null });
+    await app.close();
+  });
+
+  it("serves a catalog-only fiat sandbox and an empty real inventory", async () => {
+    const authStore = new MemoryAuthStore();
+    const app = await createApp(loadConfig({ NODE_ENV: "test" }), {
+      authStore,
+    });
+    const registration = await app.inject({
+      method: "POST",
+      url: "/v1/auth/register",
+      payload: {
+        email: "fiat-catalog@example.com",
+        password: "ValidPassword123",
+        displayName: "Fiat Catalog",
+        countryCode: "CO",
+        locale: "es",
+        acceptedTerms: true,
+        isAdult: true,
+      },
+    });
+    const cookie = registration.cookies.find(
+      ({ name }) => name === "fz_session",
+    )!;
+    const storedUser = await authStore.findUserByEmail(
+      "fiat-catalog@example.com",
+    );
+    if (!storedUser) throw new Error("Expected registered test user");
+    storedUser.status = "ACTIVE";
+
+    const catalogResponse = await app.inject({
+      method: "GET",
+      url: "/v1/fiat/catalog",
+      cookies: { fz_session: cookie.value },
+    });
+    const inventoryResponse = await app.inject({
+      method: "GET",
+      url: "/v1/fiat/entitlements",
+      cookies: { fz_session: cookie.value },
+    });
+
+    expect(catalogResponse.statusCode).toBe(200);
+    expect(catalogResponse.headers["cache-control"]).toBe("no-store");
+    expect(
+      fiatCatalogResponseSchema.parse(catalogResponse.json()),
+    ).toMatchObject({
+      checkoutEnabled: false,
+      activationEnabled: false,
+      realChargeEnabled: false,
+    });
+    expect(inventoryResponse.statusCode).toBe(200);
+    expect(
+      fiatInventoryResponseSchema.parse(inventoryResponse.json()),
+    ).toMatchObject({ items: [] });
     await app.close();
   });
 });

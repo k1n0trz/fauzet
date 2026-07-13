@@ -19,6 +19,7 @@ import {
   errorMessage,
   shouldKeepMutationAttempt,
 } from "../../../lib/reward-api";
+import { StoreTabs } from "./store-tabs";
 
 export function StoreExperience() {
   const [catalog, setCatalog] = useState<StoreCatalog | null>(null);
@@ -117,6 +118,8 @@ export function StoreExperience() {
           priority
         />
       </div>
+
+      <StoreTabs />
 
       {catalog ? <StoreSummary catalog={catalog} /> : null}
       {receipt ? <PurchaseNotice receipt={receipt} /> : null}
