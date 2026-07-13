@@ -39,6 +39,7 @@ export interface AuthStore {
   findUserByEmail(email: string): Promise<StoredUser | null>;
   createUser(
     input: RegisterRequest & { passwordHash: string },
+    context?: SessionContext,
   ): Promise<StoredUser>;
   createSession(
     userId: string,
@@ -61,7 +62,9 @@ export class AuthError extends Error {
       | "EMAIL_TAKEN"
       | "INVALID_CREDENTIALS"
       | "UNAUTHORIZED"
-      | "ACCOUNT_RESTRICTED",
+      | "ACCOUNT_RESTRICTED"
+      | "REFERRAL_CODE_INVALID"
+      | "REFERRAL_ATTRIBUTION_BLOCKED",
     public readonly statusCode: number,
   ) {
     super(message);
@@ -69,6 +72,16 @@ export class AuthError extends Error {
 }
 
 export class AuthStoreConflictError extends Error {}
+export class AuthStoreReferralError extends Error {
+  constructor(
+    public readonly code:
+      | "REFERRAL_CODE_INVALID"
+      | "REFERRAL_ATTRIBUTION_BLOCKED",
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
@@ -115,10 +128,13 @@ export class AuthService {
     }
     let user: StoredUser;
     try {
-      user = await this.store.createUser({
-        ...input,
-        passwordHash: await hashPassword(input.password),
-      });
+      user = await this.store.createUser(
+        {
+          ...input,
+          passwordHash: await hashPassword(input.password),
+        },
+        context,
+      );
     } catch (error) {
       if (error instanceof AuthStoreConflictError)
         throw new AuthError(
@@ -126,6 +142,8 @@ export class AuthService {
           "EMAIL_TAKEN",
           409,
         );
+      if (error instanceof AuthStoreReferralError)
+        throw new AuthError(error.message, error.code, 409);
       throw error;
     }
     return this.issueSession(user, context);

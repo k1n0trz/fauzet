@@ -309,22 +309,25 @@ describe("PrismaLedgerStore", () => {
     },
   );
 
-  it.each(["store_purchase", "miner_action"])(
-    "blocks generic reversal for effectful source %s",
-    async (sourceType) => {
-      const original = transactionRecord({ sourceType });
-      const { database, tx } = fakeDatabase();
-      tx.ledgerTransaction.findUnique.mockResolvedValue(original);
+  it.each([
+    "store_purchase",
+    "miner_action",
+    "referral_activity",
+    "referral_release",
+    "referral_clawback",
+  ])("blocks generic reversal for effectful source %s", async (sourceType) => {
+    const original = transactionRecord({ sourceType });
+    const { database, tx } = fakeDatabase();
+    tx.ledgerTransaction.findUnique.mockResolvedValue(original);
 
-      await expect(
-        new PrismaLedgerStore(database).reverse({
-          transactionId: original.id,
-          idempotencyKey: `reverse:${sourceType}`,
-        }),
-      ).rejects.toBeInstanceOf(LedgerReversalError);
-      expect(tx.ledgerTransaction.create).not.toHaveBeenCalled();
-    },
-  );
+    await expect(
+      new PrismaLedgerStore(database).reverse({
+        transactionId: original.id,
+        idempotencyKey: `reverse:${sourceType}`,
+      }),
+    ).rejects.toBeInstanceOf(LedgerReversalError);
+    expect(tx.ledgerTransaction.create).not.toHaveBeenCalled();
+  });
 
   it("marks a reversed mining epoch and its payouts as reversed", async () => {
     const original = transactionRecord({

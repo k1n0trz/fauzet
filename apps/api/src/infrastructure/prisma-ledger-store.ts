@@ -100,7 +100,15 @@ export class PrismaLedgerStore implements LedgerPostingStore {
     if (!original) {
       throw new LedgerTransactionNotFoundError(input.transactionId);
     }
-    if (["store_purchase", "miner_action"].includes(original.sourceType)) {
+    if (
+      [
+        "store_purchase",
+        "miner_action",
+        "referral_activity",
+        "referral_release",
+        "referral_clawback",
+      ].includes(original.sourceType)
+    ) {
       throw new LedgerReversalError(
         `Source ${original.sourceType} requires a dedicated effect-clawback workflow`,
       );

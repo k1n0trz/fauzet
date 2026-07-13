@@ -83,6 +83,11 @@ const systemAccounts: Array<{
     name: "ZYXE virtual mining reward pool",
     kind: "EQUITY",
   },
+  {
+    code: "platform:zyxe:referral-reward-pool",
+    name: "ZYXE referral rewards backed by reconciled revenue",
+    kind: "EQUITY",
+  },
   { code: "platform:zyxe:burn", name: "ZYXE burned", kind: "CONTRA" },
   {
     code: "platform:zyxe:recycle",
@@ -219,7 +224,7 @@ async function seed() {
         source: "LOCKED",
         target: 1,
         rewardMinor: 50,
-        lockedReason: "REFERRALS_NOT_AVAILABLE",
+        lockedReason: "REFERRAL_COMMISSIONS_GATED",
       },
       {
         id: "m6",
@@ -328,6 +333,18 @@ async function seed() {
       upgradeBaseMinor: 900,
     },
   } as const;
+  const referralParameters = {
+    version: 1,
+    attributionEnabled: true,
+    commissionsEnabled: false,
+    legalApproved: false,
+    disabledReason: "LEGAL_AND_REVENUE_GATE",
+    maxRiskLevel: 30,
+    ratesBps: [500, 200, 100, 50],
+    monthlyCapMinor: 50_000,
+    reviewWindowHours: 7 * 24,
+    allowedSources: ["REWARDED_AD", "OFFERWALL", "VALIDATED_PURCHASE"],
+  } as const;
   let activeConfig = await database.economicConfigVersion.findFirst({
     where: { status: "ACTIVE" },
     orderBy: { id: "desc" },
@@ -348,6 +365,7 @@ async function seed() {
           missions: missionsParameters,
           store: storeParameters,
           mining: miningParameters,
+          referrals: referralParameters,
           purchaseSplit: { burn: 40, recycle: 40, treasury: 20 },
           referralsEnabled: false,
           withdrawalsEnabled: false,
@@ -374,6 +392,7 @@ async function seed() {
             missions: missionsParameters,
             store: storeParameters,
             mining: miningParameters,
+            referrals: referralParameters,
           },
         },
       });
@@ -545,12 +564,14 @@ async function fundPool(input: {
 
 function hasRuntimeParameters(value: unknown): boolean {
   const parameters = asParameterRecord(value);
+  const referrals = asParameterRecord(parameters.referrals);
   return (
     "faucet" in parameters &&
     "games" in parameters &&
     "missions" in parameters &&
     "store" in parameters &&
-    "mining" in parameters
+    "mining" in parameters &&
+    referrals.version === 1
   );
 }
 

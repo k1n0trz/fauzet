@@ -4,7 +4,7 @@ Plataforma gamificada de micro-recompensas con una economía interna auditable. 
 
 ## Estado
 
-La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, Tap Miner, Memory Drops, misiones diarias, tienda y minería virtual server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
+La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, juegos, misiones, tienda, minería virtual y Mining Crew de cuatro niveles server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
 
 ## Inicio local
 
@@ -24,6 +24,12 @@ La liquidación diaria de minería se ejecuta únicamente para un período UTC y
 
 ```powershell
 corepack pnpm mining:settle -- 2026-07-11
+```
+
+El worker de revisión de Crew libera en lotes las comisiones cuyo período de revisión terminó; mientras el gate monetario esté cerrado devuelve un lote vacío:
+
+```powershell
+corepack pnpm referrals:release -- 100
 ```
 
 - Web: http://localhost:3000
@@ -62,6 +68,8 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Tienda con catálogo versionado, cobro promocional primero, split contable 40/40/20, límites y efectos aplicados en una sola transacción.
 - Minería virtual sin PoW, energía separada de juegos, mineros persistentes, boosts, mejoras, reparaciones y contribución ponderada por tiempo.
 - Liquidación minera UTC idempotente: un asiento global pool→usuarios, redondeo hacia abajo con residuo explícito y bloqueo sin pagos parciales si el pool no está completamente respaldado.
+- Mining Crew con código por usuario, atribución inmutable al registro y árbol materializado L1-L4; no paga por reclutamiento ni expone emails del downline.
+- Motor de comisiones 5/2/1/0,5% con allowlist de actividad monetizable, cap mensual, pending→available y clawback. El pago permanece detrás de `LEGAL_AND_REVENUE_GATE`; el seed no financia el pool de referidos con emisión.
 - Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica

@@ -542,6 +542,101 @@ export const minerActionResponseSchema = z.object({
   replayed: z.boolean(),
 });
 
+export const referralCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^FZ-[A-Z2-9]{8,16}$/);
+
+const referralProgramStateSchema = z.enum([
+  "ACTIVE",
+  "ATTRIBUTION_ONLY",
+  "DISABLED",
+  "RISK_BLOCKED",
+]);
+
+export const referralCodeResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  configVersion: z.number().int().positive(),
+  state: referralProgramStateSchema,
+  reasonCode: z.string().nullable(),
+  code: referralCodeSchema,
+  invitePath: z.string().startsWith("/r/"),
+  sponsor: z
+    .object({
+      displayName: z.string(),
+      joinedAt: z.string().datetime(),
+    })
+    .nullable(),
+  rates: z.array(
+    z.object({
+      level: z.number().int().min(1).max(4),
+      rateBps: z.number().int().nonnegative(),
+    }),
+  ),
+  monthlyCapMinorUnits: z.string().regex(/^\d+$/),
+  reviewWindowHours: z.number().int().nonnegative(),
+});
+
+export const referralTreeResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  state: referralProgramStateSchema,
+  reasonCode: z.string().nullable(),
+  totalMembers: z.number().int().nonnegative(),
+  activeMembers: z.number().int().nonnegative(),
+  levels: z.array(
+    z.object({
+      level: z.number().int().min(1).max(4),
+      rateBps: z.number().int().nonnegative(),
+      members: z.number().int().nonnegative(),
+      activeMembers: z.number().int().nonnegative(),
+    }),
+  ),
+  recentMembers: z.array(
+    z.object({
+      id: z.string().uuid(),
+      displayName: z.string(),
+      level: z.number().int().min(1).max(4),
+      state: z.enum(["ACTIVE", "INACTIVE", "BLOCKED"]),
+      joinedAt: z.string().datetime(),
+    }),
+  ),
+});
+
+export const referralCommissionsResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  state: referralProgramStateSchema,
+  reasonCode: z.string().nullable(),
+  summary: z.object({
+    pendingMinorUnits: z.string().regex(/^\d+$/),
+    availableMinorUnits: z.string().regex(/^\d+$/),
+    reversedMinorUnits: z.string().regex(/^\d+$/),
+    cappedMinorUnits: z.string().regex(/^\d+$/),
+    monthEarnedMinorUnits: z.string().regex(/^\d+$/),
+    monthRemainingMinorUnits: z.string().regex(/^\d+$/),
+  }),
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      level: z.number().int().min(1).max(4),
+      memberDisplayName: z.string(),
+      sourceType: z.string(),
+      status: z.enum([
+        "PENDING",
+        "AVAILABLE",
+        "CAPPED",
+        "HELD",
+        "REVERSED",
+        "CLAWBACK_PENDING",
+      ]),
+      baseMinorUnits: z.string().regex(/^\d+$/),
+      rewardMinorUnits: z.string().regex(/^\d+$/),
+      qualifiedAt: z.string().datetime(),
+      availableAt: z.string().datetime().nullable(),
+    }),
+  ),
+});
+
 export const registerRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z
@@ -560,6 +655,10 @@ export const registerRequestSchema = z.object({
   locale: z.enum(["es", "en"]).default("es"),
   acceptedTerms: z.literal(true),
   isAdult: z.literal(true),
+  referralCode: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    referralCodeSchema.optional(),
+  ),
 });
 
 export const loginRequestSchema = z.object({
@@ -624,3 +723,8 @@ export type StorePurchaseResponse = z.infer<typeof storePurchaseResponseSchema>;
 export type MiningStatusResponse = z.infer<typeof miningStatusResponseSchema>;
 export type MinerMutationRequest = z.infer<typeof minerMutationRequestSchema>;
 export type MinerActionResponse = z.infer<typeof minerActionResponseSchema>;
+export type ReferralCodeResponse = z.infer<typeof referralCodeResponseSchema>;
+export type ReferralTreeResponse = z.infer<typeof referralTreeResponseSchema>;
+export type ReferralCommissionsResponse = z.infer<
+  typeof referralCommissionsResponseSchema
+>;

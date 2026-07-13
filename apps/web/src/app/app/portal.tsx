@@ -20,6 +20,21 @@ export function AuthPortal() {
   const [balanceError, setBalanceError] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("ref");
+    const stored = window.localStorage.getItem("fz_referral_code");
+    const candidate = (fromUrl ?? stored ?? "").trim().toUpperCase();
+    if (/^FZ-[A-Z2-9]{8,16}$/.test(candidate)) {
+      window.localStorage.setItem("fz_referral_code", candidate);
+      const timeout = window.setTimeout(() => {
+        setReferralCode(candidate);
+        setMode("register");
+      }, 0);
+      return () => window.clearTimeout(timeout);
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -41,6 +56,8 @@ export function AuthPortal() {
         }
 
         setUser(result.user);
+        window.localStorage.removeItem("fz_referral_code");
+        setReferralCode("");
 
         try {
           setBalances(await fetchBalances(controller.signal));
@@ -83,6 +100,7 @@ export function AuthPortal() {
             locale: "es",
             acceptedTerms: form.get("acceptedTerms") === "on",
             isAdult: form.get("isAdult") === "on",
+            referralCode: form.get("referralCode") || undefined,
           };
     try {
       const response = await fetch(`${API_BASE}/auth/${mode}`, {
@@ -102,6 +120,7 @@ export function AuthPortal() {
       setBalances([]);
 
       if (mode === "register") {
+        window.localStorage.removeItem("fz_referral_code");
         const verification = await fetch(
           `${API_BASE}/auth/email-verification/request`,
           {
@@ -141,6 +160,8 @@ export function AuthPortal() {
       setBalances([]);
       setBalanceError("");
       setAccountMessage("");
+      setMode("login");
+      setReferralCode("");
     } catch {
       setAccountMessage("No fue posible cerrar la sesión. Inténtalo de nuevo.");
     }
@@ -302,6 +323,23 @@ export function AuthPortal() {
               </span>
               <span aria-hidden="true">→</span>
             </Link>
+            <Link className="faucetShortcut" href="/app/crew">
+              <span className="faucetShortcutIcon">
+                <Image
+                  src="/rewards/ic-crew.png"
+                  width={30}
+                  height={30}
+                  alt=""
+                />
+              </span>
+              <span>
+                <strong>Mining Crew</strong>
+                <small>
+                  Comparte tu código y consulta la red atribuida de 4 niveles.
+                </small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </nav>
           {balanceError && (
             <div className="notice" role="alert">
@@ -395,6 +433,18 @@ export function AuthPortal() {
                   <option value="US">Estados Unidos</option>
                   <option value="MX">México</option>
                 </select>
+              </label>
+              <label>
+                Código de referido <small>(opcional)</small>
+                <input
+                  name="referralCode"
+                  value={referralCode}
+                  onChange={(event) =>
+                    setReferralCode(event.target.value.toUpperCase())
+                  }
+                  pattern="FZ-[A-Z2-9]{8,16}"
+                  autoComplete="off"
+                />
               </label>
             </>
           )}

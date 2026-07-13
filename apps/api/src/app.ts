@@ -20,6 +20,7 @@ import {
   StoreService,
   type CommerceStore,
 } from "./domain/commerce.js";
+import { ReferralService, type ReferralStore } from "./domain/referrals.js";
 import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
 import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
@@ -27,6 +28,7 @@ import { MemoryFaucetStore } from "./infrastructure/memory-faucet-store.js";
 import { MemoryGameStore } from "./infrastructure/memory-game-store.js";
 import { MemoryMissionStore } from "./infrastructure/memory-mission-store.js";
 import { MemoryCommerceStore } from "./infrastructure/memory-commerce-store.js";
+import { MemoryReferralStore } from "./infrastructure/memory-referral-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
 import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
@@ -35,6 +37,7 @@ import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
+import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { SmtpMailer } from "./infrastructure/smtp-mailer.js";
 import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
 import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
@@ -45,6 +48,7 @@ import { registerFaucetRoutes } from "./routes/faucet.js";
 import { registerGameRoutes } from "./routes/games.js";
 import { registerMissionRoutes } from "./routes/missions.js";
 import { registerCommerceRoutes } from "./routes/commerce.js";
+import { registerReferralRoutes } from "./routes/referrals.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
@@ -53,6 +57,7 @@ export interface AppDependencies {
   gameStore?: GameStore;
   missionStore?: MissionStore;
   commerceStore?: CommerceStore;
+  referralStore?: ReferralStore;
   accountSecurityStore?: AccountSecurityStore;
   mailer?: TransactionalMailer;
   welcomeBonus?: WelcomeBonusIssuer;
@@ -159,6 +164,12 @@ export async function createApp(
     new MiningService(commerceStore),
     config.sessionSecret,
   );
+  const referralStore =
+    dependencies.referralStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryReferralStore()
+      : new PrismaReferralStore());
+  await registerReferralRoutes(app, auth, new ReferralService(referralStore));
 
   app.get("/health", async () => ({
     status: "ok" as const,

@@ -8,6 +8,9 @@ import {
   missionCatalogResponseSchema,
   missionClaimResponseSchema,
   miningStatusResponseSchema,
+  referralCodeResponseSchema,
+  referralCommissionsResponseSchema,
+  referralTreeResponseSchema,
   storeCatalogResponseSchema,
   storePurchaseResponseSchema,
 } from "@fauzet/contracts";
@@ -22,6 +25,7 @@ import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.
 import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
+import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
 
 const integration = process.env.RUN_INTEGRATION === "true";
@@ -49,6 +53,7 @@ describe.runIf(integration)("persistent auth vertical", () => {
         () => new Date(gameNow),
       ),
       missionStore: new PrismaMissionStore(database, () => new Date(gameNow)),
+      referralStore: new PrismaReferralStore(database, () => new Date(gameNow)),
       commerceStore: new PrismaCommerceStore(database, () => new Date(gameNow)),
     },
   );
@@ -1207,6 +1212,37 @@ describe.runIf(integration)("persistent auth vertical", () => {
       activeMiners: 1,
       maxSlots: 4,
     });
+
+    const [codeResponse, treeResponse, commissionsResponse] = await Promise.all(
+      [
+        app.inject({
+          method: "GET",
+          url: "/v1/referrals/code",
+          cookies: { fz_session: cookie.value },
+        }),
+        app.inject({
+          method: "GET",
+          url: "/v1/referrals/tree",
+          cookies: { fz_session: cookie.value },
+        }),
+        app.inject({
+          method: "GET",
+          url: "/v1/referrals/commissions",
+          cookies: { fz_session: cookie.value },
+        }),
+      ],
+    );
+    const referralCode = referralCodeResponseSchema.parse(codeResponse.json());
+    const referralTree = referralTreeResponseSchema.parse(treeResponse.json());
+    const referralCommissions = referralCommissionsResponseSchema.parse(
+      commissionsResponse.json(),
+    );
+    expect(referralCode).toMatchObject({
+      state: "ATTRIBUTION_ONLY",
+      reasonCode: "LEGAL_AND_REVENUE_GATE",
+    });
+    expect(referralTree.totalMembers).toBe(0);
+    expect(referralCommissions.summary.availableMinorUnits).toBe("0");
   });
 
   it("registers, verifies, resets password and revokes the old session", async () => {

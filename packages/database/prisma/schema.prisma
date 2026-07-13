@@ -102,6 +102,21 @@ enum MiningPayoutStatus {
   REVERSED
 }
 
+enum MonetizableActivityStatus {
+  QUALIFIED
+  REVERSAL_PENDING
+  REVERSED
+}
+
+enum ReferralCommissionStatus {
+  PENDING
+  AVAILABLE
+  CAPPED
+  HELD
+  REVERSED
+  CLAWBACK_PENDING
+}
+
 model User {
   id                      String                   @id @default(uuid())
   email                   String                   @unique
@@ -131,6 +146,13 @@ model User {
   minerActions            MinerAction[]
   miningContributions     MiningContribution[]
   miningPayouts           MiningPayout[]
+  referralProfile         ReferralProfile?
+  sponsoredReferralEdges  ReferralEdge[]           @relation("ReferralSponsor")
+  referralEdge            ReferralEdge?            @relation("ReferralReferred")
+  referralAncestors       ReferralAncestor[]       @relation("ReferralDescendant")
+  referralDescendants     ReferralAncestor[]       @relation("ReferralAncestorUser")
+  monetizableActivities   MonetizableActivity[]
+  referralCommissions     ReferralCommission[]     @relation("ReferralBeneficiary")
   auditEvents             AuditEvent[]             @relation("AuditActor")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
@@ -203,28 +225,31 @@ model LedgerAccount {
 }
 
 model LedgerTransaction {
-  id             String                  @id @default(uuid())
-  idempotencyKey String                  @unique
-  type           String
-  sourceType     String
-  sourceId       String
-  status         LedgerTransactionStatus @default(PENDING)
-  configVersion  Int
-  metadata       Json                    @default("{}")
-  postedAt       DateTime?
-  reversedById   String?                 @unique
-  createdAt      DateTime                @default(now())
-  postings       LedgerPosting[]
-  reversedBy     LedgerTransaction?      @relation("Reversal", fields: [reversedById], references: [id])
-  reverses       LedgerTransaction?      @relation("Reversal")
-  config         EconomicConfigVersion   @relation(fields: [configVersion], references: [id], onDelete: Restrict)
-  faucetClaim    FaucetClaim?
-  gameSession    GameSession?
-  missionClaim   MissionClaim?
-  storePurchase  StorePurchase?          @relation("StorePurchaseTransaction")
-  minerAction    MinerAction?            @relation("MinerActionTransaction")
-  miningEpoch    MiningEpoch?            @relation("MiningEpochSettlement")
-  miningPayouts  MiningPayout[]          @relation("MiningPayoutTransaction")
+  id                          String                  @id @default(uuid())
+  idempotencyKey              String                  @unique
+  type                        String
+  sourceType                  String
+  sourceId                    String
+  status                      LedgerTransactionStatus @default(PENDING)
+  configVersion               Int
+  metadata                    Json                    @default("{}")
+  postedAt                    DateTime?
+  reversedById                String?                 @unique
+  createdAt                   DateTime                @default(now())
+  postings                    LedgerPosting[]
+  reversedBy                  LedgerTransaction?      @relation("Reversal", fields: [reversedById], references: [id])
+  reverses                    LedgerTransaction?      @relation("Reversal")
+  config                      EconomicConfigVersion   @relation(fields: [configVersion], references: [id], onDelete: Restrict)
+  faucetClaim                 FaucetClaim?
+  gameSession                 GameSession?
+  missionClaim                MissionClaim?
+  storePurchase               StorePurchase?          @relation("StorePurchaseTransaction")
+  minerAction                 MinerAction?            @relation("MinerActionTransaction")
+  miningEpoch                 MiningEpoch?            @relation("MiningEpochSettlement")
+  miningPayouts               MiningPayout[]          @relation("MiningPayoutTransaction")
+  referralPendingCommissions  ReferralCommission[]    @relation("ReferralPendingTransaction")
+  referralReleaseCommissions  ReferralCommission[]    @relation("ReferralReleaseTransaction")
+  referralClawbackCommissions ReferralCommission[]    @relation("ReferralClawbackTransaction")
 
   @@unique([sourceType, sourceId, type])
 }
@@ -243,24 +268,26 @@ model LedgerPosting {
 }
 
 model EconomicConfigVersion {
-  id             Int                 @id @default(autoincrement())
-  status         String              @default("DRAFT")
-  parameters     Json
-  reason         String
-  createdById    String
-  approvedById   String?
-  effectiveAt    DateTime?
-  createdAt      DateTime            @default(now())
-  transactions   LedgerTransaction[]
-  faucetClaims   FaucetClaim[]
-  gameEnergy     GameEnergy[]
-  gameSessions   GameSession[]
-  missionClaims  MissionClaim[]
-  storePurchases StorePurchase[]
-  miningProfiles MiningProfile[]
-  miners         UserMiner[]
-  minerActions   MinerAction[]
-  miningEpochs   MiningEpoch[]
+  id                    Int                   @id @default(autoincrement())
+  status                String                @default("DRAFT")
+  parameters            Json
+  reason                String
+  createdById           String
+  approvedById          String?
+  effectiveAt           DateTime?
+  createdAt             DateTime              @default(now())
+  transactions          LedgerTransaction[]
+  faucetClaims          FaucetClaim[]
+  gameEnergy            GameEnergy[]
+  gameSessions          GameSession[]
+  missionClaims         MissionClaim[]
+  storePurchases        StorePurchase[]
+  miningProfiles        MiningProfile[]
+  miners                UserMiner[]
+  minerActions          MinerAction[]
+  miningEpochs          MiningEpoch[]
+  monetizableActivities MonetizableActivity[]
+  referralCommissions   ReferralCommission[]
 }
 
 model FaucetChallenge {
@@ -540,6 +567,90 @@ model MiningPayout {
   @@unique([periodDate, userId])
   @@index([userId, periodDate, status])
   @@index([transactionId, status])
+}
+
+model ReferralProfile {
+  userId    String   @id
+  code      String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+model ReferralEdge {
+  id                  String   @id @default(uuid())
+  sponsorId           String
+  referredUserId      String   @unique
+  codeSnapshot        String
+  attributionEvidence Json     @default("{}")
+  createdAt           DateTime @default(now())
+  sponsor             User     @relation("ReferralSponsor", fields: [sponsorId], references: [id], onDelete: Restrict)
+  referredUser        User     @relation("ReferralReferred", fields: [referredUserId], references: [id], onDelete: Restrict)
+
+  @@index([sponsorId, createdAt])
+}
+
+model ReferralAncestor {
+  descendantId String
+  ancestorId   String
+  depth        Int
+  createdAt    DateTime @default(now())
+  descendant   User     @relation("ReferralDescendant", fields: [descendantId], references: [id], onDelete: Restrict)
+  ancestor     User     @relation("ReferralAncestorUser", fields: [ancestorId], references: [id], onDelete: Restrict)
+
+  @@id([descendantId, depth])
+  @@unique([descendantId, ancestorId])
+  @@index([ancestorId, depth, createdAt])
+}
+
+model MonetizableActivity {
+  id             String                    @id @default(uuid())
+  userId         String
+  sourceType     String
+  sourceId       String
+  idempotencyKey String                    @unique
+  status         MonetizableActivityStatus @default(QUALIFIED)
+  baseMinor      Decimal                   @db.Decimal(36, 0)
+  evidence       Json                      @default("{}")
+  ruleVersion    Int
+  qualifiedAt    DateTime
+  reversedAt     DateTime?
+  createdAt      DateTime                  @default(now())
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config         EconomicConfigVersion     @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  commissions    ReferralCommission[]
+
+  @@unique([sourceType, sourceId])
+  @@index([userId, status, qualifiedAt])
+}
+
+model ReferralCommission {
+  id                    String                   @id @default(uuid())
+  activityId            String
+  beneficiaryId         String
+  level                 Int
+  rateBps               Int
+  baseMinor             Decimal                  @db.Decimal(36, 0)
+  rewardMinor           Decimal                  @db.Decimal(36, 0)
+  cappedMinor           Decimal                  @default(0) @db.Decimal(36, 0)
+  status                ReferralCommissionStatus @default(PENDING)
+  capMonth              String
+  ruleVersion           Int
+  pendingTransactionId  String?
+  releaseTransactionId  String?
+  clawbackTransactionId String?
+  availableAt           DateTime?
+  reversedAt            DateTime?
+  createdAt             DateTime                 @default(now())
+  activity              MonetizableActivity      @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  beneficiary           User                     @relation("ReferralBeneficiary", fields: [beneficiaryId], references: [id], onDelete: Restrict)
+  config                EconomicConfigVersion    @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  pendingTransaction    LedgerTransaction?       @relation("ReferralPendingTransaction", fields: [pendingTransactionId], references: [id], onDelete: Restrict)
+  releaseTransaction    LedgerTransaction?       @relation("ReferralReleaseTransaction", fields: [releaseTransactionId], references: [id], onDelete: Restrict)
+  clawbackTransaction   LedgerTransaction?       @relation("ReferralClawbackTransaction", fields: [clawbackTransactionId], references: [id], onDelete: Restrict)
+
+  @@unique([activityId, beneficiaryId])
+  @@index([beneficiaryId, status, createdAt])
+  @@index([capMonth, beneficiaryId, status])
 }
 
 model AuditEvent {
