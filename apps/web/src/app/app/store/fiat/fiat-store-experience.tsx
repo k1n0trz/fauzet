@@ -2,18 +2,30 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { EconomicConfirmation } from "../../economic-confirmation";
 import {
+  canStartFiatCheckout,
+  createFiatOrder,
   fetchFiatCatalog,
+  fiatErrorMessage,
   type FiatCatalog,
   type FiatProduct,
 } from "../../../../lib/fiat-store-api";
-import { errorMessage } from "../../../../lib/reward-api";
+import {
+  clearMutationKey,
+  getOrCreateMutationKey,
+} from "../../../../lib/mutation-attempt-storage";
+import { shouldKeepMutationAttempt } from "../../../../lib/reward-api";
 import { StoreTabs } from "../store-tabs";
 
 export function FiatStoreExperience() {
   const [catalog, setCatalog] = useState<FiatCatalog | null>(null);
+  const [selected, setSelected] = useState<FiatProduct | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState("");
+  const [dialogError, setDialogError] = useState("");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -21,7 +33,7 @@ export function FiatStoreExperience() {
     try {
       setCatalog(await fetchFiatCatalog());
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(fiatErrorMessage(caught));
     } finally {
       setLoading(false);
     }
@@ -35,7 +47,7 @@ export function FiatStoreExperience() {
         const result = await fetchFiatCatalog(controller.signal);
         if (!controller.signal.aborted) setCatalog(result);
       } catch (caught) {
-        if (!controller.signal.aborted) setError(errorMessage(caught));
+        if (!controller.signal.aborted) setError(fiatErrorMessage(caught));
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -45,6 +57,59 @@ export function FiatStoreExperience() {
     return () => controller.abort();
   }, []);
 
+  const closeDialog = useCallback(() => {
+    if (purchasing) return;
+    setSelected(null);
+    setTermsAccepted(false);
+    setDialogError("");
+  }, [purchasing]);
+
+  async function confirmCheckout() {
+    if (!catalog || !selected || !termsAccepted || purchasing) return;
+    if (!canStartFiatCheckout(catalog, selected)) {
+      setDialogError(
+        "El servidor cerró este checkout. Actualiza el catálogo antes de continuar.",
+      );
+      return;
+    }
+
+    const signature = [
+      selected.productVersionId,
+      catalog.checkoutTermsVersion,
+      selected.refundPolicyVersion,
+      "1",
+    ].join(":");
+    const key = getOrCreateMutationKey("fiat-checkout", signature);
+    setPurchasing(true);
+    setDialogError("");
+    try {
+      const result = await createFiatOrder(
+        {
+          productVersionId: selected.productVersionId,
+          quantity: 1,
+          termsVersion: catalog.checkoutTermsVersion,
+          refundPolicyVersion: selected.refundPolicyVersion,
+        },
+        key,
+      );
+      const checkout = result.order.checkout;
+      if (!checkout) {
+        throw new Error(
+          "La orden existe, pero Mercado Pago TEST no devolvió un checkout utilizable.",
+        );
+      }
+      window.location.assign(checkout.url);
+      clearMutationKey("fiat-checkout", signature);
+    } catch (caught) {
+      if (!shouldKeepMutationAttempt(caught)) {
+        clearMutationKey("fiat-checkout", signature);
+      }
+      setDialogError(fiatErrorMessage(caught));
+    } finally {
+      setPurchasing(false);
+    }
+  }
+
   return (
     <section
       className="rewardsPage storePage"
@@ -52,14 +117,14 @@ export function FiatStoreExperience() {
     >
       <div className="commerceHeading">
         <div>
-          <div className="eyebrow">Catálogo informativo · pagos de prueba</div>
+          <div className="eyebrow">Mercado Pago TEST · sin dinero real</div>
           <h1 className="rewardsTitle" id="fiat-store-title">
             Tienda fiat sandbox
           </h1>
           <p className="lead">
-            Consulta el catálogo COP preparado para Mercado Pago. En esta fase
-            no se crean órdenes, no se cobra dinero y no se entregan
-            recompensas.
+            Prueba el checkout alojado de Mercado Pago con una cuenta compradora
+            y medios de pago de prueba. Fauzet no cobra dinero real ni acredita
+            productos por el regreso del navegador.
           </p>
         </div>
         <Image
@@ -93,8 +158,8 @@ export function FiatStoreExperience() {
 
       {catalog?.disabledReason ? (
         <div className="storePhaseNotice" role="status">
-          <strong>Catálogo limitado por configuración.</strong>
-          <span>{catalog.disabledReason}</span>
+          <strong>Checkout de prueba limitado por configuración.</strong>
+          <span>{fiatReasonCopy(catalog.disabledReason)}</span>
         </div>
       ) : null}
 
@@ -104,6 +169,11 @@ export function FiatStoreExperience() {
             catalog={catalog}
             product={product}
             key={product.productVersionId}
+            onSelect={() => {
+              setSelected(product);
+              setTermsAccepted(false);
+              setDialogError("");
+            }}
           />
         ))}
       </div>
@@ -119,11 +189,62 @@ export function FiatStoreExperience() {
 
       {catalog ? (
         <aside className="commercePolicy">
-          <strong>Sandbox sin valor real.</strong> Mercado Pago figura como
-          proveedor de prueba, pero checkout y activación permanecen cerrados.
-          Estos productos no representan hardware ni minería blockchain y no
-          generan ZYXEs en esta fase.
+          <strong>Sandbox sin valor real.</strong> Checkout Pro se abre fuera de
+          Fauzet y debe usarse únicamente con credenciales de comprador y medios
+          de pago TEST. El inventario cambia sólo después de que el backend
+          verifica el pago con Mercado Pago; la activación continúa cerrada y
+          ningún producto genera ZYXE en esta fase.
         </aside>
+      ) : null}
+
+      {catalog && selected ? (
+        <EconomicConfirmation
+          title="Abrir checkout de prueba"
+          warning="Serás enviado a Mercado Pago TEST. Volver a Fauzet, incluso con status=approved en la URL, no confirma el pago: sólo cuenta el estado verificado por el servidor."
+          pending={purchasing}
+          error={dialogError}
+          confirmLabel="Ir a Mercado Pago TEST"
+          confirmDisabled={!termsAccepted}
+          pendingLabel="Creando checkout TEST…"
+          onCancel={closeDialog}
+          onConfirm={() => void confirmCheckout()}
+        >
+          <dl className="economicRows">
+            <div>
+              <dt>Producto</dt>
+              <dd>{selected.name}</dd>
+            </div>
+            <div>
+              <dt>Precio simulado</dt>
+              <dd>{formatCop(selected.price.minorUnits)} COP</dd>
+            </div>
+            <div>
+              <dt>Efecto</dt>
+              <dd>{selected.effect.label}</dd>
+            </div>
+            <div>
+              <dt>Ambiente</dt>
+              <dd>Mercado Pago TEST</dd>
+            </div>
+            <div>
+              <dt>Activación</dt>
+              <dd>Cerrada</dd>
+            </div>
+          </dl>
+          <label className="fiatConsent">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              disabled={purchasing}
+              onChange={(event) => setTermsAccepted(event.target.checked)}
+            />
+            <span>
+              Entiendo que es una simulación sin dinero real y acepto las
+              condiciones de prueba {catalog.checkoutTermsVersion} y la política{" "}
+              de reembolso {selected.refundPolicyVersion}.
+            </span>
+          </label>
+        </EconomicConfirmation>
       ) : null}
     </section>
   );
@@ -134,11 +255,11 @@ function FiatSummary({ catalog }: { catalog: FiatCatalog }) {
     <div className="commerceSummary" aria-label="Estado de la tienda fiat">
       <article>
         <span>Ambiente</span>
-        <strong>Sandbox</strong>
+        <strong>TEST</strong>
         <small>No se cobrará dinero real.</small>
       </article>
       <article className="promotional">
-        <span>Moneda</span>
+        <span>Moneda simulada</span>
         <strong>{catalog.currency}</strong>
         <small>Importes de prueba, sin centavos.</small>
       </article>
@@ -147,8 +268,8 @@ function FiatSummary({ catalog }: { catalog: FiatCatalog }) {
         <strong>Mercado Pago</strong>
         <small>
           {catalog.checkoutEnabled
-            ? "Integración preparada; acceso público cerrado."
-            : "Checkout deshabilitado por el servidor."}
+            ? "Checkout de prueba habilitado por el servidor."
+            : "Checkout de prueba cerrado por el servidor."}
         </small>
       </article>
     </div>
@@ -158,23 +279,24 @@ function FiatSummary({ catalog }: { catalog: FiatCatalog }) {
 function FiatProductCard({
   catalog,
   product,
+  onSelect,
 }: {
   catalog: FiatCatalog;
   product: FiatProduct;
+  onSelect: () => void;
 }) {
   const art = productArt(product.kind);
+  const available = canStartFiatCheckout(catalog, product);
   const reason = product.reasonCode ?? catalog.disabledReason;
 
   return (
-    <article
-      className={`storeCard ${product.state === "AVAILABLE" ? "" : "locked"}`}
-    >
+    <article className={`storeCard ${available ? "" : "locked"}`}>
       <div className="storeCardTop">
         <span className="storeProductArt">
           <Image src={art.src} width={art.width} height={art.height} alt="" />
         </span>
         <span className={`storeKind kind-${product.kind.toLowerCase()}`}>
-          {product.kind} · SANDBOX
+          {product.kind} · TEST
         </span>
       </div>
       <h2>{product.name}</h2>
@@ -190,7 +312,7 @@ function FiatProductCard({
           <dd>{formatDuration(product.durationSeconds)}</dd>
         </div>
       </dl>
-      {reason ? (
+      {reason && !available ? (
         <div className="storeReason">
           <span>{fiatProductStateLabel(product, catalog)}</span>
           <code>{reason}</code>
@@ -198,8 +320,13 @@ function FiatProductCard({
       ) : null}
       <div className="storeCardAction">
         <strong>{formatCop(product.price.minorUnits)} COP</strong>
-        <button type="button" disabled>
-          {fiatProductStateLabel(product, catalog)}
+        <button
+          className={available ? "button" : ""}
+          type="button"
+          disabled={!available}
+          onClick={onSelect}
+        >
+          {available ? "Probar pago" : fiatProductStateLabel(product, catalog)}
         </button>
       </div>
     </article>
@@ -211,7 +338,19 @@ function fiatProductStateLabel(product: FiatProduct, catalog: FiatCatalog) {
   if (product.state === "DISABLED") return "Deshabilitado";
   if (!catalog.catalogEnabled) return "Catálogo cerrado";
   if (!catalog.checkoutEnabled) return "Checkout cerrado";
-  return "Fase informativa";
+  return "No disponible";
+}
+
+function fiatReasonCopy(reason: string) {
+  return (
+    {
+      CHECKOUT_DISABLED: "El servidor mantiene cerrado el checkout de prueba.",
+      PRODUCT_PAUSED: "El producto está pausado para nuevas pruebas.",
+      PRODUCT_COMING_SOON: "El producto todavía no admite pruebas de pago.",
+      SALE_NOT_STARTED: "La ventana de prueba aún no ha comenzado.",
+      SALE_ENDED: "La ventana de prueba ya finalizó.",
+    }[reason] ?? reason
+  );
 }
 
 function productArt(kind: string) {

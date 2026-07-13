@@ -32,16 +32,58 @@ const envSchema = z.object({
   FIAT_CATALOG_ENABLED: z.enum(["true", "false"]).default("true"),
   FIAT_SANDBOX_CHECKOUT_ENABLED: z.enum(["true", "false"]).default("false"),
   FIAT_SANDBOX_ACTIVATION_ENABLED: z.enum(["true", "false"]).default("false"),
+  FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS: z.string().default(""),
+  MERCADOPAGO_MODE: z.enum(["test", "live"]).default("test"),
+  MERCADOPAGO_ACCESS_TOKEN: optionalNonEmptyString.pipe(
+    z.string().min(20).max(512).optional(),
+  ),
+  MERCADOPAGO_WEBHOOK_SECRET: optionalNonEmptyString.pipe(
+    z.string().min(16).max(512).optional(),
+  ),
+  MERCADOPAGO_APPLICATION_ID: optionalNonEmptyString.pipe(
+    z
+      .string()
+      .regex(/^\d{1,20}$/)
+      .optional(),
+  ),
+  MERCADOPAGO_SELLER_USER_ID: optionalNonEmptyString.pipe(
+    z
+      .string()
+      .regex(/^\d{1,20}$/)
+      .optional(),
+  ),
 });
 
 export type AppConfig = ReturnType<typeof loadConfig>;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const parsed = envSchema.parse(env);
+  if (parsed.MERCADOPAGO_MODE === "live") {
+    throw new Error("MERCADOPAGO_MODE=live is not authorized in this release");
+  }
   const hasSmtpUser = parsed.SMTP_USER !== undefined;
   const hasSmtpPassword = parsed.SMTP_PASSWORD !== undefined;
   const smtpSecure = parsed.SMTP_SECURE === "true";
   const smtpRequireTls = parsed.SMTP_REQUIRE_TLS === "true";
+  const allowlistedCheckoutUsers = parseCheckoutAllowlist(
+    parsed.FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS,
+  );
+  const mercadoPago = {
+    mode: parsed.MERCADOPAGO_MODE,
+    accessToken:
+      parsed.MERCADOPAGO_ACCESS_TOKEN ??
+      legacyDevelopmentValue(parsed.NODE_ENV, env.MERCADOPAGO_TEST_API_KEY),
+    webhookSecret: parsed.MERCADOPAGO_WEBHOOK_SECRET,
+    applicationId:
+      parsed.MERCADOPAGO_APPLICATION_ID ??
+      legacyDevelopmentNumericValue(
+        parsed.NODE_ENV,
+        env.NUMERO_DE_LA_APLICACION,
+      ),
+    sellerUserId:
+      parsed.MERCADOPAGO_SELLER_USER_ID ??
+      legacyDevelopmentNumericValue(parsed.NODE_ENV, env.USER_ID),
+  } as const;
 
   if (hasSmtpUser !== hasSmtpPassword) {
     throw new Error("SMTP_USER and SMTP_PASSWORD must be set together");
@@ -53,11 +95,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   }
 
   if (parsed.NODE_ENV === "production") {
-    assertProductionConfig(parsed, env, {
-      hasSmtpUser,
-      smtpSecure,
-      smtpRequireTls,
-    });
+    assertProductionConfig(
+      parsed,
+      env,
+      {
+        hasSmtpUser,
+        smtpSecure,
+        smtpRequireTls,
+      },
+      allowlistedCheckoutUsers,
+    );
   }
 
   return {
@@ -81,6 +128,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
         : {}),
     },
     trustProxy: parsed.TRUST_PROXY_HOPS === 0 ? false : parsed.TRUST_PROXY_HOPS,
+    mercadoPago,
+    fiatSandbox: { checkoutAllowedUsers: allowlistedCheckoutUsers },
     features: {
       realMoney: parsed.REAL_MONEY_ENABLED === "true",
       withdrawals: parsed.WITHDRAWALS_ENABLED === "true",
@@ -101,6 +150,7 @@ function assertProductionConfig(
     smtpSecure: boolean;
     smtpRequireTls: boolean;
   },
+  allowlistedCheckoutUsers: readonly string[],
 ) {
   if (
     !parsed.SESSION_SECRET ||
@@ -132,15 +182,37 @@ function assertProductionConfig(
     );
   }
   const enabledUnimplementedFiatGates = [
-    ["FIAT_SANDBOX_CHECKOUT_ENABLED", parsed.FIAT_SANDBOX_CHECKOUT_ENABLED],
     ["FIAT_SANDBOX_ACTIVATION_ENABLED", parsed.FIAT_SANDBOX_ACTIVATION_ENABLED],
   ]
     .filter(([, value]) => value === "true")
     .map(([name]) => name);
   if (enabledUnimplementedFiatGates.length > 0) {
     throw new Error(
-      `${enabledUnimplementedFiatGates.join(", ")} cannot be enabled: fiat sandbox checkout and activation are not implemented`,
+      `${enabledUnimplementedFiatGates.join(", ")} cannot be enabled: fiat sandbox activation is not implemented`,
     );
+  }
+  if (parsed.FIAT_SANDBOX_CHECKOUT_ENABLED === "true") {
+    if (parsed.MERCADOPAGO_MODE !== "test") {
+      throw new Error(
+        "FIAT_SANDBOX_CHECKOUT_ENABLED requires MERCADOPAGO_MODE=test",
+      );
+    }
+    const required = [
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "MERCADOPAGO_WEBHOOK_SECRET",
+      "MERCADOPAGO_APPLICATION_ID",
+      "MERCADOPAGO_SELLER_USER_ID",
+    ].filter((name) => !raw[name]?.trim());
+    if (required.length > 0) {
+      throw new Error(
+        `${required.join(", ")} are required when the fiat sandbox checkout is enabled`,
+      );
+    }
+    if (allowlistedCheckoutUsers.length === 0) {
+      throw new Error(
+        "FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS must contain at least one user when checkout is enabled",
+      );
+    }
   }
   if (!raw.SMTP_HOST?.trim() || !raw.SMTP_PORT?.trim()) {
     throw new Error(
@@ -163,3 +235,43 @@ function assertProductionConfig(
 function isHttps(value: string) {
   return new URL(value).protocol === "https:";
 }
+
+function parseCheckoutAllowlist(value: string) {
+  const entries = [
+    ...new Set(
+      value
+        .split(",")
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ];
+  for (const entry of entries) {
+    if (!UUID.test(entry) && !EMAIL.test(entry)) {
+      throw new Error(
+        "FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS accepts only UUIDs or email addresses",
+      );
+    }
+  }
+  return entries;
+}
+
+function legacyDevelopmentValue(
+  nodeEnv: "development" | "test" | "production",
+  value: string | undefined,
+) {
+  if (nodeEnv === "production") return undefined;
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function legacyDevelopmentNumericValue(
+  nodeEnv: "development" | "test" | "production",
+  value: string | undefined,
+) {
+  const candidate = legacyDevelopmentValue(nodeEnv, value);
+  return candidate && /^\d{1,20}$/.test(candidate) ? candidate : undefined;
+}
+
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

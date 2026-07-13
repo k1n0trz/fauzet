@@ -28,6 +28,11 @@ import {
   FiatCommerceService,
   type FiatCommerceStore,
 } from "./domain/fiat-commerce.js";
+import {
+  FiatPaymentService,
+  type FiatPaymentGateway,
+  type FiatPaymentStore,
+} from "./domain/fiat-payments.js";
 import { ReferralService, type ReferralStore } from "./domain/referrals.js";
 import { AdminService, type AdminStore } from "./domain/admin.js";
 import {
@@ -43,6 +48,7 @@ import { MemoryGameStore } from "./infrastructure/memory-game-store.js";
 import { MemoryMissionStore } from "./infrastructure/memory-mission-store.js";
 import { MemoryCommerceStore } from "./infrastructure/memory-commerce-store.js";
 import { MemoryFiatCommerceStore } from "./infrastructure/memory-fiat-commerce-store.js";
+import { MemoryFiatPaymentStore } from "./infrastructure/memory-fiat-payment-store.js";
 import { MemoryReferralStore } from "./infrastructure/memory-referral-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
@@ -54,6 +60,8 @@ import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
 import { PrismaFiatCommerceStore } from "./infrastructure/prisma-fiat-commerce-store.js";
+import { PrismaFiatPaymentStore } from "./infrastructure/prisma-fiat-payment-store.js";
+import { MercadoPagoGateway } from "./infrastructure/mercadopago-gateway.js";
 import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
 import { PrismaSandboxWithdrawalStore } from "./infrastructure/prisma-sandbox-withdrawal-store.js";
@@ -69,6 +77,7 @@ import { registerGameRoutes } from "./routes/games.js";
 import { registerMissionRoutes } from "./routes/missions.js";
 import { registerCommerceRoutes } from "./routes/commerce.js";
 import { registerFiatCommerceRoutes } from "./routes/fiat-commerce.js";
+import { registerFiatPaymentRoutes } from "./routes/fiat-payments.js";
 import { registerReferralRoutes } from "./routes/referrals.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerSandboxWithdrawalRoutes } from "./routes/sandbox-withdrawals.js";
@@ -83,6 +92,8 @@ export interface AppDependencies {
   missionStore?: MissionStore;
   commerceStore?: CommerceStore;
   fiatCommerceStore?: FiatCommerceStore;
+  fiatPaymentStore?: FiatPaymentStore;
+  fiatPaymentGateway?: FiatPaymentGateway | null;
   referralStore?: ReferralStore;
   adminStore?: AdminStore;
   sandboxWithdrawalStore?: SandboxWithdrawalStore;
@@ -212,10 +223,47 @@ export async function createApp(
   await registerFiatCommerceRoutes(
     app,
     auth,
-    new FiatCommerceService(fiatCommerceStore, {
-      catalogEnabled: config.features.fiatCatalog,
+    new FiatCommerceService(
+      fiatCommerceStore,
+      {
+        catalogEnabled: config.features.fiatCatalog,
+        checkoutEnabled: config.features.fiatSandboxCheckout,
+        activationEnabled: config.features.fiatSandboxActivation,
+      },
+      config.fiatSandbox.checkoutAllowedUsers,
+    ),
+  );
+  const fiatPaymentStore =
+    dependencies.fiatPaymentStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryFiatPaymentStore()
+      : new PrismaFiatPaymentStore());
+  const fiatPaymentGateway =
+    dependencies.fiatPaymentGateway !== undefined
+      ? dependencies.fiatPaymentGateway
+      : config.mercadoPago.accessToken
+        ? new MercadoPagoGateway({
+            accessToken: config.mercadoPago.accessToken,
+            mode: config.mercadoPago.mode,
+          })
+        : null;
+  await registerFiatPaymentRoutes(
+    app,
+    auth,
+    new FiatPaymentService(fiatPaymentStore, fiatPaymentGateway, {
       checkoutEnabled: config.features.fiatSandboxCheckout,
-      activationEnabled: config.features.fiatSandboxActivation,
+      checkoutAllowedUsers: config.fiatSandbox.checkoutAllowedUsers,
+      mode: config.mercadoPago.mode,
+      appBaseUrl: config.appBaseUrl,
+      ...(config.mercadoPago.sellerUserId
+        ? { sellerUserId: config.mercadoPago.sellerUserId }
+        : {}),
+      ...(config.mercadoPago.applicationId
+        ? { applicationId: config.mercadoPago.applicationId }
+        : {}),
+      ...(config.mercadoPago.webhookSecret
+        ? { webhookSecret: config.mercadoPago.webhookSecret }
+        : {}),
     }),
   );
   const referralStore =

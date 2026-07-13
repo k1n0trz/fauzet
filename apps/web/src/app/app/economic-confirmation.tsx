@@ -9,6 +9,8 @@ export function EconomicConfirmation({
   pending,
   error,
   confirmLabel,
+  confirmDisabled = false,
+  pendingLabel = "Confirmando…",
   onCancel,
   onConfirm,
 }: {
@@ -18,6 +20,8 @@ export function EconomicConfirmation({
   pending: boolean;
   error: string;
   confirmLabel: string;
+  confirmDisabled?: boolean;
+  pendingLabel?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -60,10 +64,10 @@ export function EconomicConfirmation({
           <button
             className="button"
             type="button"
-            disabled={pending}
+            disabled={pending || confirmDisabled}
             onClick={onConfirm}
           >
-            {pending ? "Confirmando…" : confirmLabel}
+            {pending ? pendingLabel : confirmLabel}
           </button>
         </div>
       </section>

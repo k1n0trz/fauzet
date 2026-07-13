@@ -40,6 +40,7 @@ export class FiatCommerceService {
   constructor(
     private readonly store: FiatCommerceStore,
     private readonly flags: FiatCommerceFlags,
+    private readonly checkoutAllowedUsers?: readonly string[],
   ) {}
 
   async catalog(user: PublicUser) {
@@ -51,12 +52,30 @@ export class FiatCommerceService {
         404,
       );
     }
-    return this.store.catalog({ userId: user.id, flags: this.flags });
+    return this.store.catalog({
+      userId: user.id,
+      flags: this.effectiveFlags(user),
+    });
   }
 
   async inventory(user: PublicUser) {
     assertEligible(user);
-    return this.store.inventory({ userId: user.id, flags: this.flags });
+    return this.store.inventory({
+      userId: user.id,
+      flags: this.effectiveFlags(user),
+    });
+  }
+
+  private effectiveFlags(user: PublicUser): FiatCommerceFlags {
+    if (!this.checkoutAllowedUsers) return this.flags;
+    const allowed = this.checkoutAllowedUsers.some(
+      (entry) =>
+        entry === user.id.toLowerCase() || entry === user.email.toLowerCase(),
+    );
+    return {
+      ...this.flags,
+      checkoutEnabled: this.flags.checkoutEnabled && allowed,
+    };
   }
 }
 

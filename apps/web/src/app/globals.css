@@ -2327,6 +2327,145 @@ html[data-theme="dark"] {
 .miningFormula strong {
   color: #bae6fd;
 }
+.fiatConsent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin-top: 15px;
+  padding: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.055);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.fiatConsent input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: var(--green);
+}
+.fiatOrderPage code {
+  overflow-wrap: anywhere;
+}
+.fiatOrderPanel {
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 22px;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-top: 3px solid var(--cyan);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.fiatOrderPanel.tone-success {
+  border-color: rgba(57, 255, 136, 0.28);
+  border-top-color: var(--green);
+}
+.fiatOrderPanel.tone-warning {
+  border-color: rgba(245, 158, 11, 0.28);
+  border-top-color: #f59e0b;
+}
+.fiatOrderPanel.tone-neutral {
+  border-color: rgba(156, 163, 175, 0.2);
+  border-top-color: #6b7280;
+}
+.fiatOrderStatus {
+  display: grid;
+  gap: 6px;
+}
+.fiatOrderStatus > span {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tone-success .fiatOrderStatus > span {
+  color: var(--green);
+}
+.tone-warning .fiatOrderStatus > span {
+  color: #fbbf24;
+}
+.fiatOrderStatus > strong {
+  color: var(--text);
+  font: 700 20px var(--font-display);
+}
+.fiatOrderStatus > p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.fiatOrderStatus > code {
+  color: #9ca3af;
+  font-size: 9px;
+}
+.fiatOrderFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+.fiatOrderFacts div {
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: rgba(229, 231, 235, 0.035);
+}
+.fiatOrderFacts dt {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.fiatOrderFacts dd {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.fiatOrderWaiting {
+  padding: 11px 12px;
+  border: 1px solid rgba(34, 211, 238, 0.16);
+  border-radius: 9px;
+  background: rgba(34, 211, 238, 0.045);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.fiatOrderActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.fiatOrderActions a,
+.fiatOrderActions button {
+  border: 1px solid rgba(229, 231, 235, 0.14);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 13px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.fiatOrderActions a:hover,
+.fiatOrderActions button:hover {
+  border-color: rgba(34, 211, 238, 0.32);
+  color: var(--text);
+}
+.fiatOrderActions a.primary {
+  border-color: var(--green);
+  background: var(--green);
+  color: #04140a;
+}
 .economicOverlay {
   position: fixed;
   inset: 0;
@@ -2737,6 +2876,9 @@ html[data-theme="dark"] {
 .storeTab:focus-visible,
 .storeEmpty a:focus-visible,
 .economicDialogActions button:focus-visible,
+.fiatConsent input:focus-visible,
+.fiatOrderActions a:focus-visible,
+.fiatOrderActions button:focus-visible,
 .minerActions button:focus-visible,
 .miningSectionTitle a:focus-visible,
 .miningPanel a:focus-visible {
@@ -2802,6 +2944,9 @@ html[data-theme="dark"] {
   }
   .purchaseReceipt > dl {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .fiatOrderFacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 520px) {
@@ -2877,6 +3022,19 @@ html[data-theme="dark"] {
   }
   .economicDialog {
     padding: 20px;
+  }
+  .fiatOrderPanel {
+    padding: 17px;
+  }
+  .fiatOrderFacts {
+    grid-template-columns: 1fr;
+  }
+  .fiatOrderActions {
+    display: grid;
+  }
+  .fiatOrderActions a,
+  .fiatOrderActions button {
+    text-align: center;
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -841,9 +841,12 @@ model PaymentAttempt {
   observedCurrency       String?               @db.Char(3)
   verificationEvidence   Json                  @default("{}")
   checkoutUrl            String?               @db.Text
+  checkoutLockToken      String?
+  checkoutLockedAt       DateTime?
   expiresAt              DateTime?
   approvedAt             DateTime?
   failedAt               DateTime?
+  providerUpdatedAt      DateTime?
   lastProviderSyncAt     DateTime?
   createdAt              DateTime              @default(now())
   updatedAt              DateTime              @updatedAt
@@ -856,6 +859,8 @@ model PaymentAttempt {
   @@unique([provider, environment, providerCheckoutId])
   @@unique([provider, environment, providerPaymentId])
   @@index([orderId, status, createdAt])
+  @@index([status, checkoutLockedAt])
+  @@index([provider, environment, providerUpdatedAt])
 }
 
 model PaymentWebhookInbox {
