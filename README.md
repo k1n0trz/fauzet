@@ -49,7 +49,11 @@ corepack pnpm admin:grant
 
 El navegador consume `/api/v1/*` en el mismo origen del frontend; Next.js lo reenvía a `API_ORIGIN`. En Vercel esta variable debe apuntar a la URL HTTPS de la API en Cloud Run.
 
+La configuración reproducible y el checklist de publicación del frontend están en [`docs/deployment/vercel.md`](docs/deployment/vercel.md).
+
 `TRUST_PROXY_HOPS` queda en `0` por defecto. En un despliegue debe configurarse con el número exacto de proxies confiables verificado para esa topología; la API nunca confía de forma abierta en cualquier `X-Forwarded-For`.
+
+En `production` la API exige `DATABASE_URL`, orígenes HTTPS, un `SESSION_SECRET` único y un relay SMTP explícito con `SMTP_USER`/`SMTP_PASSWORD`. Para el correo debe elegirse un solo modo cifrado: `SMTP_SECURE=true` para TLS implícito (normalmente puerto 465), o `SMTP_REQUIRE_TLS=true` para STARTTLS obligatorio (normalmente 587). Los gates reales de dinero, retiros y trading fallan cerrados mientras esas integraciones no existan.
 
 ## Verificación
 

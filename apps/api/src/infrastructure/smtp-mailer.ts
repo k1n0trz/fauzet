@@ -12,6 +12,9 @@ export class SmtpMailer implements TransactionalMailer {
       port: number;
       from: string;
       appBaseUrl: string;
+      secure: boolean;
+      requireTls: boolean;
+      auth?: { user: string; pass: string };
     },
   ) {}
   async sendEmailVerification(to: TokenOwner, token: string) {
@@ -62,7 +65,10 @@ export class SmtpMailer implements TransactionalMailer {
     this.transport ??= nodemailer.createTransport({
       host: this.options.host,
       port: this.options.port,
-      secure: false,
+      secure: this.options.secure,
+      requireTLS: this.options.requireTls,
+      auth: this.options.auth,
+      tls: { minVersion: "TLSv1.2" },
     });
     return this.transport;
   }

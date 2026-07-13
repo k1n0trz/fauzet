@@ -1,0 +1,13 @@
+{
+  "name": "@fauzet/migrations",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal production-only Prisma migration runner",
+  "scripts": {
+    "migrate:deploy": "prisma migrate deploy --schema=node_modules/@fauzet/database/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@fauzet/database": "workspace:*",
+    "prisma": "6.19.3"
+  }
+}

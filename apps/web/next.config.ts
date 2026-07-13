@@ -5,11 +5,33 @@ import { resolve } from "node:path";
 const localEnv = resolve(process.cwd(), "../../.env");
 if (existsSync(localEnv)) process.loadEnvFile(localEnv);
 
-const apiOrigin = process.env.API_ORIGIN ?? "http://localhost:4000";
+function resolveApiOrigin(): string {
+  const configuredOrigin = process.env.API_ORIGIN?.trim();
 
-if (process.env.VERCEL && !process.env.API_ORIGIN) {
-  throw new Error("API_ORIGIN is required for Vercel deployments");
+  if (process.env.VERCEL && !configuredOrigin) {
+    throw new Error("API_ORIGIN is required for Vercel deployments");
+  }
+
+  const url = new URL(configuredOrigin || "http://localhost:4000");
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error("API_ORIGIN must use http or https");
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(
+      "API_ORIGIN must not contain credentials, query or fragment",
+    );
+  }
+  if (url.pathname !== "/") {
+    throw new Error("API_ORIGIN must be an origin without a path");
+  }
+  if (process.env.VERCEL && url.protocol !== "https:") {
+    throw new Error("API_ORIGIN must use https on Vercel");
+  }
+
+  return url.origin;
 }
+
+const apiOrigin = resolveApiOrigin();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,

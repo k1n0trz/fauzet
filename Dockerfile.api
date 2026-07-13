@@ -1,0 +1,85 @@
+# syntax=docker/dockerfile:1.7
+
+# Node 22 remains the project's supported runtime. The digest pins the
+# multi-platform official image so a rebuild cannot silently change its base.
+ARG NODE_IMAGE=node:22.23.1-bookworm-slim@sha256:53ada149d435c38b14476cb57e4a7da73c15595aba79bd6971b547ceb6d018bf
+
+FROM ${NODE_IMAGE} AS runtime-base
+
+# Prisma detects its native engine target through OpenSSL and needs libssl at
+# runtime. Installing it in the shared base keeps build and runtime aligned.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM runtime-base AS toolchain
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+
+WORKDIR /workspace
+
+FROM toolchain AS dependencies
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json tsconfig.base.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/migrations/package.json apps/migrations/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/database/package.json packages/database/package.json
+
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+FROM dependencies AS compiled
+
+COPY apps/api apps/api
+COPY packages/contracts packages/contracts
+COPY packages/database packages/database
+
+RUN pnpm --filter @fauzet/api... build
+
+FROM compiled AS api-bundle
+
+RUN pnpm --filter @fauzet/api deploy --prod --no-optional --legacy /opt/fauzet-api
+WORKDIR /opt/fauzet-api
+RUN source_client="$(cd /workspace/packages/database && node -e \
+      "const path=require('node:path');const file=require.resolve('@prisma/client/package.json');process.stdout.write(path.resolve(path.dirname(file),'../../.prisma/client'))")" \
+    && target_client="$(cd node_modules/@fauzet/database && node -e \
+      "const path=require('node:path');const file=require.resolve('@prisma/client/package.json');process.stdout.write(path.resolve(path.dirname(file),'../../.prisma/client'))")" \
+    && rm -rf "$target_client" \
+    && mkdir -p "$(dirname "$target_client")" \
+    && cp -a "$source_client" "$target_client"
+
+FROM compiled AS migrations-bundle
+
+RUN pnpm --filter @fauzet/migrations deploy --prod --legacy /opt/fauzet-migrations
+
+FROM runtime-base AS api
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
+WORKDIR /app
+
+COPY --from=api-bundle --chown=node:node /opt/fauzet-api ./
+
+USER node
+
+EXPOSE 8080
+ENTRYPOINT ["node"]
+CMD ["dist/server.js"]
+
+FROM runtime-base AS migrations
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY --from=migrations-bundle --chown=node:node /opt/fauzet-migrations ./
+
+USER node
+
+ENTRYPOINT ["./node_modules/.bin/prisma"]
+CMD ["migrate", "deploy", "--schema=node_modules/@fauzet/database/prisma/schema.prisma"]
