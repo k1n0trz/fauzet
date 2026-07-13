@@ -21,6 +21,39 @@ export const balanceSchema = moneySchema.extend({
   bucket: balanceBucketSchema,
 });
 
+export const accountActivityQuerySchema = z.object({
+  cursor: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const accountActivityResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      type: z.string(),
+      sourceType: z.string(),
+      sourceId: z.string(),
+      status: z.string(),
+      createdAt: z.string().datetime(),
+      postedAt: z.string().datetime().nullable(),
+      movements: z
+        .array(
+          z.object({
+            asset: z.string().min(2).max(12),
+            bucket: balanceBucketSchema,
+            minorUnits: z.string().regex(/^-?\d+$/),
+            balanceAfterMinorUnits: z
+              .string()
+              .regex(/^-?\d+$/)
+              .nullable(),
+          }),
+        )
+        .min(1),
+    }),
+  ),
+  nextCursor: z.string().uuid().nullable(),
+});
+
 export const claimRequestSchema = z.object({
   challengeId: z.string().uuid(),
 });
@@ -964,6 +997,8 @@ export const registerRequestSchema = z.object({
   locale: z.enum(["es", "en"]).default("es"),
   acceptedTerms: z.literal(true),
   isAdult: z.literal(true),
+  termsVersion: z.literal("beta-2026-07-13").optional(),
+  privacyVersion: z.literal("beta-2026-07-13").optional(),
   referralCode: z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
     referralCodeSchema.optional(),
@@ -1008,6 +1043,10 @@ export const healthSchema = z.object({
 
 export type Money = z.infer<typeof moneySchema>;
 export type Balance = z.infer<typeof balanceSchema>;
+export type AccountActivityQuery = z.infer<typeof accountActivityQuerySchema>;
+export type AccountActivityResponse = z.infer<
+  typeof accountActivityResponseSchema
+>;
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type PublicUser = z.infer<typeof publicUserSchema>;

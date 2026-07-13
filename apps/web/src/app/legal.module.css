@@ -1,0 +1,159 @@
+.page {
+  min-height: 100vh;
+  padding: 40px 20px 72px;
+  color: #e7edf7;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(34, 211, 238, 0.1), transparent 32%),
+    #080b12;
+  font-family: var(--font-body), sans-serif;
+}
+
+.container {
+  width: min(860px, 100%);
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 38px;
+}
+
+.header a {
+  color: #9aa8bc;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.header a:hover {
+  color: #39ff88;
+}
+
+.brand {
+  width: 122px;
+  height: auto;
+}
+
+.hero,
+.section,
+.notice {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(17, 24, 39, 0.76);
+}
+
+.hero {
+  padding: clamp(24px, 5vw, 46px);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: #22d3ee;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.hero h1 {
+  margin: 0 0 14px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(34px, 7vw, 58px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.hero p,
+.section p,
+.section li,
+.notice {
+  color: #aeb9ca;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 20px;
+  color: #7f8da2;
+  font-size: 12px;
+}
+
+.notice {
+  margin: 18px 0;
+  padding: 18px 20px;
+  border-color: rgba(245, 185, 66, 0.25);
+  background: rgba(245, 185, 66, 0.06);
+}
+
+.sections {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.section {
+  padding: 24px clamp(20px, 4vw, 32px);
+  scroll-margin-top: 20px;
+}
+
+.section h2 {
+  margin: 0 0 10px;
+  color: #f5f7fb;
+  font-family: var(--font-display), sans-serif;
+  font-size: 22px;
+}
+
+.section p {
+  margin: 0;
+}
+
+.section p + p,
+.section ul {
+  margin-top: 10px;
+}
+
+.section ul {
+  margin-bottom: 0;
+  padding-left: 20px;
+}
+
+.section a {
+  color: #39ff88;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 28px 4px 0;
+  color: #738096;
+  font-size: 12px;
+}
+
+.footer a {
+  color: #9aa8bc;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding-top: 24px;
+  }
+
+  .header {
+    align-items: flex-start;
+  }
+
+  .hero,
+  .section {
+    border-radius: 14px;
+  }
+}

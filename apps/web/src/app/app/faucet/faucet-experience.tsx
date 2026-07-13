@@ -193,16 +193,6 @@ export function FaucetExperience() {
   const remainingSeconds = getRemainingSeconds(status, now);
   return (
     <main className="appShell">
-      <header className="appHeader">
-        <Link className="brand" href="/app" aria-label="Fauzet, ir al panel">
-          Fau<span>zet</span>
-        </Link>
-        <nav className="appNav" aria-label="Navegación de la aplicación">
-          <Link href="/app">Panel</Link>
-          <span aria-current="page">Faucet</span>
-        </nav>
-      </header>
-
       <section className="faucetPage" aria-labelledby="faucet-title">
         <div className="eyebrow">Recompensas validadas</div>
         <h1 className="faucetTitle" id="faucet-title">

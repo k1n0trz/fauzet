@@ -1,0 +1,1267 @@
+.authShell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 108px 24px 54px;
+  color: #eef2ff;
+  background:
+    linear-gradient(rgba(7, 9, 20, 0.92), rgba(7, 9, 20, 0.98)),
+    radial-gradient(circle at 50% 0%, #20244d, #080a13 62%);
+}
+
+.authAmbient {
+  position: absolute;
+  z-index: -1;
+  inset: -20%;
+  background:
+    radial-gradient(
+      circle at 28% 20%,
+      rgba(34, 211, 238, 0.13),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 73% 28%,
+      rgba(124, 58, 237, 0.22),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 50% 75%,
+      rgba(57, 255, 136, 0.08),
+      transparent 30%
+    );
+  filter: blur(12px);
+}
+
+.authAmbient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, black, transparent 64%);
+}
+
+.authBrand {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -0.045em;
+  transform: translateX(-50%);
+}
+
+.authBrand strong {
+  color: #39ff88;
+}
+
+.authBrandIcon {
+  width: 39px;
+  height: 39px;
+  object-fit: contain;
+}
+
+.authCard {
+  width: min(448px, 100%);
+  padding: 34px;
+  border: 1px solid rgba(167, 139, 250, 0.24);
+  border-radius: 24px;
+  background: linear-gradient(
+    145deg,
+    rgba(25, 29, 52, 0.93),
+    rgba(13, 16, 31, 0.96)
+  );
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.5),
+    inset 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+}
+
+.registerCard {
+  width: min(650px, 100%);
+}
+
+.authEyebrow,
+.dashboardEyebrow,
+.sectionHeading > div > span {
+  color: #35e8ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.authTitle {
+  margin: 10px 0 8px;
+  color: #f8fafc;
+  font-size: clamp(31px, 6vw, 42px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 1.03;
+}
+
+.authCopy {
+  margin: 0;
+  color: #aeb9cf;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.authTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin: 25px 0 17px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.authTabs button {
+  min-height: 39px;
+  border: 0;
+  border-radius: 8px;
+  color: #8793aa;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.authTabs button:hover,
+.authTabs button:focus-visible {
+  color: #f8fafc;
+}
+
+.authTabs .activeTab {
+  color: #07120d;
+  background: #39ff88;
+  box-shadow: 0 8px 24px rgba(57, 255, 136, 0.18);
+}
+
+.googleButton {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 11px;
+  color: #dde4f0;
+  background: rgba(255, 255, 255, 0.045);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.78;
+  cursor: not-allowed;
+}
+
+.googleButton small {
+  padding: 4px 6px;
+  border-radius: 999px;
+  color: #aeb9cf;
+  background: rgba(148, 163, 184, 0.1);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 18px 0;
+  color: #64748b;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.authForm {
+  display: grid;
+  gap: 15px;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.field {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  color: #d5deed;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.field > span small {
+  color: #6f7d95;
+  font-weight: 600;
+}
+
+.field > small {
+  margin-top: -3px;
+  color: #75839c;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  min-height: 45px;
+  padding: 0 13px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  outline: 0;
+  color: #f8fafc;
+  background: rgba(3, 7, 18, 0.52);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.field input::placeholder {
+  color: #56637a;
+}
+
+.field input:focus {
+  border-color: rgba(57, 255, 136, 0.7);
+  background: rgba(3, 7, 18, 0.78);
+  box-shadow: 0 0 0 3px rgba(57, 255, 136, 0.1);
+}
+
+.field .countryInput {
+  text-transform: uppercase;
+}
+
+.checks {
+  display: grid;
+  gap: 9px;
+  padding: 12px 13px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 11px;
+  background: rgba(2, 6, 23, 0.28);
+}
+
+.checks label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #9eabc1;
+  font-size: 10px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.checks input {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  margin-top: 0;
+  accent-color: #39ff88;
+}
+
+.checks a {
+  color: #39ff88;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.formError {
+  padding: 11px 12px;
+  border: 1px solid rgba(251, 113, 133, 0.34);
+  border-radius: 10px;
+  color: #fda4af;
+  background: rgba(159, 18, 57, 0.13);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.submitButton {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 11px;
+  color: #04120a;
+  background: linear-gradient(135deg, #39ff88, #20de77);
+  box-shadow: 0 11px 28px rgba(57, 255, 136, 0.2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.submitButton:not(:disabled):hover {
+  box-shadow: 0 14px 32px rgba(57, 255, 136, 0.28);
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  opacity: 0.64;
+  cursor: wait;
+}
+
+.forgotLink {
+  justify-self: center;
+  color: #96a5be;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.forgotLink:hover {
+  color: #39ff88;
+}
+
+.authLegal {
+  max-width: 440px;
+  margin: 22px auto 0;
+  color: #637087;
+  font-size: 9px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.loadingCard {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.loadingOrb {
+  width: 54px;
+  height: 54px;
+  margin-bottom: 19px;
+  border: 3px solid rgba(57, 255, 136, 0.12);
+  border-top-color: #39ff88;
+  border-radius: 50%;
+  animation: portalSpin 0.9s linear infinite;
+}
+
+@keyframes portalSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dashboardShell {
+  --portal-line: color-mix(in srgb, var(--text) 12%, transparent);
+  --portal-soft-line: color-mix(in srgb, var(--text) 7%, transparent);
+  --portal-panel: color-mix(in srgb, var(--surface) 94%, transparent);
+  --portal-panel-soft: color-mix(in srgb, var(--surface) 82%, transparent);
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(
+      circle at 78% 3%,
+      rgba(124, 58, 237, 0.11),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 23% 10%,
+      rgba(34, 211, 238, 0.065),
+      transparent 25%
+    ),
+    var(--background);
+}
+
+.dashboard {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 45px 38px 70px;
+}
+
+.dashboardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 29px;
+}
+
+.dashboardHeader h1 {
+  margin: 7px 0 6px;
+  font-size: clamp(32px, 4vw, 47px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.dashboardHeader h1 span {
+  color: #39ff88;
+}
+
+.dashboardHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.accountStatus {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  padding: 9px 12px;
+  border: 1px solid var(--portal-line);
+  border-radius: 999px;
+  background: var(--portal-panel-soft);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.accountStatus > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.accountActive {
+  color: #24d979;
+}
+
+.accountActive > span {
+  background: #39ff88;
+  box-shadow: 0 0 10px rgba(57, 255, 136, 0.58);
+}
+
+.accountPending {
+  color: #f5b942;
+}
+
+.accountPending > span {
+  background: #f5b942;
+  box-shadow: 0 0 10px rgba(245, 185, 66, 0.42);
+}
+
+.accountRestricted {
+  color: #fb7185;
+}
+
+.accountRestricted > span {
+  background: #fb7185;
+  box-shadow: 0 0 10px rgba(251, 113, 133, 0.42);
+}
+
+.panel,
+.statCard {
+  border: 1px solid var(--portal-line);
+  background: var(--portal-panel);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.13),
+    inset 0 1px color-mix(in srgb, var(--text) 4%, transparent);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.82fr 0.82fr;
+  gap: 16px;
+}
+
+.heroGrid > article {
+  min-height: 226px;
+  border-radius: 20px;
+}
+
+.walletCard {
+  position: relative;
+  overflow: hidden;
+  padding: 25px 27px;
+  background:
+    radial-gradient(
+      circle at 88% 16%,
+      rgba(57, 255, 136, 0.2),
+      transparent 30%
+    ),
+    linear-gradient(135deg, rgba(14, 31, 30, 0.98), rgba(18, 24, 43, 0.97));
+  color: #edfdf5;
+}
+
+.walletCard::after {
+  content: "Z";
+  position: absolute;
+  right: 25px;
+  bottom: -36px;
+  color: rgba(57, 255, 136, 0.045);
+  font-size: 155px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.walletTopline {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #a9bfc1;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.walletTopline img {
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(57, 255, 136, 0.22));
+}
+
+.walletAmount {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 2px;
+  color: #f8fffb;
+  font-size: clamp(33px, 4vw, 50px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.walletAmount small {
+  color: #39ff88;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.walletCard > p {
+  position: relative;
+  z-index: 1;
+  margin: 10px 0 22px;
+  color: #87a09f;
+  font-size: 9px;
+}
+
+.walletLinks {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.walletLinks a {
+  padding: 8px 11px;
+  border: 1px solid rgba(57, 255, 136, 0.25);
+  border-radius: 8px;
+  color: #c9ffdd;
+  background: rgba(57, 255, 136, 0.08);
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.walletLinks a:first-child {
+  color: #04120a;
+  background: #39ff88;
+}
+
+.faucetCard,
+.miningCard {
+  display: flex;
+  flex-direction: column;
+  padding: 23px;
+}
+
+.cardHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardHeading > div {
+  display: grid;
+  gap: 8px;
+}
+
+.cardHeading span,
+.statCard > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cardHeading strong {
+  font-size: 20px;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.cardHeading img {
+  object-fit: contain;
+}
+
+.faucetCard > p,
+.miningCard > p {
+  min-height: 31px;
+  margin: 16px 0 14px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.primaryCardAction,
+.secondaryCardAction {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding: 0 13px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.primaryCardAction {
+  color: #06130b;
+  background: #39ff88;
+}
+
+.secondaryCardAction {
+  border: 1px solid rgba(167, 139, 250, 0.24);
+  color: color-mix(in srgb, var(--text) 88%, #a78bfa);
+  background: rgba(124, 58, 237, 0.09);
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin: 14px 0;
+}
+
+.statCard {
+  position: relative;
+  overflow: hidden;
+  min-height: 113px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 17px 19px 17px 23px;
+  border-radius: 15px;
+}
+
+.statCard::before {
+  content: "";
+  position: absolute;
+  inset: 18px auto 18px 0;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--stat-color);
+  box-shadow: 0 0 15px var(--stat-color);
+}
+
+.statCard strong {
+  overflow: hidden;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statCard small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cyan {
+  --stat-color: #22d3ee;
+}
+
+.violet {
+  --stat-color: #a78bfa;
+}
+
+.green {
+  --stat-color: #39ff88;
+}
+
+.amber {
+  --stat-color: #f5b942;
+}
+
+.errorNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 0;
+  padding: 12px 15px;
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  border-radius: 12px;
+  color: #fb7185;
+  background: rgba(159, 18, 57, 0.09);
+  font-size: 11px;
+}
+
+.errorNotice button {
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboardColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.72fr);
+  gap: 14px;
+}
+
+.actionsPanel,
+.missionsPanel,
+.activityPanel,
+.balancesPanel {
+  border-radius: 18px;
+}
+
+.actionsPanel,
+.balancesPanel {
+  padding: 23px;
+}
+
+.sectionHeading {
+  min-height: 39px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 16px;
+}
+
+.sectionHeading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.sectionHeading h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.025em;
+}
+
+.sectionHeading > a,
+.sectionHeading > small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.sectionHeading > a:hover {
+  color: #39ff88;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.actionGrid > a {
+  min-width: 0;
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 11px;
+  border: 1px solid var(--portal-soft-line);
+  border-radius: 13px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 67%, transparent);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.actionGrid > a:hover {
+  border-color: rgba(57, 255, 136, 0.3);
+  background: color-mix(in srgb, var(--surface) 86%, rgba(57, 255, 136, 0.04));
+  transform: translateY(-1px);
+}
+
+.actionGrid > a > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.actionGrid strong,
+.actionGrid small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actionGrid strong {
+  font-size: 11px;
+}
+
+.actionGrid small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.actionGrid b {
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.actionIcon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(167, 139, 250, 0.14);
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.075);
+}
+
+.actionIcon img {
+  max-width: 35px;
+  max-height: 35px;
+  object-fit: contain;
+}
+
+.sideColumn {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.missionsPanel,
+.activityPanel {
+  padding: 19px;
+}
+
+.missionList {
+  display: grid;
+  gap: 8px;
+}
+
+.missionList > a {
+  display: grid;
+  gap: 9px;
+  padding: 10px 11px;
+  border: 1px solid var(--portal-soft-line);
+  border-radius: 10px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 66%, transparent);
+}
+
+.missionList > a > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.missionList strong,
+.missionList small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.missionList strong {
+  font-size: 9px;
+}
+
+.missionList small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.missionList progress {
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+}
+
+.missionList progress::-webkit-progress-bar {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+}
+
+.missionList progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22d3ee, #39ff88);
+}
+
+.missionList progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22d3ee, #39ff88);
+}
+
+.emptyState {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.notAvailableBadge {
+  width: fit-content;
+  margin-bottom: 9px;
+  padding: 4px 7px;
+  border: 1px solid rgba(245, 185, 66, 0.22);
+  border-radius: 999px;
+  color: #dba63a;
+  background: rgba(245, 185, 66, 0.07);
+  font-size: 8px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.activityList {
+  display: grid;
+  gap: 8px;
+}
+
+.activityList > a {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 11px;
+  border: 1px solid var(--portal-soft-line);
+  border-radius: 10px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 66%, transparent);
+}
+
+.activityList > a:hover {
+  border-color: rgba(57, 255, 136, 0.28);
+}
+
+.activityList > a > span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.activityList > a > span:last-child {
+  justify-items: end;
+}
+
+.activityList strong,
+.activityList small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activityList strong {
+  font-size: 9px;
+}
+
+.activityList small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.activityList .activityCredit {
+  color: #20cc75;
+}
+
+.activityList .activityDebit {
+  color: #f08787;
+}
+
+.balancesPanel {
+  margin-top: 14px;
+}
+
+.balanceGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.balanceItem {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  padding: 11px;
+  border: 1px solid var(--portal-soft-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 66%, transparent);
+}
+
+.balanceItem span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.balanceItem strong {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-top: 14px;
+  padding: 17px 19px;
+  border: 1px solid;
+  border-radius: 14px;
+}
+
+.accountNotice > div {
+  display: grid;
+  gap: 4px;
+}
+
+.accountNotice strong {
+  font-size: 11px;
+}
+
+.accountNotice p,
+.accountNotice small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.accountNotice button,
+.accountNotice a {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.noticeActive {
+  border-color: rgba(57, 255, 136, 0.2);
+  color: #2ee881;
+  background: rgba(57, 255, 136, 0.045);
+}
+
+.noticePending {
+  border-color: rgba(245, 185, 66, 0.24);
+  color: #e7af3b;
+  background: rgba(245, 185, 66, 0.055);
+}
+
+.noticeRestricted {
+  border-color: rgba(251, 113, 133, 0.24);
+  color: #fb7185;
+  background: rgba(159, 18, 57, 0.07);
+}
+
+.dashboardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 23px 2px 0;
+}
+
+.dashboardFooter p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.dashboardFooter button {
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboardFooter button:hover {
+  color: #fb7185;
+}
+
+.authShell button:focus-visible,
+.authShell a:focus-visible,
+.dashboardShell button:focus-visible,
+.dashboardShell a:focus-visible {
+  outline: 2px solid #39ff88;
+  outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+  .heroGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .walletCard {
+    grid-column: 1 / -1;
+  }
+
+  .dashboardColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .sideColumn {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .balanceGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .authShell {
+    justify-content: flex-start;
+    overflow: visible;
+    padding: 92px 14px 35px;
+  }
+
+  .authBrand {
+    top: 23px;
+  }
+
+  .authCard {
+    padding: 26px 20px;
+    border-radius: 20px;
+  }
+
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard {
+    padding: 29px 18px 56px;
+  }
+
+  .dashboardHeader {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .accountStatus {
+    width: fit-content;
+  }
+
+  .heroGrid,
+  .statGrid,
+  .sideColumn {
+    grid-template-columns: 1fr;
+  }
+
+  .walletCard {
+    grid-column: auto;
+  }
+
+  .statGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .balanceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accountNotice,
+  .dashboardFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 410px) {
+  .authTabs {
+    margin-top: 20px;
+  }
+
+  .googleButton {
+    grid-template-columns: 20px 1fr;
+  }
+
+  .googleButton small {
+    display: none;
+  }
+
+  .statGrid,
+  .balanceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingOrb {
+    animation-duration: 2s;
+  }
+
+  .submitButton,
+  .actionGrid > a {
+    transition: none;
+  }
+}

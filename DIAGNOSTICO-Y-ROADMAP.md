@@ -1,10 +1,298 @@
 # Fauzet / ZYXE — Diagnóstico y roadmap técnico integral
 
-**Fecha:** 12 de julio de 2026  
-**Estado:** línea base de arquitectura y ejecución  
+**Fecha:** 13 de julio de 2026
+**Estado:** beta cerrada técnica; backend real desplegado, frontend original integrado localmente y pendiente de promoción a producción
 **Fuentes canónicas:** `data/Fauzet_Ficha_Tecnica_Funcionamiento_v0.1.docx` y `data/Fauzet_ZYXE_Documentacion_Tecnica_Economica_v0.1.docx`
 
-## 1. Resumen ejecutivo
+## 0. Estado canónico — revisión corregida del 13 de julio de 2026
+
+Esta sección es la fuente de verdad del estado actual y reemplaza cualquier diagnóstico histórico contradictorio del resto del documento. Las secciones posteriores conservan arquitectura, reglas económicas y antecedentes, pero sus frases sobre el punto de partida deben leerse como historia del proyecto.
+
+### 0.1 Corrección obligatoria sobre el frontend
+
+`frontend/` **no es una referencia opcional ni un boceto**. Contiene el frontend completo creado previamente con Claude y su UX está congelada:
+
+- `frontend/index.html`: landing EN/ES, temas claro/oscuro, responsive y todas sus secciones.
+- `frontend/app.html` + `frontend/js/app-data.js`, `app-views.js` y `app-main.js`: experiencia completa del usuario.
+- `frontend/admin.html`: consola administrativa standalone con su lógica inline.
+- `frontend/Fauzet *.dc.html`: fuentes originales de Claude Design.
+- `frontend/assets/`: identidad visual e iconografía aprobadas.
+
+El percance fue construir y desplegar en `apps/web` una interfaz Next.js funcional pero visualmente distinta e incompleta. Vercel está correctamente configurado para servir `apps/web`; lo incorrecto fue no portar allí con fidelidad el frontend congelado antes de conectarlo al backend.
+
+Reglas obligatorias desde ahora:
+
+1. `frontend/` es la **especificación visual y de interacción canónica**.
+2. `apps/web` seguirá siendo la aplicación de producción porque permite sesiones seguras, rutas, SSR y conexión con la API, pero debe reproducir fielmente landing, app y admin originales.
+3. No se rediseñará, simplificará ni sustituirá una pantalla sin aprobación explícita del propietario.
+4. Se reemplazarán únicamente simulaciones, `localStorage`, acciones inseguras y datos hardcoded por API, estados reales y controles server-side.
+5. Cada migración requerirá comparación visual desktop/móvil, tema claro/oscuro e idioma ES/EN contra el prototipo.
+6. Producción no se volverá a publicar hasta completar al menos la recuperación visual de landing, autenticación y shell principal, con smoke test.
+
+La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 módulos diseñados y 8 placeholders). Las rutas inexistentes no se simularán: se integrarán solo con backend real o permanecerán gated y claramente rotuladas.
+
+### 0.2 Dónde estamos realmente
+
+| Área            | Activo en producción                                                    | Implementado localmente, no publicado                                                                                                   | Pendiente real                                                                                      |
+| --------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Frontend        | `apps/web` desplegado, funcional pero no fiel al diseño original        | Landing Claude, acceso/registro, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales | Promover esta integración y continuar la fidelidad de cada vertical especializada                   |
+| Backend         | Fastify en Cloud Run                                                    | Nuevas rutas de perfil e historial personal; corrección de contexto Faucet                                                              | Desplegar cambios después de migración y QA                                                         |
+| Datos           | PostgreSQL en Cloud SQL, ledger y migraciones anteriores                | Migración `UserProfile` preparada y probada; historial deriva del ledger existente                                                      | Aplicar la migración en Cloud SQL antes de la nueva revisión API                                    |
+| Email           | Resend verificado; registro y activación por correo comprobados         | —                                                                                                                                       | Monitorear rebotes/entrega y probar recuperación periódicamente                                     |
+| Auth            | Registro, login, verificación, recuperación y sesiones persistentes     | UI de seguridad/perfil ampliada                                                                                                         | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                         |
+| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites                                                                     | Publicar, probar desde Vercel y reconciliar pools operativamente                                    |
+| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                   | Pruebas unitarias/integración verdes                                                                                                    | Reconciliación automática, alertas y reportes operativos                                            |
+| Conversión      | Sandbox sin valor real                                                  | Sección Swap marcada como futura                                                                                                        | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                                  |
+| Pagos fiat      | Ninguno activo                                                          | Claves test de MP y Stripe detectadas sin exponerlas; catálogo/refunds entregados; arquitectura fiat separada ya diagnosticada          | Normalizar secretos, órdenes, intentos, inventario, webhook, fulfillment, reembolsos y conciliación |
+| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                         | Build productivo de 23 rutas verde; GA, GTM y Clarity sólo en producción y tras consentimiento; cambios actuales viven en rama local    | PR, migraciones, despliegues y smoke test                                                           |
+
+**Conclusión:** el núcleo backend de una beta cerrada existe y está bastante avanzado. La recuperación principal del frontend aprobado ya quedó integrada localmente sin perder autoridad server-side. La prioridad inmediata es publicarla de forma segura, validarla en el dominio y después construir el nuevo agregado de pagos fiat; dinero real continúa bloqueado.
+
+### 0.3 Qué está probado
+
+- Registro, entrega de correo y activación real de cuenta con Resend: confirmados.
+- Backend, ledger, Faucet, rewards y flujos sandbox: cubiertos por pruebas automatizadas.
+- Suite local: formato del alcance modificado, lint, tipos, build productivo de 23 rutas, 14 pruebas web y 89 pruebas API con integración: verdes.
+- Cloud Run, Cloud SQL y Vercel: operativos.
+- Credenciales de prueba de Mercado Pago: configuradas por el propietario; no deben copiarse al código, chat ni GitHub.
+- Claves publicable y secreta de Stripe: prefijos de test validados localmente sin mostrar valores; integración y webhook aún no existen.
+- Google Analytics `G-W8GWS1R97E`, Google Tag Manager `GTM-TVLTFNJG` y Microsoft Clarity `xly1yjpewc`: disponibles únicamente en producción, bloqueados hasta consentimiento y descargados al entrar a la app mediante navegación completa.
+
+### 0.4 Qué todavía no puede considerarse terminado
+
+- Producción todavía sirve la interfaz anterior; la integración fiel existe localmente pero aún no está promovida.
+- Los cambios de landing, menú, dashboard, wallet, perfil, favicon, Faucet y admin aún no están publicados.
+- No hay pagos Mercado Pago funcionando: tener credenciales no equivale a checkout, webhook ni conciliación.
+- No hay pagos Stripe funcionando: las claves test no equivalen a checkout, PaymentIntent, webhook ni conciliación.
+- Firebase/Google Auth, KYC, custodia y demás terceros siguen pendientes o en proceso.
+- No hay criptomonedas reales, swaps reales, depósitos ni retiros on-chain habilitados.
+- Minería sigue siendo virtual y recompensa ZYXE desde un pool interno.
+- 2FA, KYC real, medios de pago guardados mediante tokens, facturación real y seguridad financiera reforzada siguen incompletos.
+
+### 0.5 Decisiones de producto
+
+#### Qué significa “minar” en Fauzet
+
+Fauzet no debe afirmar que el navegador o los mineros virtuales extraen BTC, ETH u otra red si no ejecutan trabajo verificable en esa blockchain. El producto correcto es **minería virtual gamificada**: el usuario aporta hashpower virtual y recibe una recompensa financiada por un pool.
+
+Se proponen tres niveles:
+
+1. **Ahora:** minar virtualmente ZYXE, como ya funciona.
+2. **Piloto:** permitir elegir un único activo de recompensa real, por ejemplo una stablecoin o una criptomoneda de comisiones bajas. El hashpower calcula la participación, pero el activo sale de tesorería; no se “mina” técnicamente.
+3. **Después:** catálogo multi-activo. Cada activo tendrá pool financiado, red, precisión, mínimo, fee, límites, precio, disponibilidad, política de riesgo y kill switch independientes.
+
+No se habilitará “cualquier cripto” de forma abierta. Cada activo nuevo necesita respaldo real, liquidez, custodia, monitor de red, reconciliación y aprobación legal.
+
+#### Compras de boosts y mineros
+
+La tienda tendrá dos formas de pago separadas:
+
+- **Saldo interno:** ZYXE disponible/promocional, como ahora.
+- **Dinero fiat:** Mercado Pago o Stripe mediante checkout alojado/componentes tokenizados. Fauzet nunca almacenará número de tarjeta ni CVV.
+
+La API de Mercado Libre no sustituye una integración de pagos. Para Colombia, la cuenta y credenciales necesarias son de **Mercado Pago**. La primera integración recomendada es un solo proveedor, con ambiente de prueba, webhook firmado, idempotencia, conciliación, reembolso y contracargo; el segundo proveedor se añade solo si existe una razón comercial.
+
+El catálogo COP entregado **no puede reutilizar directamente** el flujo actual `StorePurchase`: hoy ese flujo debita ZYXE y activa el beneficio en la misma transacción, mientras el catálogo fiat exige comprar primero y activar después. Se implementará un agregado separado:
+
+```text
+Mercado Pago/Stripe → PaymentOrder → pago verificado → Entitlement PURCHASED
+                                                       ↓ activación del usuario
+                                              boost/minero con vigencia real
+```
+
+La primera beta fiat tendrá una orden por producto, cantidad uno, COP, Checkout Pro alojado, inventario separado y reembolso total únicamente antes de activación/consumo/beneficio. Dripper Mini, Flow One y Aqua Rig podrán entrar a sandbox; Zyxe Core y Neon Forge permanecerán `COMING_SOON`. `Quick Claim`, `Game Pulse` y `Full Accelerator` no se venderán hasta que Faucet/Juegos consuman sus reglas exclusivamente en servidor. Dinero real continuará deshabilitado.
+
+#### Swap
+
+El primer Swap será contable y custodial, no un DEX:
+
+1. El usuario selecciona activo origen/destino.
+2. El servidor obtiene precio de una fuente aprobada y crea una cotización de corta duración.
+3. La cotización muestra precio, spread, comisión Fauzet, costo de red estimado y total final.
+4. Al confirmar, el ledger reserva el origen y acredita el destino solo si hay liquidez.
+5. La tesorería concilia la operación con custodio/exchange.
+
+“GAS” debe mostrarse como **fee de red** únicamente cuando exista una transacción on-chain real. En swaps internos se mostrará “comisión de conversión” o “spread”; no se cobrará gas ficticio. Se requieren límites diarios/mensuales, KYC por umbral, allowlist de activos/países, protección contra precios obsoletos y kill switch.
+
+### 0.6 Centro de Ajustes — alcance aprobado para el roadmap
+
+El nuevo menú **Ajustes** tendrá estas áreas:
+
+- **Apariencia:** tema claro/oscuro/sistema, idioma, zona horaria, accesibilidad y preferencias de notificación.
+- **Perfil:** avatar con moderación/tamaño/tipo, nombre visible, username único con cooldown, fecha de nacimiento, país, dirección y contactos verificados.
+- **Seguridad:** cambio de contraseña, recuperación, historial de acceso, sesiones/dispositivos, cierre remoto, alertas, TOTP 2FA, códigos de recuperación y passkeys en una fase posterior.
+- **Identidad/KYC:** estado, nivel, proveedor, consentimiento, documentos y revisión. Los documentos vivirán en almacenamiento cifrado del proveedor o bucket privado, nunca públicos.
+- **Wallets y pagos:** wallets externas con red y verificación; medios fiat tokenizados por el procesador; agregar/quitar/preferido sin guardar PAN/CVV.
+- **Facturación:** razón social/nombre, identificación fiscal, dirección, país, comprobantes, historial de compras, reembolsos y exportación.
+- **Privacidad:** descarga de datos, consentimientos, cierre de cuenta y solicitud de eliminación sujeta a retención legal/contable.
+
+### 0.7 Lo que debe hacer el propietario — punto por punto
+
+No compartas claves privadas, seed phrases ni API secrets por chat o GitHub. Cuando una integración esté lista, guarda el secreto en Google Secret Manager y comparte solo el nombre del secreto.
+
+#### A. Ya completado por ti
+
+- [x] Proyecto GCP `fauzet` y dominio `fauzet.app`.
+- [x] Resend verificado y correos reales de activación comprobados.
+- [x] Credenciales de prueba de Mercado Pago configuradas.
+- [x] Claves publicable y secreta de Stripe en modo test configuradas localmente y validadas por prefijo, sin exponer valores.
+- [x] Tabla inicial de boosts/mineros, precios COP y política operativa de reembolso en `data/Fauzet_Tabla_Boosts_Mineros_y_Politica_Reembolsos_v0.1.docx`.
+- [x] País base informado: Colombia, con RUT y operación inicial a título/estructura local por definir legalmente.
+- [x] Presupuesto exploratorio informado: aproximadamente 300.000 COP.
+
+#### B. Mercado Pago — lo próximo que debes decidir
+
+1. Confirma en Mercado Pago Developers que tienes el **Access Token de prueba**. Las variables actuales de usuario/API no prueban por sí solas que sea el token oficial requerido por Checkout Pro.
+2. No las envíes por chat. Déjalas únicamente en variables locales/Secret Manager; desarrollo verificará solo que existan.
+3. La moneda inicial del checkout queda definida como `COP` por el catálogo entregado.
+4. La tabla inicial de productos ya fue entregada: en beta se priorizarán boosts y los mineros Dripper Mini, Flow One y Aqua Rig; los mineros superiores quedarán como próximos.
+5. La política preliminar ya fue entregada: solicitud dentro de cinco días hábiles mientras el producto no haya sido activado/consumido ni generado beneficios, sujeta a los casos y derechos legales aplicables.
+6. Cuando desarrollo entregue la URL, regístrala como webhook de pagos en Mercado Pago.
+7. Crea o conserva las cuentas de comprador/vendedor de prueba que proporcione MP; no uses una compra real durante sandbox.
+
+**Nombres que usará el runtime:** `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`, `MERCADOPAGO_APPLICATION_ID`, `MERCADOPAGO_SELLER_USER_ID` y `MERCADOPAGO_MODE=test`. Access Token y secreto del webhook vivirán únicamente en Secret Manager; usuario, contraseña y código de comprador de prueba no pertenecen al runtime.
+
+**Lo que hará desarrollo:** detectar la configuración sin exponerla, crear el adaptador, órdenes, checkout, webhook firmado/idempotente, acreditación exact-once, reembolsos, contracargos, recibos y conciliación.
+
+#### C. Stripe — en proceso por ti
+
+1. Termina el alta y verificación de la cuenta, sin frenar la integración sandbox de Mercado Pago.
+2. Comprueba que Stripe permite tu modelo de negocio, países objetivo y productos digitales/recompensas.
+3. Test mode y las dos claves test ya están presentes. No las copies al chat ni a GitHub.
+4. Al integrar, renombra las variables genéricas a `STRIPE_PUBLISHABLE_KEY` y `STRIPE_SECRET_KEY`; la secreta irá a Secret Manager, no a Vercel.
+5. Más adelante crea el endpoint de webhook en Stripe y guarda su `STRIPE_WEBHOOK_SECRET` (`whsec_…`). Todavía no existe y no se puede obtener antes de registrar el endpoint.
+6. Stripe será el segundo adaptador para expansión internacional, no una dependencia del primer checkout.
+
+#### D. Fondeo y custodia cripto
+
+1. **Define la empresa:** escribe el país donde está registrada o se registrará Fauzet y los países donde aceptarás usuarios. Sin esto un proveedor no puede aprobarte.
+2. **Habla con un abogado fintech/cripto:** pídele por escrito si Fauzet puede vender recompensas, custodiar activos, convertirlos y pagar retiros en esos países; además, qué KYC/AML, edades, impuestos y licencias aplican.
+3. **Elige un solo activo piloto:** no BTC + ETH + DOGE + USDT a la vez. Define `activo`, `red`, `monto total de prueba`, `mínimo por retiro` y `máximo diario por usuario`. Recomendación operativa: comenzar con una stablecoin en una sola red barata, sujeto al concepto legal y disponibilidad del proveedor.
+4. **Pide demos/cotizaciones a dos custodios:** por ejemplo, soluciones empresariales de wallets/custodia. Pregunta por disponibilidad en tu país, precio mensual, redes/activos, MPC/HSM, whitelists, doble aprobación, webhooks, sandbox, screening AML, seguros, recuperación y SLA.
+5. **Abre la cuenta empresarial:** completa KYB de la empresa y beneficiarios finales. Una cuenta personal de exchange no debe ser la tesorería de producción.
+6. **Crea tres bolsillos:** reserva fría, tesorería operativa y hot wallet limitada para pagos. Nunca pongas todo el fondo en la hot wallet.
+7. **Define el presupuesto piloto:** dinero que puedes perder sin afectar la empresa. Ese será el máximo del reward pool; el software no podrá emitir más.
+8. **Entrega a desarrollo solo datos no secretos:** nombre del custodio, ambiente sandbox, activo/red, IDs públicos, límites y nombres de secretos. Las llaves de retiro deben quedar con permisos mínimos, allowlist y doble aprobación.
+
+Las APIs de Binance pueden servir más adelante para precio/liquidez o conciliación si la cuenta empresarial y sus términos lo permiten, pero no reemplazan automáticamente custodia, KYC, contabilidad ni aprobación legal. No se conectarán claves con permiso de retiro durante el prototipo.
+
+#### E. Google Auth/Firebase
+
+1. En Firebase habilita Authentication → Sign-in method → Google.
+2. Agrega `fauzet.app` a dominios autorizados.
+3. Configura la pantalla de consentimiento con nombre, logo, correo de soporte, privacidad y términos.
+4. Comparte el `projectId` y la configuración web pública; guarda cualquier credencial privada/service account en Secret Manager.
+5. No reemplazaremos el usuario actual: vincularemos Google por email verificado y evitaremos cuentas duplicadas.
+
+#### F. Terceros que debes investigar — uno por categoría
+
+No contrates todavía sin revisar costos, soporte para Colombia y compatibilidad legal. Necesitamos candidatos para:
+
+1. **KYC/AML:** verificación de identidad, prueba de vida, screening y webhooks; pregunta países, costo por verificación y almacenamiento de documentos.
+2. **Custodia/wallet empresarial:** Polygon/USDC, sandbox, MPC/HSM, allowlist, doble aprobación, webhooks y KYB para Colombia.
+3. **Liquidez/precios:** cotizaciones y, más adelante, ejecución/conciliación; una API personal de exchange no reemplaza custodia empresarial.
+4. **Antifraude de pagos:** primero usaremos señales de MP/Stripe más nuestras reglas; evaluar un tercero solo si el volumen lo justifica.
+5. **Soporte:** define correo y procedimiento para cuenta bloqueada, pago faltante, KYC y retiro en revisión.
+
+Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, seed phrases ni credenciales.
+
+#### G. Decisiones que todavía debes entregar
+
+- Forma jurídica/operativa en Colombia y lista inicial de países permitidos; “todo el mundo” será una expansión progresiva por allowlist.
+- Confirmación final del piloto propuesto: `USDC` sobre `Polygon PoS`, usando `POL` solo para fees de red.
+- Distribución de los 300.000 COP: reserva, reward pool y costos operativos; nunca todo en hot wallet.
+- Mínimo de retiro, máximo diario por usuario y presupuesto diario del pool.
+- Custodia: empresarial gestionada o wallet controlada por usuario.
+- Proveedor KYC/KYB.
+- Activos del futuro Swap y fórmula de comisión/spread.
+- Edad mínima, correo de soporte y países expresamente bloqueados.
+- Más adelante, antes de dinero real: concepto legal, términos, privacidad, AML/KYC, impuestos y política de recompensas/retiros.
+
+### 0.8 Roadmap corregido y orden de ejecución
+
+**Decisiones registradas:** operación inicial desde Colombia; expansión internacional solo por lista de países habilitados; presupuesto exploratorio de 300.000 COP; Polygon PoS como candidata; USDC como activo real piloto recomendado y POL únicamente para gas; ZYXE continúa como unidad interna. El catálogo multi-activo futuro evaluará BTC, BCH, DASH, DOGE, LTC, USDC y ZYXE, cada uno con pool y gate independiente.
+
+#### R0 — Recuperación e integración fiel del frontend (fase actual)
+
+- [x] Inventariar vistas, estados y navegaciones de `frontend/index.html`, `app.html` y `admin.html`.
+- [x] Crear matriz pantalla original → ruta Next → endpoint API → estado de integración.
+- [x] Consolidar los 38 assets originales sin alterar marca, proporciones ni estilo aprobado.
+- [x] Portar la landing original a componentes Next preservando EN/ES, claro/oscuro, responsive, contenido, SEO y telemetría productiva.
+- [x] Publicar condiciones y privacidad provisionales versionadas para la beta; registrar las versiones aceptadas y exigir nuevo consentimiento antes de dinero real.
+- [x] Portar autenticación/onboarding con la misma UX y backend real; Google se muestra honestamente como próximo.
+- [x] Portar shell/dashboard original; integrar datos reales y eliminar cifras demostrativas engañosas.
+- [x] Portar wallet con siete buckets e historial personal derivado del ledger, sin valoración fiat inventada.
+- [x] Portar el admin original sobre RBAC, step-up y auditoría existentes; módulos inexistentes quedan `GATED`.
+- [ ] Terminar la fidelidad de cada vertical especializada: Faucet, misiones, minería, tienda, Crew, conversión y soporte.
+- [x] Validar desktop/móvil, loading/error/empty/accessibility, lint, tipos, pruebas y build productivo; el navegador raíz quedó limitado por un fallo del entorno, pero hubo revisión visual independiente.
+- [ ] Publicar, aplicar migración, desplegar API/web y ejecutar smoke E2E en `fauzet.app`.
+
+#### R1 — Estabilización funcional inmediata
+
+- [x] Shell/menu persistente por iconos en todas las rutas autenticadas, incluido Faucet (pendiente despliegue).
+- [x] Favicon, iconos y metadata; manifest instalable queda pendiente.
+- [x] Contexto del Faucet ligado a sesión/dispositivo con IP conservada para límites/riesgo; 89 pruebas verdes (pendiente despliegue).
+- [x] E2E persistente de registro → verificación → claim → balance en PostgreSQL local.
+- [x] Entrega real Resend y activación de cuenta confirmadas por el propietario.
+- [ ] Monitoreo de errores, logs correlacionados y alertas mínimas.
+
+#### R2 — Identidad, perfil y seguridad
+
+- [x] Centro de Ajustes con Perfil, Apariencia, Seguridad, Pagos, Facturación, KYC y Privacidad (pendiente despliegue).
+- [x] Tema claro/oscuro/sistema persistente.
+- [x] Avatar validado, username, contactos, privacidad y cierre/exportación.
+- [ ] Recuperación por email y sesiones/dispositivos listas; falta cambio autenticado de contraseña y alertas de acceso.
+- [ ] TOTP 2FA, códigos de recuperación y step-up para acciones sensibles.
+- [ ] Google Auth con Firebase y vinculación segura de cuentas.
+- [ ] Estado KYC incorporado al perfil; falta seleccionar proveedor y construir su adaptador sandbox.
+
+#### R3 — Mercado Pago sandbox y monetización fiat
+
+- [x] Credenciales de prueba de Mercado Pago configuradas por el propietario.
+- [x] Catálogo fiat COP y política preliminar de reembolsos entregados.
+- [x] Verificar presencia de la configuración actual sin imprimirla ni versionarla; falta mapearla al Access Token/webhook secret oficiales.
+- [x] Diseñar la separación obligatoria entre compra ZYXE actual y compra fiat con inventario/activación posterior.
+- [ ] Modelos versionados `FiatProductVersion`, `PaymentOrder`, `PaymentAttempt`, `PaymentWebhookInbox`, `Entitlement`, refunds, chargebacks, outbox y reconciliación.
+- [ ] Adaptador de pagos abstracto con Mercado Pago Checkout Pro como proveedor sandbox inicial.
+- [ ] Checkout alojado, webhooks firmados e idempotentes y fulfillment efectivamente una vez.
+- [ ] Órdenes, pagos, inventario, activación, recibos, reembolsos totales no activados y contracargos.
+- [ ] Implementar mineros temporales y los efectos server-side del catálogo antes de vender cada SKU.
+- [ ] Conciliación diaria y separación entre ingresos, impuestos, rewards y owner available.
+- [x] Claves Stripe test validadas por prefijo; falta normalizar nombres y crear el webhook.
+- [ ] Stripe como segundo proveedor solo después de estabilizar MP y aprobar la cuenta/modelo de negocio.
+
+#### R4 — Piloto cripto real con un activo
+
+- [ ] Concepto legal, KYB/KYC/AML y políticas aprobadas.
+- [ ] Custodio empresarial sandbox, whitelists, doble aprobación y signer aislado.
+- [ ] Registro de activos/redes, precios, fees y límites versionados.
+- [ ] Reward pool realmente fondeado y reconciliado.
+- [ ] Minería virtual con selector del activo piloto y textos no engañosos.
+- [ ] Retiros allowlisted, límites bajos, revisión manual y kill switch ensayado.
+
+#### R5 — Multi-activo y Swap
+
+- [ ] Segundo activo solo después de reconciliar el piloto.
+- [ ] Motor de cotizaciones, reservas, spread/comisión y liquidez.
+- [ ] Ledger multi-activo, precisión por token y contabilidad de fees.
+- [ ] Swap interno primero; ejecución externa/on-chain después.
+- [ ] Monitoreo de precios, slippage, exposición de tesorería y fallos de red.
+
+#### R6 — Juegos y expansión
+
+- [ ] Revisión de UX, catálogo y economía de juegos.
+- [ ] Nuevos juegos solo con validación server-side, antifraude y budgets.
+- [ ] Temporadas, torneos y contenido después de estabilizar valor externo.
+
+### 0.9 Gates obligatorios
+
+No se activarán depósitos, swaps o retiros reales hasta que existan: concepto legal escrito; empresa/KYB; proveedor KYC/AML; custodio empresarial; activo/red y límites aprobados; pool financiado; reconciliación; alertas; backup/restore probado; pentest; doble aprobación; soporte; términos/políticas; y prueba documentada de los kill switches.
+
+## 1. Línea base histórica del diagnóstico inicial
+
+> Esta sección describe el repositorio al inicio del proyecto. No representa el estado vigente; para decisiones y planificación prevalece la sección 0.
+
+### Resumen ejecutivo histórico
 
 Fauzet tiene una especificación funcional/económica amplia, una identidad visual terminada y un prototipo navegable que cubre casi toda la experiencia prevista. No existe todavía una aplicación de producción: no hay repositorio Git, manifiestos de dependencias, backend, base de datos, autenticación real, ledger, infraestructura, pruebas ni integraciones. Todos los saldos y acciones del prototipo viven en datos hardcoded o `localStorage` y pueden alterarse desde el navegador.
 

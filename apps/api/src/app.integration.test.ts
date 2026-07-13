@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { getDatabase } from "@fauzet/database";
 import {
+  accountActivityResponseSchema,
   gameCatalogResponseSchema,
   gameEventResponseSchema,
   gameSessionResponseSchema,
@@ -21,6 +22,7 @@ import {
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
+import { PrismaAccountActivityStore } from "./infrastructure/prisma-account-activity-store.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
 import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
@@ -48,6 +50,7 @@ describe.runIf(integration)("persistent auth vertical", () => {
     {
       authStore,
       balanceStore: new PrismaBalanceStore(database),
+      accountActivityStore: new PrismaAccountActivityStore(database),
       accountSecurityStore: new PrismaAccountSecurityStore(database),
       mailer,
       welcomeBonus: new PrismaWelcomeBonusIssuer(database),
@@ -120,7 +123,11 @@ describe.runIf(integration)("persistent auth vertical", () => {
     expect(confirmation.json().bonusTransactionId).toBeNull();
     await expect(
       database.user.findUniqueOrThrow({ where: { email } }),
-    ).resolves.toMatchObject({ status: "SUSPENDED" });
+    ).resolves.toMatchObject({
+      status: "SUSPENDED",
+      acceptedTermsVersion: "beta-2026-07-13",
+      acceptedPrivacyVersion: "beta-2026-07-13",
+    });
   });
 
   it("posts exactly one funded faucet reward under concurrent retries", async () => {
@@ -208,11 +215,12 @@ describe.runIf(integration)("persistent auth vertical", () => {
     expect(challengeResponse.statusCode).toBe(201);
     const challengeId = challengeResponse.json().challenge.id as string;
     const idempotencyKey = `claim-${crypto.randomUUID()}`;
+    const rotatedProxyAddress = testRemoteAddress();
     const attempts = await Promise.all(
       [0, 1].map(() =>
         app.inject({
           method: "POST",
-          remoteAddress,
+          remoteAddress: rotatedProxyAddress,
           url: "/v1/faucet/claims",
           headers: {
             "x-device-id": deviceId,
@@ -1332,6 +1340,29 @@ describe.runIf(integration)("persistent auth vertical", () => {
       ],
     });
     expect(repeated.id).toBe(posted.id);
+
+    const activity = await app.inject({
+      method: "GET",
+      url: "/v1/account/activity?limit=1",
+      cookies: { fz_session: cookie.value },
+    });
+    expect(activity.statusCode).toBe(200);
+    expect(activity.headers["cache-control"]).toBe("no-store");
+    const activityPayload = accountActivityResponseSchema.parse(
+      activity.json(),
+    );
+    expect(activityPayload.items[0]).toMatchObject({
+      id: posted.id,
+      type: "PROMOTIONAL_BONUS",
+      sourceType: "integration_test",
+      movements: [
+        {
+          asset: "ZYXE",
+          bucket: "PROMOTIONAL",
+          minorUnits: "100",
+        },
+      ],
+    });
 
     const withBonus = await app.inject({
       method: "GET",

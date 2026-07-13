@@ -607,13 +607,14 @@ function validateChallenge(
       410,
     );
   }
-  if (
-    challenge.ipHash !== input.context.ipHash ||
-    challenge.deviceId !== (input.context.deviceId ?? null)
-  ) {
+  // Managed proxies can legitimately rotate their egress address between the
+  // challenge and claim requests. The current IP remains part of rate limits
+  // and risk accounting, while challenge identity is bound to the authenticated
+  // session's device UUID.
+  if (challenge.deviceId !== (input.context.deviceId ?? null)) {
     throw new FaucetError(
       "FAUCET_CONTEXT_MISMATCH",
-      "The faucet challenge does not match this IP/device context",
+      "The faucet challenge does not match this session-bound device",
       403,
     );
   }

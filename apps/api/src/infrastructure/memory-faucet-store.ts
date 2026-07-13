@@ -188,13 +188,10 @@ export class MemoryFaucetStore implements FaucetStore {
         410,
       );
     }
-    if (
-      challenge.context.ipHash !== input.context.ipHash ||
-      challenge.context.deviceId !== input.context.deviceId
-    ) {
+    if (challenge.context.deviceId !== input.context.deviceId) {
       throw new FaucetError(
         "FAUCET_CONTEXT_MISMATCH",
-        "The faucet challenge does not match this IP/device context",
+        "The faucet challenge does not match this session-bound device",
         403,
       );
     }

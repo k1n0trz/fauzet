@@ -64,7 +64,7 @@ describe("FaucetService", () => {
     });
   });
 
-  it("binds challenges to the issuing IP and device", async () => {
+  it("allows proxy IP rotation while keeping the challenge device-bound", async () => {
     const service = new FaucetService(new MemoryFaucetStore());
     const challenge = await service.createChallenge(activeUser, context);
     await expect(
@@ -72,6 +72,18 @@ describe("FaucetService", () => {
         activeUser,
         { challengeId: challenge.id, idempotencyKey: "claim-context" },
         { ...context, ipHash: "ip-hash-b" },
+      ),
+    ).resolves.toMatchObject({ replayed: false });
+  });
+
+  it("rejects a challenge from a different device", async () => {
+    const service = new FaucetService(new MemoryFaucetStore());
+    const challenge = await service.createChallenge(activeUser, context);
+    await expect(
+      service.claim(
+        activeUser,
+        { challengeId: challenge.id, idempotencyKey: "claim-device" },
+        { ...context, deviceId: "20000000-0000-4000-8000-000000000003" },
       ),
     ).rejects.toMatchObject({ code: "FAUCET_CONTEXT_MISMATCH" });
   });
