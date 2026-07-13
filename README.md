@@ -32,6 +32,15 @@ El worker de revisión de Crew libera en lotes las comisiones cuyo período de r
 corepack pnpm referrals:release -- 100
 ```
 
+El primer rol administrativo se concede sólo mediante una operación explícita y auditada sobre una cuenta activa y verificada:
+
+```powershell
+$env:ADMIN_EMAIL='admin@example.com'
+$env:ADMIN_ROLE='SUPERADMIN'
+$env:ADMIN_REASON='Bootstrap inicial aprobado por el propietario'
+corepack pnpm admin:grant
+```
+
 - Web: http://localhost:3000
 - API: http://localhost:4000
 - Health: http://localhost:4000/health
@@ -70,6 +79,9 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Liquidación minera UTC idempotente: un asiento global pool→usuarios, redondeo hacia abajo con residuo explícito y bloqueo sin pagos parciales si el pool no está completamente respaldado.
 - Mining Crew con código por usuario, atribución inmutable al registro y árbol materializado L1-L4; no paga por reclutamiento ni expone emails del downline.
 - Motor de comisiones 5/2/1/0,5% con allowlist de actividad monetizable, cap mensual, pending→available y clawback. El pago permanece detrás de `LEGAL_AND_REVENUE_GATE`; el seed no financia el pool de referidos con emisión.
+- Consola `/admin` con reautenticación de contraseña separada por diez minutos, RBAC por endpoint y vistas reales de overview, usuarios, riesgo, ledger y auditoría.
+- Cambios administrativos de estado/riesgo con motivo obligatorio, before/after, request ID, revocación de sesiones al suspender y bloqueo de autoacciones o cambios directos sobre Owner/Superadmin.
+- `AuditEvent` y `RiskSignal` protegidos por triggers append-only; el admin no ofrece edición directa de saldos ni puede habilitar dinero real, retiros o trading.
 - Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica

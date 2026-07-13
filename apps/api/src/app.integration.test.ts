@@ -13,6 +13,10 @@ import {
   referralTreeResponseSchema,
   storeCatalogResponseSchema,
   storePurchaseResponseSchema,
+  adminAuditResponseSchema,
+  adminOverviewResponseSchema,
+  adminRiskResponseSchema,
+  adminUsersResponseSchema,
 } from "@fauzet/contracts";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
@@ -27,6 +31,7 @@ import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
+import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
 
 const integration = process.env.RUN_INTEGRATION === "true";
 
@@ -55,6 +60,7 @@ describe.runIf(integration)("persistent auth vertical", () => {
       missionStore: new PrismaMissionStore(database, () => new Date(gameNow)),
       referralStore: new PrismaReferralStore(database, () => new Date(gameNow)),
       commerceStore: new PrismaCommerceStore(database, () => new Date(gameNow)),
+      adminStore: new PrismaAdminStore(database),
     },
   );
 
@@ -1479,6 +1485,180 @@ describe.runIf(integration)("persistent auth vertical", () => {
     });
     expect(login.statusCode).toBe(200);
     expect(login.json().user.status).toBe("ACTIVE");
+  });
+
+  it("enforces admin step-up, RBAC, session revocation and append-only audit", async () => {
+    const app = await appPromise;
+    const adminEmail = `admin-${crypto.randomUUID()}@fauzet.local`;
+    const targetEmail = `admin-target-${crypto.randomUUID()}@fauzet.local`;
+    const password = "ValidAdminPassword123";
+    const register = async (email: string, displayName: string) => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/v1/auth/register",
+        payload: {
+          email,
+          password,
+          displayName,
+          countryCode: "CO",
+          locale: "es",
+          acceptedTerms: true,
+          isAdult: true,
+        },
+      });
+      expect(response.statusCode).toBe(201);
+      return {
+        id: response.json().user.id as string,
+        cookie: response.cookies.find(({ name }) => name === "fz_session")!
+          .value,
+      };
+    };
+    const adminUser = await register(adminEmail, "Admin Integration");
+    const target = await register(targetEmail, "Risk Target");
+    await database.$transaction([
+      database.user.update({
+        where: { id: adminUser.id },
+        data: { status: "ACTIVE", emailVerifiedAt: new Date() },
+      }),
+      database.userRole.create({
+        data: { userId: adminUser.id, role: "SUPERADMIN" },
+      }),
+      database.user.update({
+        where: { id: target.id },
+        data: { status: "ACTIVE", emailVerifiedAt: new Date() },
+      }),
+    ]);
+
+    const regularAttempt = await app.inject({
+      method: "POST",
+      url: "/v1/admin/auth/step-up",
+      cookies: { fz_session: target.cookie },
+      payload: { password },
+    });
+    expect(regularAttempt.statusCode).toBe(403);
+    const wrongPassword = await app.inject({
+      method: "POST",
+      url: "/v1/admin/auth/step-up",
+      cookies: { fz_session: adminUser.cookie },
+      payload: { password: "WrongPassword123" },
+    });
+    expect(wrongPassword.statusCode).toBe(401);
+    const stepUp = await app.inject({
+      method: "POST",
+      url: "/v1/admin/auth/step-up",
+      cookies: { fz_session: adminUser.cookie },
+      payload: { password },
+    });
+    expect(stepUp.statusCode).toBe(200);
+    expect(stepUp.json()).toMatchObject({
+      roles: expect.arrayContaining(["SUPERADMIN"]),
+      assurance: "PASSWORD_REAUTH",
+    });
+    const adminCookie = stepUp.cookies.find(
+      ({ name }) => name === "fz_admin_session",
+    )!.value;
+    const cookies = {
+      fz_session: adminUser.cookie,
+      fz_admin_session: adminCookie,
+    };
+    const [overviewResponse, usersResponse, ledgerResponse] = await Promise.all(
+      [
+        app.inject({ method: "GET", url: "/v1/admin/overview", cookies }),
+        app.inject({ method: "GET", url: "/v1/admin/users", cookies }),
+        app.inject({ method: "GET", url: "/v1/admin/ledger", cookies }),
+      ],
+    );
+    expect(overviewResponse.statusCode).toBe(200);
+    expect(usersResponse.statusCode).toBe(200);
+    expect(ledgerResponse.statusCode).toBe(200);
+    expect(
+      adminOverviewResponseSchema.parse(overviewResponse.json()).users.total,
+    ).toBeGreaterThan(1);
+    expect(adminUsersResponseSchema.parse(usersResponse.json()).items).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: target.id })]),
+    );
+
+    const riskUpdate = await app.inject({
+      method: "PATCH",
+      url: `/v1/admin/users/${target.id}/risk`,
+      cookies,
+      payload: {
+        riskLevel: 85,
+        reason: "Integration high-risk manual assessment",
+      },
+    });
+    expect(riskUpdate.statusCode).toBe(200);
+    expect(riskUpdate.json().user.riskLevel).toBe(85);
+    const risk = await app.inject({
+      method: "GET",
+      url: "/v1/admin/risk",
+      cookies,
+    });
+    expect(
+      adminRiskResponseSchema
+        .parse(risk.json())
+        .items.some(
+          ({ userId, nextScore }) => userId === target.id && nextScore === 85,
+        ),
+    ).toBe(true);
+
+    const suspension = await app.inject({
+      method: "PATCH",
+      url: `/v1/admin/users/${target.id}/status`,
+      cookies,
+      payload: {
+        status: "SUSPENDED",
+        reason: "Integration confirmed abuse investigation",
+      },
+    });
+    expect(suspension.statusCode).toBe(200);
+    const revokedTarget = await app.inject({
+      method: "GET",
+      url: "/v1/me",
+      cookies: { fz_session: target.cookie },
+    });
+    expect(revokedTarget.statusCode).toBe(401);
+    const selfMutation = await app.inject({
+      method: "PATCH",
+      url: `/v1/admin/users/${adminUser.id}/status`,
+      cookies,
+      payload: {
+        status: "SUSPENDED",
+        reason: "Must be rejected as a self mutation",
+      },
+    });
+    expect(selfMutation.statusCode).toBe(409);
+
+    const audit = await app.inject({
+      method: "GET",
+      url: "/v1/admin/audit",
+      cookies,
+    });
+    const auditItems = adminAuditResponseSchema.parse(audit.json()).items;
+    const statusAudit = auditItems.find(
+      ({ action, targetId }) =>
+        action === "ADMIN_USER_STATUS_CHANGED" && targetId === target.id,
+    );
+    expect(statusAudit).toBeTruthy();
+    await expect(
+      database.auditEvent.update({
+        where: { id: statusAudit!.id },
+        data: { reason: "Tampered audit" },
+      }),
+    ).rejects.toBeTruthy();
+
+    const logout = await app.inject({
+      method: "POST",
+      url: "/v1/admin/auth/logout",
+      cookies,
+    });
+    expect(logout.statusCode).toBe(204);
+    const expired = await app.inject({
+      method: "GET",
+      url: "/v1/admin/session",
+      cookies,
+    });
+    expect(expired.statusCode).toBe(401);
   });
 });
 

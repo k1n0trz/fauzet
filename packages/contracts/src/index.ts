@@ -637,6 +637,168 @@ export const referralCommissionsResponseSchema = z.object({
   ),
 });
 
+export const adminRoleSchema = z.enum([
+  "SUPPORT",
+  "CONTENT",
+  "FRAUD",
+  "FINANCE",
+  "AUDITOR",
+  "SUPERADMIN",
+  "OWNER",
+]);
+export const adminPermissionSchema = z.enum([
+  "OVERVIEW_READ",
+  "USERS_READ",
+  "USERS_STATUS_WRITE",
+  "RISK_READ",
+  "RISK_WRITE",
+  "LEDGER_READ",
+  "AUDIT_READ",
+  "CONFIG_READ",
+]);
+export const adminStepUpRequestSchema = z.object({
+  password: z.string().min(1).max(128),
+});
+export const adminSessionResponseSchema = z.object({
+  user: z.object({
+    id: z.string().uuid(),
+    email: z.string().email(),
+    displayName: z.string().nullable(),
+    locale: z.enum(["es", "en"]),
+    countryCode: z.string().nullable(),
+    status: z.string(),
+    roles: z.array(z.string()),
+  }),
+  roles: z.array(adminRoleSchema).min(1),
+  permissions: z.array(adminPermissionSchema),
+  assurance: z.literal("PASSWORD_REAUTH"),
+  expiresAt: z.string().datetime(),
+});
+const adminBucketBalancesSchema = z.record(
+  z.enum([
+    "PENDING",
+    "AVAILABLE",
+    "PROMOTIONAL",
+    "LOCKED",
+    "ELIGIBLE",
+    "RESERVED",
+    "WITHDRAWN",
+  ]),
+  z.string().regex(/^-?\d+$/),
+);
+export const adminOverviewResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  users: z.object({
+    total: z.number().int().nonnegative(),
+    active: z.number().int().nonnegative(),
+    restricted: z.number().int().nonnegative(),
+    suspended: z.number().int().nonnegative(),
+    registered24h: z.number().int().nonnegative(),
+  }),
+  risk: z.object({
+    elevated: z.number().int().nonnegative(),
+    high: z.number().int().nonnegative(),
+    signals24h: z.number().int().nonnegative(),
+  }),
+  ledger: z.object({
+    transactions24h: z.number().int().nonnegative(),
+    userLiabilities: adminBucketBalancesSchema,
+  }),
+  features: z.object({
+    realMoney: z.literal(false),
+    withdrawals: z.literal(false),
+    trading: z.literal(false),
+  }),
+});
+export const adminUserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  displayName: z.string().nullable(),
+  countryCode: z.string().nullable(),
+  status: z.enum([
+    "PENDING_VERIFICATION",
+    "ACTIVE",
+    "RESTRICTED",
+    "SUSPENDED",
+    "CLOSED",
+  ]),
+  riskLevel: z.number().int().min(0).max(100),
+  roles: z.array(z.string()),
+  balances: adminBucketBalancesSchema,
+  emailVerified: z.boolean(),
+  createdAt: z.string().datetime(),
+});
+export const adminUsersResponseSchema = z.object({
+  items: z.array(adminUserSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+});
+export const adminLedgerResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      type: z.string(),
+      status: z.string(),
+      sourceType: z.string(),
+      sourceId: z.string(),
+      configVersion: z.number().int().positive(),
+      createdAt: z.string().datetime(),
+      postingCount: z.number().int().positive(),
+      balanced: z.boolean(),
+      totalDebitsMinorUnits: z.string().regex(/^\d+$/),
+      totalCreditsMinorUnits: z.string().regex(/^\d+$/),
+    }),
+  ),
+});
+export const adminAuditResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      actor: z.string().nullable(),
+      action: z.string(),
+      targetType: z.string(),
+      targetId: z.string(),
+      reason: z.string().nullable(),
+      before: z.unknown().nullable(),
+      after: z.unknown().nullable(),
+      requestId: z.string(),
+      createdAt: z.string().datetime(),
+    }),
+  ),
+});
+export const adminRiskResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      userId: z.string().uuid(),
+      userDisplayName: z.string().nullable(),
+      actor: z.string().nullable(),
+      type: z.string(),
+      severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+      scoreDelta: z.number().int(),
+      previousScore: z.number().int().min(0).max(100),
+      nextScore: z.number().int().min(0).max(100),
+      reason: z.string(),
+      createdAt: z.string().datetime(),
+    }),
+  ),
+});
+export const adminUserStatusRequestSchema = z.object({
+  status: z.enum(["ACTIVE", "RESTRICTED", "SUSPENDED"]),
+  reason: z.string().trim().min(10).max(500),
+});
+export const adminRiskUpdateRequestSchema = z.object({
+  riskLevel: z.number().int().min(0).max(100),
+  reason: z.string().trim().min(10).max(500),
+});
+export const adminMutationResponseSchema = z.object({
+  user: adminUserSchema.omit({ balances: true }).extend({
+    balances: adminBucketBalancesSchema.optional(),
+  }),
+  auditEventId: z.string().uuid(),
+});
+
 export const registerRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z
@@ -728,3 +890,10 @@ export type ReferralTreeResponse = z.infer<typeof referralTreeResponseSchema>;
 export type ReferralCommissionsResponse = z.infer<
   typeof referralCommissionsResponseSchema
 >;
+export type AdminPermission = z.infer<typeof adminPermissionSchema>;
+export type AdminSessionResponse = z.infer<typeof adminSessionResponseSchema>;
+export type AdminOverviewResponse = z.infer<typeof adminOverviewResponseSchema>;
+export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
+export type AdminLedgerResponse = z.infer<typeof adminLedgerResponseSchema>;
+export type AdminAuditResponse = z.infer<typeof adminAuditResponseSchema>;
+export type AdminRiskResponse = z.infer<typeof adminRiskResponseSchema>;

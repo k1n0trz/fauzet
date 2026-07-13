@@ -21,6 +21,7 @@ import {
   type CommerceStore,
 } from "./domain/commerce.js";
 import { ReferralService, type ReferralStore } from "./domain/referrals.js";
+import { AdminService, type AdminStore } from "./domain/admin.js";
 import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
 import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
@@ -38,6 +39,7 @@ import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
 import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
+import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
 import { SmtpMailer } from "./infrastructure/smtp-mailer.js";
 import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
 import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
@@ -49,6 +51,7 @@ import { registerGameRoutes } from "./routes/games.js";
 import { registerMissionRoutes } from "./routes/missions.js";
 import { registerCommerceRoutes } from "./routes/commerce.js";
 import { registerReferralRoutes } from "./routes/referrals.js";
+import { registerAdminRoutes } from "./routes/admin.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
@@ -58,6 +61,7 @@ export interface AppDependencies {
   missionStore?: MissionStore;
   commerceStore?: CommerceStore;
   referralStore?: ReferralStore;
+  adminStore?: AdminStore;
   accountSecurityStore?: AccountSecurityStore;
   mailer?: TransactionalMailer;
   welcomeBonus?: WelcomeBonusIssuer;
@@ -170,6 +174,16 @@ export async function createApp(
       ? new MemoryReferralStore()
       : new PrismaReferralStore());
   await registerReferralRoutes(app, auth, new ReferralService(referralStore));
+  const adminStore =
+    dependencies.adminStore ??
+    (config.nodeEnv === "test" ? undefined : new PrismaAdminStore());
+  if (adminStore)
+    await registerAdminRoutes(
+      app,
+      auth,
+      new AdminService(adminStore, config.sessionSecret),
+      config.sessionSecret,
+    );
 
   app.get("/health", async () => ({
     status: "ok" as const,

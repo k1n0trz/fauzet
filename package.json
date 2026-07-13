@@ -17,7 +17,8 @@
     "db:studio": "corepack pnpm --filter @fauzet/database studio",
     "db:seed": "corepack pnpm --filter @fauzet/database seed",
     "mining:settle": "corepack pnpm --filter @fauzet/api mining:settle",
-    "referrals:release": "corepack pnpm --filter @fauzet/api referrals:release"
+    "referrals:release": "corepack pnpm --filter @fauzet/api referrals:release",
+    "admin:grant": "corepack pnpm --filter @fauzet/api admin:grant"
   },
   "devDependencies": {
     "cross-env": "7.0.3",

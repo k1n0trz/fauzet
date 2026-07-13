@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "mining:settle": "tsx src/scripts/settle-mining.ts",
-    "referrals:release": "tsx src/scripts/release-referrals.ts"
+    "referrals:release": "tsx src/scripts/release-referrals.ts",
+    "admin:grant": "tsx src/scripts/grant-admin.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.0.2",

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { loginRequestSchema, registerRequestSchema } from "@fauzet/contracts";
 import { AuthError, type AuthService } from "../domain/auth.js";
 import { AccountTokenError } from "../domain/account-security.js";
+import { AdminError } from "../domain/admin.js";
 
 const COOKIE = "fz_session";
 
@@ -65,6 +66,7 @@ export async function registerAuthRoutes(
   app.post("/v1/auth/logout", async (request, reply) => {
     await auth.logout(tokenFrom(request));
     reply.clearCookie(COOKIE, { path: "/" });
+    reply.clearCookie("fz_admin_session", { path: "/" });
     return reply.code(204).send();
   });
   app.get("/v1/me", async (request, reply) => {
@@ -78,6 +80,10 @@ export async function registerAuthRoutes(
         .code(error.statusCode)
         .send({ error: { code: error.code, message: error.message } });
     if (error instanceof AccountTokenError)
+      return reply
+        .code(error.statusCode)
+        .send({ error: { code: error.code, message: error.message } });
+    if (error instanceof AdminError)
       return reply
         .code(error.statusCode)
         .send({ error: { code: error.code, message: error.message } });
