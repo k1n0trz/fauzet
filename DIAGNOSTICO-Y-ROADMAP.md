@@ -1,7 +1,7 @@
 # Fauzet / ZYXE — Diagnóstico y roadmap técnico integral
 
 **Fecha:** 13 de julio de 2026
-**Estado:** beta cerrada técnica; backend real desplegado, frontend original integrado localmente y pendiente de promoción a producción
+**Estado:** beta cerrada técnica desplegada; frontend canónico, API y migraciones publicados y verificados en producción
 **Fuentes canónicas:** `data/Fauzet_Ficha_Tecnica_Funcionamiento_v0.1.docx` y `data/Fauzet_ZYXE_Documentacion_Tecnica_Economica_v0.1.docx`
 
 ## 0. Estado canónico — revisión corregida del 13 de julio de 2026
@@ -27,26 +27,26 @@ Reglas obligatorias desde ahora:
 3. No se rediseñará, simplificará ni sustituirá una pantalla sin aprobación explícita del propietario.
 4. Se reemplazarán únicamente simulaciones, `localStorage`, acciones inseguras y datos hardcoded por API, estados reales y controles server-side.
 5. Cada migración requerirá comparación visual desktop/móvil, tema claro/oscuro e idioma ES/EN contra el prototipo.
-6. Producción no se volverá a publicar hasta completar al menos la recuperación visual de landing, autenticación y shell principal, con smoke test.
+6. Toda publicación futura requerirá comparación visual, CI verde, backup cuando aplique, candidata aislada y smoke test antes de promover.
 
 La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 módulos diseñados y 8 placeholders). Las rutas inexistentes no se simularán: se integrarán solo con backend real o permanecerán gated y claramente rotuladas.
 
 ### 0.2 Dónde estamos realmente
 
-| Área            | Activo en producción                                                    | Implementado localmente, no publicado                                                                                                   | Pendiente real                                                                                      |
-| --------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Frontend        | `apps/web` desplegado, funcional pero no fiel al diseño original        | Landing Claude, acceso/registro, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales | Promover esta integración y continuar la fidelidad de cada vertical especializada                   |
-| Backend         | Fastify en Cloud Run                                                    | Nuevas rutas de perfil e historial personal; corrección de contexto Faucet                                                              | Desplegar cambios después de migración y QA                                                         |
-| Datos           | PostgreSQL en Cloud SQL, ledger y migraciones anteriores                | Migración `UserProfile` preparada y probada; historial deriva del ledger existente                                                      | Aplicar la migración en Cloud SQL antes de la nueva revisión API                                    |
-| Email           | Resend verificado; registro y activación por correo comprobados         | —                                                                                                                                       | Monitorear rebotes/entrega y probar recuperación periódicamente                                     |
-| Auth            | Registro, login, verificación, recuperación y sesiones persistentes     | UI de seguridad/perfil ampliada                                                                                                         | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                         |
-| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites                                                                     | Publicar, probar desde Vercel y reconciliar pools operativamente                                    |
-| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                   | Pruebas unitarias/integración verdes                                                                                                    | Reconciliación automática, alertas y reportes operativos                                            |
-| Conversión      | Sandbox sin valor real                                                  | Sección Swap marcada como futura                                                                                                        | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                                  |
-| Pagos fiat      | Ninguno activo                                                          | Claves test de MP y Stripe detectadas sin exponerlas; catálogo/refunds entregados; arquitectura fiat separada ya diagnosticada          | Normalizar secretos, órdenes, intentos, inventario, webhook, fulfillment, reembolsos y conciliación |
-| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                         | Build productivo de 23 rutas verde; GA, GTM y Clarity sólo en producción y tras consentimiento; cambios actuales viven en rama local    | PR, migraciones, despliegues y smoke test                                                           |
+| Área            | Activo en producción                                                              | Completado en este release                                                                                                              | Pendiente real                                                                                      |
+| --------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Frontend        | `apps/web` fiel a la landing, autenticación y shell aprobados, servido por Vercel | Landing Claude, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales y smoke superado | Continuar la fidelidad y funcionalidad de cada vertical especializada                               |
+| Backend         | Fastify en Cloud Run, revisión `fauzet-api-00003-feg` con 100% del tráfico        | Rutas de perfil e historial personal; corrección de contexto Faucet                                                                     | Monitoreo, alertas, métricas operativas y siguientes integraciones                                  |
+| Datos           | PostgreSQL en Cloud SQL, ledger y 20 migraciones aplicadas                        | Perfil y versiones de consentimiento aplicados tras backup manual exitoso                                                               | Reconciliación automática, alertas y reportes operativos                                            |
+| Email           | Resend verificado; registro y activación por correo comprobados                   | —                                                                                                                                       | Monitorear rebotes/entrega y probar recuperación periódicamente                                     |
+| Auth            | Registro, login, verificación, recuperación y sesiones persistentes               | UI de seguridad/perfil ampliada                                                                                                         | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                         |
+| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side           | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites; rutas publicadas y probadas                                        | Reconciliar pools y reforzar controles operativos                                                   |
+| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                             | Pruebas unitarias/integración verdes                                                                                                    | Reconciliación automática, alertas y reportes operativos                                            |
+| Conversión      | Sandbox sin valor real                                                            | Sección Swap marcada como futura                                                                                                        | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                                  |
+| Pagos fiat      | Ninguno activo                                                                    | Claves test de MP y Stripe detectadas sin exponerlas; catálogo/refunds entregados; arquitectura fiat separada ya diagnosticada          | Normalizar secretos, órdenes, intentos, inventario, webhook, fulfillment, reembolsos y conciliación |
+| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                                   | PR #2 fusionado; CI verde; backup, migraciones, API/jobs y Vercel promovidos; GA, GTM y Clarity bajo consentimiento                     | Observabilidad y alertas mínimas de producción                                                      |
 
-**Conclusión:** el núcleo backend de una beta cerrada existe y está bastante avanzado. La recuperación principal del frontend aprobado ya quedó integrada localmente sin perder autoridad server-side. La prioridad inmediata es publicarla de forma segura, validarla en el dominio y después construir el nuevo agregado de pagos fiat; dinero real continúa bloqueado.
+**Conclusión:** el núcleo de la beta cerrada está publicado con frontend aprobado y autoridad server-side. La prioridad inmediata pasa a ser observabilidad y el agregado de pagos fiat en sandbox; dinero real continúa bloqueado.
 
 ### 0.3 Qué está probado
 
@@ -57,11 +57,12 @@ La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 
 - Credenciales de prueba de Mercado Pago: configuradas por el propietario; no deben copiarse al código, chat ni GitHub.
 - Claves publicable y secreta de Stripe: prefijos de test validados localmente sin mostrar valores; integración y webhook aún no existen.
 - Google Analytics `G-W8GWS1R97E`, Google Tag Manager `GTM-TVLTFNJG` y Microsoft Clarity `xly1yjpewc`: disponibles únicamente en producción, bloqueados hasta consentimiento y descargados al entrar a la app mediante navegación completa.
+- Release de producción: PR #2 fusionado en `main` (`1597750`), CI verde, backup `pre-release-59d28f6d241a` exitoso y candidata API validada antes de recibir tráfico.
+- `fauzet.app`: landing canónica, app, ajustes, wallet, admin, términos, privacidad y assets con respuesta `200`; proxy sin sesión responde `401`.
 
 ### 0.4 Qué todavía no puede considerarse terminado
 
-- Producción todavía sirve la interfaz anterior; la integración fiel existe localmente pero aún no está promovida.
-- Los cambios de landing, menú, dashboard, wallet, perfil, favicon, Faucet y admin aún no están publicados.
+- Las verticales especializadas aún requieren iteración de fidelidad y funcionalidad; juegos futuros, Vault, swap y retiros continúan rotulados como no disponibles.
 - No hay pagos Mercado Pago funcionando: tener credenciales no equivale a checkout, webhook ni conciliación.
 - No hay pagos Stripe funcionando: las claves test no equivalen a checkout, PaymentIntent, webhook ni conciliación.
 - Firebase/Google Auth, KYC, custodia y demás terceros siguen pendientes o en proceso.
@@ -212,7 +213,7 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 
 **Decisiones registradas:** operación inicial desde Colombia; expansión internacional solo por lista de países habilitados; presupuesto exploratorio de 300.000 COP; Polygon PoS como candidata; USDC como activo real piloto recomendado y POL únicamente para gas; ZYXE continúa como unidad interna. El catálogo multi-activo futuro evaluará BTC, BCH, DASH, DOGE, LTC, USDC y ZYXE, cada uno con pool y gate independiente.
 
-#### R0 — Recuperación e integración fiel del frontend (fase actual)
+#### R0 — Recuperación e integración fiel del frontend (release base completado)
 
 - [x] Inventariar vistas, estados y navegaciones de `frontend/index.html`, `app.html` y `admin.html`.
 - [x] Crear matriz pantalla original → ruta Next → endpoint API → estado de integración.
@@ -225,20 +226,20 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 - [x] Portar el admin original sobre RBAC, step-up y auditoría existentes; módulos inexistentes quedan `GATED`.
 - [ ] Terminar la fidelidad de cada vertical especializada: Faucet, misiones, minería, tienda, Crew, conversión y soporte.
 - [x] Validar desktop/móvil, loading/error/empty/accessibility, lint, tipos, pruebas y build productivo; el navegador raíz quedó limitado por un fallo del entorno, pero hubo revisión visual independiente.
-- [ ] Publicar, aplicar migración, desplegar API/web y ejecutar smoke E2E en `fauzet.app`.
+- [x] Publicar, aplicar migraciones, desplegar API/web y ejecutar smoke de producción en `fauzet.app`.
 
 #### R1 — Estabilización funcional inmediata
 
-- [x] Shell/menu persistente por iconos en todas las rutas autenticadas, incluido Faucet (pendiente despliegue).
+- [x] Shell/menu persistente por iconos en todas las rutas autenticadas, incluido Faucet.
 - [x] Favicon, iconos y metadata; manifest instalable queda pendiente.
-- [x] Contexto del Faucet ligado a sesión/dispositivo con IP conservada para límites/riesgo; 89 pruebas verdes (pendiente despliegue).
+- [x] Contexto del Faucet ligado a sesión/dispositivo con IP conservada para límites/riesgo; 89 pruebas verdes y release publicado.
 - [x] E2E persistente de registro → verificación → claim → balance en PostgreSQL local.
 - [x] Entrega real Resend y activación de cuenta confirmadas por el propietario.
 - [ ] Monitoreo de errores, logs correlacionados y alertas mínimas.
 
 #### R2 — Identidad, perfil y seguridad
 
-- [x] Centro de Ajustes con Perfil, Apariencia, Seguridad, Pagos, Facturación, KYC y Privacidad (pendiente despliegue).
+- [x] Centro de Ajustes con Perfil, Apariencia, Seguridad, Pagos, Facturación, KYC y Privacidad publicado.
 - [x] Tema claro/oscuro/sistema persistente.
 - [x] Avatar validado, username, contactos, privacidad y cierre/exportación.
 - [ ] Recuperación por email y sesiones/dispositivos listas; falta cambio autenticado de contraseña y alertas de acceso.
