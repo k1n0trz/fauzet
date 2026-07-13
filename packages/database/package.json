@@ -11,9 +11,9 @@
     }
   },
   "scripts": {
-    "build": "prisma generate && tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json && tsc -p tsconfig.seed.json",
     "lint": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate",
-    "typecheck": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate && tsc -p tsconfig.json --noEmit",
+    "typecheck": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.seed.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
@@ -24,6 +24,7 @@
     "@prisma/client": "6.19.3"
   },
   "devDependencies": {
+    "@types/node": "22.14.1",
     "prisma": "6.19.3",
     "tsx": "4.19.3",
     "vitest": "3.2.7"
