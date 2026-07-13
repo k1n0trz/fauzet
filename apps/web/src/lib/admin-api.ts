@@ -49,7 +49,7 @@ export async function adminLogin(email: string, password: string) {
 }
 
 export async function adminLogout() {
-  await Promise.allSettled([
+  const [adminResult, sessionResult] = await Promise.allSettled([
     fetch(`${API_BASE}/admin/auth/logout`, {
       method: "POST",
       credentials: "include",
@@ -59,6 +59,17 @@ export async function adminLogout() {
       credentials: "include",
     }),
   ]);
+
+  if (sessionResult.status === "rejected" || !sessionResult.value.ok) {
+    throw new Error(
+      "No fue posible revocar la sesión principal. Sigues conectado.",
+    );
+  }
+
+  // Once the base session is revoked, its administrative step-up can no
+  // longer authorize requests. A secondary endpoint failure must not keep
+  // sensitive data rendered in the browser.
+  void adminResult;
 }
 
 export async function getAdminOverview(): Promise<AdminOverviewResponse> {

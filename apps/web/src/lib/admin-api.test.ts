@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { adminLogin, getAdminOverview } from "./admin-api";
+import { adminLogin, adminLogout, getAdminOverview } from "./admin-api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -78,6 +78,36 @@ describe("admin API adapters", () => {
       adminLogin("admin@fauzet.local", "WrongPassword123"),
     ).rejects.toThrow("Administrative re-authentication failed");
     expect(String(fetchMock.mock.calls[2]?.[0])).toBe("/api/v1/auth/logout");
+  });
+
+  it("fails closed when the base session cannot be revoked", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status: 204 }))
+        .mockResolvedValueOnce(
+          jsonResponse({ error: { message: "logout failed" } }, 503),
+        ),
+    );
+
+    await expect(adminLogout()).rejects.toThrow(
+      "No fue posible revocar la sesión principal",
+    );
+  });
+
+  it("clears the client after the base session is revoked even if admin logout fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse({ error: { message: "admin endpoint failed" } }, 503),
+        )
+        .mockResolvedValueOnce(new Response(null, { status: 204 })),
+    );
+
+    await expect(adminLogout()).resolves.toBeUndefined();
   });
 });
 

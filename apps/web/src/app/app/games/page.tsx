@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { RewardsHeader } from "../rewards-header";
 import { GamesHub } from "./games-hub";
 
 export const metadata: Metadata = {
@@ -10,7 +9,6 @@ export const metadata: Metadata = {
 export default function GamesPage() {
   return (
     <main className="appShell">
-      <RewardsHeader current="games" />
       <GamesHub />
     </main>
   );

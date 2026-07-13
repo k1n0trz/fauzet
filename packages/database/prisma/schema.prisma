@@ -162,6 +162,8 @@ model User {
   credentialVersion       Int                      @default(1)
   emailVerifiedAt         DateTime?
   acceptedTermsAt         DateTime
+  acceptedTermsVersion    String?
+  acceptedPrivacyVersion  String?
   adultDeclaredAt         DateTime
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
@@ -197,6 +199,39 @@ model User {
   withdrawalChallenges    WithdrawalChallenge[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
+  profile                 UserProfile?
+}
+
+model UserProfile {
+  userId             String    @id
+  username           String?   @unique
+  firstName          String?
+  lastName           String?
+  phone              String?
+  birthDate          DateTime? @db.Date
+  timezone           String    @default("America/Bogota")
+  theme              String    @default("SYSTEM")
+  addressLine1       String?
+  addressLine2       String?
+  city               String?
+  region             String?
+  postalCode         String?
+  billingName        String?
+  billingTaxId       String?
+  billingEmail       String?
+  marketingEmails    Boolean   @default(false)
+  productEmails      Boolean   @default(true)
+  avatarMime         String?
+  avatarData         Bytes?
+  kycStatus          String    @default("NOT_STARTED")
+  kycProvider        String?
+  kycReference       String?
+  closureRequestedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([kycStatus, updatedAt])
 }
 
 model EmailVerificationToken {

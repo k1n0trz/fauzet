@@ -66,6 +66,14 @@ describe("API", () => {
           ({ minorUnits }: { minorUnits: string }) => minorUnits === "0",
         ),
     ).toBe(true);
+    const activity = await app.inject({
+      method: "GET",
+      url: "/v1/account/activity?limit=10",
+      cookies: { fz_session: cookie!.value },
+    });
+    expect(activity.statusCode).toBe(200);
+    expect(activity.headers["cache-control"]).toBe("no-store");
+    expect(activity.json()).toEqual({ items: [], nextCursor: null });
     await app.close();
   });
 });

@@ -12,6 +12,10 @@ import {
   type TransactionalMailer,
 } from "./domain/account-security.js";
 import { BalanceService, type BalanceStore } from "./domain/balances.js";
+import {
+  AccountActivityService,
+  type AccountActivityStore,
+} from "./domain/account-activity.js";
 import { FaucetService, type FaucetStore } from "./domain/faucet.js";
 import { GameService, type GameStore } from "./domain/games.js";
 import { MissionService, type MissionStore } from "./domain/missions.js";
@@ -29,6 +33,7 @@ import {
 import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
 import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
+import { MemoryAccountActivityStore } from "./infrastructure/memory-account-activity-store.js";
 import { MemoryFaucetStore } from "./infrastructure/memory-faucet-store.js";
 import { MemoryGameStore } from "./infrastructure/memory-game-store.js";
 import { MemoryMissionStore } from "./infrastructure/memory-mission-store.js";
@@ -38,6 +43,7 @@ import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
 import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
 import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
+import { PrismaAccountActivityStore } from "./infrastructure/prisma-account-activity-store.js";
 import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
 import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
 import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
@@ -51,6 +57,7 @@ import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
 import { registerAccountSecurityRoutes } from "./routes/account-security.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerBalanceRoutes } from "./routes/balances.js";
+import { registerAccountActivityRoutes } from "./routes/account-activity.js";
 import { registerFaucetRoutes } from "./routes/faucet.js";
 import { registerGameRoutes } from "./routes/games.js";
 import { registerMissionRoutes } from "./routes/missions.js";
@@ -58,10 +65,12 @@ import { registerCommerceRoutes } from "./routes/commerce.js";
 import { registerReferralRoutes } from "./routes/referrals.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerSandboxWithdrawalRoutes } from "./routes/sandbox-withdrawals.js";
+import { registerProfileRoutes } from "./routes/profile.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
   balanceStore?: BalanceStore;
+  accountActivityStore?: AccountActivityStore;
   faucetStore?: FaucetStore;
   gameStore?: GameStore;
   missionStore?: MissionStore;
@@ -129,7 +138,19 @@ export async function createApp(
     ),
     welcomeBonus,
   );
+  if (config.nodeEnv !== "test")
+    await registerProfileRoutes(app, auth, config.sessionSecret);
   await registerBalanceRoutes(app, auth, new BalanceService(balanceStore));
+  const accountActivityStore =
+    dependencies.accountActivityStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryAccountActivityStore()
+      : new PrismaAccountActivityStore());
+  await registerAccountActivityRoutes(
+    app,
+    auth,
+    new AccountActivityService(accountActivityStore),
+  );
   const faucetStore =
     dependencies.faucetStore ??
     (config.nodeEnv === "test"

@@ -76,6 +76,8 @@ export class PrismaAuthStore implements AuthStore {
               locale: input.locale,
               countryCode: input.countryCode,
               acceptedTermsAt: now,
+              acceptedTermsVersion: input.termsVersion ?? "beta-2026-07-13",
+              acceptedPrivacyVersion: input.privacyVersion ?? "beta-2026-07-13",
               adultDeclaredAt: now,
               roles: { create: { role: "USER" } },
             },
