@@ -55,6 +55,14 @@ RUN source_client="$(cd /workspace/packages/database && node -e \
 FROM compiled AS migrations-bundle
 
 RUN pnpm --filter @fauzet/migrations deploy --prod --legacy /opt/fauzet-migrations
+WORKDIR /opt/fauzet-migrations
+RUN source_client="$(cd /workspace/packages/database && node -e \
+      "const path=require('node:path');const file=require.resolve('@prisma/client/package.json');process.stdout.write(path.resolve(path.dirname(file),'../../.prisma/client'))")" \
+    && target_client="$(cd node_modules/@fauzet/database && node -e \
+      "const path=require('node:path');const file=require.resolve('@prisma/client/package.json');process.stdout.write(path.resolve(path.dirname(file),'../../.prisma/client'))")" \
+    && rm -rf "$target_client" \
+    && mkdir -p "$(dirname "$target_client")" \
+    && cp -a "$source_client" "$target_client"
 
 FROM runtime-base AS api
 
