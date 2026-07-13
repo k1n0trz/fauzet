@@ -1,24 +1,233 @@
 import cors from "@fastify/cors";
+import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
+import { getDatabase } from "@fauzet/database";
 import type { AppConfig } from "./config.js";
+import { AuthService, type AuthStore } from "./domain/auth.js";
+import {
+  AccountSecurityService,
+  type AccountSecurityStore,
+  type TransactionalMailer,
+} from "./domain/account-security.js";
+import { BalanceService, type BalanceStore } from "./domain/balances.js";
+import { FaucetService, type FaucetStore } from "./domain/faucet.js";
+import { GameService, type GameStore } from "./domain/games.js";
+import { MissionService, type MissionStore } from "./domain/missions.js";
+import {
+  MiningService,
+  StoreService,
+  type CommerceStore,
+} from "./domain/commerce.js";
+import { ReferralService, type ReferralStore } from "./domain/referrals.js";
+import { AdminService, type AdminStore } from "./domain/admin.js";
+import {
+  SandboxWithdrawalService,
+  type SandboxWithdrawalStore,
+} from "./domain/sandbox-withdrawals.js";
+import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
+import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
+import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
+import { MemoryFaucetStore } from "./infrastructure/memory-faucet-store.js";
+import { MemoryGameStore } from "./infrastructure/memory-game-store.js";
+import { MemoryMissionStore } from "./infrastructure/memory-mission-store.js";
+import { MemoryCommerceStore } from "./infrastructure/memory-commerce-store.js";
+import { MemoryReferralStore } from "./infrastructure/memory-referral-store.js";
+import { MemoryMailer } from "./infrastructure/memory-mailer.js";
+import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
+import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
+import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
+import { PrismaFaucetStore } from "./infrastructure/prisma-faucet-store.js";
+import { PrismaGameStore } from "./infrastructure/prisma-game-store.js";
+import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
+import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
+import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
+import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
+import { PrismaSandboxWithdrawalStore } from "./infrastructure/prisma-sandbox-withdrawal-store.js";
+import { SmtpMailer } from "./infrastructure/smtp-mailer.js";
+import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
+import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
+import { registerAccountSecurityRoutes } from "./routes/account-security.js";
+import { registerAuthRoutes } from "./routes/auth.js";
+import { registerBalanceRoutes } from "./routes/balances.js";
+import { registerFaucetRoutes } from "./routes/faucet.js";
+import { registerGameRoutes } from "./routes/games.js";
+import { registerMissionRoutes } from "./routes/missions.js";
+import { registerCommerceRoutes } from "./routes/commerce.js";
+import { registerReferralRoutes } from "./routes/referrals.js";
+import { registerAdminRoutes } from "./routes/admin.js";
+import { registerSandboxWithdrawalRoutes } from "./routes/sandbox-withdrawals.js";
 
-export async function createApp(config: AppConfig) {
+export interface AppDependencies {
+  authStore?: AuthStore;
+  balanceStore?: BalanceStore;
+  faucetStore?: FaucetStore;
+  gameStore?: GameStore;
+  missionStore?: MissionStore;
+  commerceStore?: CommerceStore;
+  referralStore?: ReferralStore;
+  adminStore?: AdminStore;
+  sandboxWithdrawalStore?: SandboxWithdrawalStore;
+  accountSecurityStore?: AccountSecurityStore;
+  mailer?: TransactionalMailer;
+  welcomeBonus?: WelcomeBonusIssuer;
+}
+
+export async function createApp(
+  config: AppConfig,
+  dependencies: AppDependencies = {},
+) {
   const app = Fastify({
     logger: config.nodeEnv !== "test",
     genReqId: () => crypto.randomUUID(),
+    trustProxy: config.trustProxy,
   });
 
   await app.register(helmet, { contentSecurityPolicy: false });
+  await app.register(cookie);
   await app.register(cors, { origin: config.webOrigin, credentials: true });
-  await app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
+  await app.register(rateLimit, {
+    max: config.nodeEnv === "test" ? 10_000 : 100,
+    timeWindow: "1 minute",
+    ...(config.nodeEnv === "test" ? { allowList: () => true } : {}),
+  });
+  const authStore =
+    dependencies.authStore ??
+    (config.nodeEnv === "test" ? new MemoryAuthStore() : new PrismaAuthStore());
+  const auth = new AuthService(
+    authStore,
+    config.sessionSecret,
+    config.sessionTtlDays,
+  );
+  const balanceStore =
+    dependencies.balanceStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryBalanceStore()
+      : new PrismaBalanceStore());
+  await registerAuthRoutes(app, auth);
+  const accountSecurityStore =
+    dependencies.accountSecurityStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryAccountSecurityStore()
+      : new PrismaAccountSecurityStore());
+  const mailer =
+    dependencies.mailer ??
+    (config.nodeEnv === "test"
+      ? new MemoryMailer()
+      : new SmtpMailer({ ...config.smtp, appBaseUrl: config.appBaseUrl }));
+  const welcomeBonus =
+    dependencies.welcomeBonus ??
+    (config.nodeEnv === "test" ? undefined : new PrismaWelcomeBonusIssuer());
+  await registerAccountSecurityRoutes(
+    app,
+    auth,
+    new AccountSecurityService(
+      accountSecurityStore,
+      mailer,
+      config.sessionSecret,
+    ),
+    welcomeBonus,
+  );
+  await registerBalanceRoutes(app, auth, new BalanceService(balanceStore));
+  const faucetStore =
+    dependencies.faucetStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryFaucetStore()
+      : new PrismaFaucetStore());
+  await registerFaucetRoutes(
+    app,
+    auth,
+    new FaucetService(faucetStore),
+    config.sessionSecret,
+  );
+  const gameStore =
+    dependencies.gameStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryGameStore()
+      : new PrismaGameStore(undefined, config.sessionSecret));
+  await registerGameRoutes(
+    app,
+    auth,
+    new GameService(gameStore),
+    config.sessionSecret,
+  );
+  const missionStore =
+    dependencies.missionStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryMissionStore()
+      : new PrismaMissionStore());
+  await registerMissionRoutes(
+    app,
+    auth,
+    new MissionService(missionStore),
+    config.sessionSecret,
+  );
+  const commerceStore =
+    dependencies.commerceStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryCommerceStore()
+      : new PrismaCommerceStore());
+  await registerCommerceRoutes(
+    app,
+    auth,
+    new StoreService(commerceStore),
+    new MiningService(commerceStore),
+    config.sessionSecret,
+  );
+  const referralStore =
+    dependencies.referralStore ??
+    (config.nodeEnv === "test"
+      ? new MemoryReferralStore()
+      : new PrismaReferralStore());
+  await registerReferralRoutes(app, auth, new ReferralService(referralStore));
+  const adminStore =
+    dependencies.adminStore ??
+    (config.nodeEnv === "test" ? undefined : new PrismaAdminStore());
+  if (adminStore)
+    await registerAdminRoutes(
+      app,
+      auth,
+      new AdminService(adminStore, config.sessionSecret),
+      config.sessionSecret,
+    );
+  const sandboxWithdrawalStore =
+    dependencies.sandboxWithdrawalStore ??
+    (config.nodeEnv === "test"
+      ? undefined
+      : new PrismaSandboxWithdrawalStore(
+          undefined,
+          undefined,
+          mailer,
+          config.sessionSecret,
+        ));
+  if (sandboxWithdrawalStore)
+    await registerSandboxWithdrawalRoutes(
+      app,
+      auth,
+      new SandboxWithdrawalService(
+        sandboxWithdrawalStore,
+        config.features.sandboxWithdrawals,
+      ),
+    );
 
   app.get("/health", async () => ({
     status: "ok" as const,
     service: "fauzet-api",
     timestamp: new Date().toISOString(),
   }));
+
+  app.get("/health/ready", async (_request, reply) => {
+    if (config.nodeEnv !== "test") {
+      await getDatabase().$queryRaw`SELECT 1`;
+    }
+    return reply.send({
+      status: "ok" as const,
+      service: "fauzet-api",
+      database: config.nodeEnv === "test" ? "memory" : "ready",
+      timestamp: new Date().toISOString(),
+    });
+  });
 
   app.get("/v1/platform", async () => ({
     name: "Fauzet",

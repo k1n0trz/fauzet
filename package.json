@@ -13,12 +13,17 @@
     "format:check": "prettier --check .",
     "db:generate": "corepack pnpm --filter @fauzet/database generate",
     "db:migrate": "corepack pnpm --filter @fauzet/database migrate",
-    "db:studio": "corepack pnpm --filter @fauzet/database studio"
+    "db:migrate:deploy": "corepack pnpm --filter @fauzet/database exec prisma migrate deploy",
+    "db:studio": "corepack pnpm --filter @fauzet/database studio",
+    "db:seed": "corepack pnpm --filter @fauzet/database seed",
+    "mining:settle": "corepack pnpm --filter @fauzet/api mining:settle",
+    "referrals:release": "corepack pnpm --filter @fauzet/api referrals:release",
+    "admin:grant": "corepack pnpm --filter @fauzet/api admin:grant"
   },
   "devDependencies": {
     "cross-env": "7.0.3",
     "prettier": "3.5.3",
-    "turbo": "2.5.0",
+    "turbo": "2.9.14",
     "typescript": "5.8.3"
   }
 }

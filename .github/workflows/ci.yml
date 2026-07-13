@@ -11,18 +11,55 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: fauzet
+          POSTGRES_PASSWORD: fauzet
+          POSTGRES_DB: fauzet_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fauzet -d fauzet_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://fauzet:fauzet@localhost:5432/fauzet_test?schema=public
+      SESSION_SECRET: github-actions-session-secret-at-least-32-characters
+      RUN_INTEGRATION: "true"
+      API_ORIGIN: http://localhost:4000
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.7.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
+      - run: pnpm db:migrate:deploy
+      - run: pnpm db:seed
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Smoke production API artifact
+        shell: bash
+        run: |
+          pnpm --filter @fauzet/api start > /tmp/fauzet-api.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error http://127.0.0.1:4000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          cat /tmp/fauzet-api.log
+          exit 1
+      - run: pnpm audit --prod --audit-level high

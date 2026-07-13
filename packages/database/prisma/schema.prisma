@@ -26,6 +26,39 @@ enum Role {
   OWNER
 }
 
+enum RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExternalWalletStatus {
+  PENDING_COOLDOWN
+  ACTIVE
+  REVOKED
+}
+
+enum ConversionQuoteStatus {
+  OPEN
+  CONSUMED
+  EXPIRED
+}
+
+enum ConversionStatus {
+  RESERVED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  REVIEW
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
 enum LedgerAccountKind {
   ASSET
   LIABILITY
@@ -52,35 +85,156 @@ enum LedgerTransactionStatus {
   REJECTED
 }
 
+enum GameKind {
+  TAP_MINER
+  MEMORY_DROPS
+}
+
+enum GameSessionStatus {
+  ACTIVE
+  COMPLETED
+  HELD
+  REJECTED
+  EXPIRED
+  ABORTED
+}
+
+enum StorePurchaseStatus {
+  POSTED
+  REJECTED
+  REVERSED
+  REVERSAL_PENDING
+}
+
+enum MinerStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum MinerActionKind {
+  UPGRADE
+  REPAIR
+}
+
+enum MinerActionStatus {
+  POSTED
+  REJECTED
+  REVERSAL_PENDING
+}
+
+enum MiningEpochStatus {
+  OPEN
+  BLOCKED
+  SETTLED
+  REVERSED
+}
+
+enum MiningPayoutStatus {
+  POSTED
+  REJECTED
+  REVERSED
+}
+
+enum MonetizableActivityStatus {
+  QUALIFIED
+  REVERSAL_PENDING
+  REVERSED
+}
+
+enum ReferralCommissionStatus {
+  PENDING
+  AVAILABLE
+  CAPPED
+  HELD
+  REVERSED
+  CLAWBACK_PENDING
+}
+
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String
-  displayName   String?
-  locale        String   @default("es")
-  countryCode   String?
-  status        UserStatus @default(PENDING_VERIFICATION)
-  riskLevel     Int      @default(0)
-  emailVerifiedAt DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  sessions      Session[]
-  roles         UserRole[]
-  accounts      LedgerAccount[]
-  faucetClaims  FaucetClaim[]
-  auditEvents   AuditEvent[] @relation("AuditActor")
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  passwordHash            String
+  displayName             String?
+  locale                  String                   @default("es")
+  countryCode             String?
+  status                  UserStatus               @default(PENDING_VERIFICATION)
+  riskLevel               Int                      @default(0)
+  credentialVersion       Int                      @default(1)
+  emailVerifiedAt         DateTime?
+  acceptedTermsAt         DateTime
+  adultDeclaredAt         DateTime
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  sessions                Session[]
+  roles                   UserRole[]
+  accounts                LedgerAccount[]
+  faucetChallenges        FaucetChallenge[]
+  faucetClaims            FaucetClaim[]
+  gameEnergy              GameEnergy?
+  gameSessions            GameSession[]
+  missionClaims           MissionClaim[]
+  storePurchases          StorePurchase[]
+  miningProfile           MiningProfile?
+  miners                  UserMiner[]
+  minerActions            MinerAction[]
+  miningContributions     MiningContribution[]
+  miningPayouts           MiningPayout[]
+  referralProfile         ReferralProfile?
+  sponsoredReferralEdges  ReferralEdge[]           @relation("ReferralSponsor")
+  referralEdge            ReferralEdge?            @relation("ReferralReferred")
+  referralAncestors       ReferralAncestor[]       @relation("ReferralDescendant")
+  referralDescendants     ReferralAncestor[]       @relation("ReferralAncestorUser")
+  monetizableActivities   MonetizableActivity[]
+  referralCommissions     ReferralCommission[]     @relation("ReferralBeneficiary")
+  auditEvents             AuditEvent[]             @relation("AuditActor")
+  adminSessions           AdminSession[]
+  riskSignals             RiskSignal[]             @relation("RiskSubject")
+  createdRiskSignals      RiskSignal[]             @relation("RiskActor")
+  externalWallets         ExternalWallet[]
+  conversionQuotes        ConversionQuote[]
+  conversions             Conversion[]
+  withdrawals             Withdrawal[]
+  withdrawalChallenges    WithdrawalChallenge[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
 }
 
 model Session {
-  id          String   @id @default(uuid())
-  userId      String
-  tokenHash   String   @unique
-  deviceId    String?
-  ipHash      String?
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(uuid())
+  userId            String
+  tokenHash         String    @unique
+  deviceId          String?
+  ipHash            String?
+  credentialVersion Int       @default(1)
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, expiresAt])
 }
 
@@ -88,100 +242,615 @@ model UserRole {
   userId    String
   role      Role
   grantedAt DateTime @default(now())
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@id([userId, role])
 }
 
+model AdminSession {
+  id              String    @id @default(uuid())
+  userId          String
+  tokenHash       String    @unique
+  baseSessionHash String
+  assurance       String    @default("PASSWORD_REAUTH")
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([baseSessionHash, expiresAt])
+}
+
+model RiskSignal {
+  id            String       @id @default(uuid())
+  userId        String
+  actorId       String?
+  type          String
+  severity      RiskSeverity
+  scoreDelta    Int
+  previousScore Int
+  nextScore     Int
+  reason        String
+  evidence      Json         @default("{}")
+  requestId     String
+  createdAt     DateTime     @default(now())
+  user          User         @relation("RiskSubject", fields: [userId], references: [id], onDelete: Restrict)
+  actor         User?        @relation("RiskActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([severity, createdAt])
+}
+
+model ExternalWallet {
+  id                   String                @id @default(uuid())
+  userId               String
+  network              String
+  address              String
+  label                String
+  status               ExternalWalletStatus  @default(PENDING_COOLDOWN)
+  availableAt          DateTime
+  revokedAt            DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  withdrawals          Withdrawal[]
+  withdrawalChallenges WithdrawalChallenge[]
+
+  @@unique([userId, network, address])
+  @@index([userId, status, createdAt])
+}
+
+model ConversionQuote {
+  id                   String                @id @default(uuid())
+  userId               String
+  asset                String
+  eligibleMinor        Decimal               @db.Decimal(36, 0)
+  rateNumerator        Decimal               @db.Decimal(36, 0)
+  rateDenominator      Decimal               @db.Decimal(36, 0)
+  spreadBps            Int
+  grossAssetMinor      Decimal               @db.Decimal(36, 0)
+  networkFeeAssetMinor Decimal               @db.Decimal(36, 0)
+  netAssetMinor        Decimal               @db.Decimal(36, 0)
+  status               ConversionQuoteStatus @default(OPEN)
+  expiresAt            DateTime
+  createdAt            DateTime              @default(now())
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversion           Conversion?
+
+  @@index([userId, status, expiresAt])
+}
+
+model Conversion {
+  id                   String                @id @default(uuid())
+  userId               String
+  quoteId              String                @unique
+  idempotencyKey       String                @unique
+  status               ConversionStatus      @default(RESERVED)
+  reserveTransactionId String                @unique
+  releaseTransactionId String?               @unique
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  quote                ConversionQuote       @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  reserveTransaction   LedgerTransaction     @relation("ConversionReserveTransaction", fields: [reserveTransactionId], references: [id], onDelete: Restrict)
+  releaseTransaction   LedgerTransaction?    @relation("ConversionReleaseTransaction", fields: [releaseTransactionId], references: [id], onDelete: Restrict)
+  withdrawal           Withdrawal?
+  withdrawalChallenges WithdrawalChallenge[]
+
+  @@index([userId, status, createdAt])
+}
+
+model WithdrawalChallenge {
+  id             String         @id @default(uuid())
+  userId         String
+  conversionId   String
+  walletId       String
+  codeHash       String
+  failedAttempts Int            @default(0)
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversion     Conversion     @relation(fields: [conversionId], references: [id], onDelete: Restrict)
+  wallet         ExternalWallet @relation(fields: [walletId], references: [id], onDelete: Restrict)
+
+  @@index([userId, conversionId, walletId, expiresAt])
+}
+
+model Withdrawal {
+  id                      String             @id @default(uuid())
+  userId                  String
+  conversionId            String             @unique
+  walletId                String
+  idempotencyKey          String             @unique
+  status                  WithdrawalStatus
+  riskScore               Int
+  reasonCodes             Json               @default("[]")
+  assurance               String
+  sandboxTxId             String?            @unique
+  confirmations           Int                @default(0)
+  settlementTransactionId String?            @unique
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversion              Conversion         @relation(fields: [conversionId], references: [id], onDelete: Restrict)
+  wallet                  ExternalWallet     @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  settlementTransaction   LedgerTransaction? @relation("WithdrawalSettlementTransaction", fields: [settlementTransactionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
 model LedgerAccount {
-  id        String @id @default(uuid())
-  code      String @unique
-  name      String
-  kind      LedgerAccountKind
-  asset     String
-  bucket    BalanceBucket?
-  userId    String?
-  active    Boolean @default(true)
-  createdAt DateTime @default(now())
-  user      User? @relation(fields: [userId], references: [id], onDelete: Restrict)
-  postings  LedgerPosting[]
+  id            String            @id @default(uuid())
+  code          String            @unique
+  name          String
+  kind          LedgerAccountKind
+  asset         String
+  bucket        BalanceBucket?
+  userId        String?
+  active        Boolean           @default(true)
+  allowNegative Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  user          User?             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  postings      LedgerPosting[]
+
+  @@unique([userId, asset, bucket])
   @@index([userId, asset, bucket])
 }
 
 model LedgerTransaction {
-  id             String @id @default(uuid())
-  idempotencyKey String @unique
-  type           String
-  sourceType     String
-  sourceId       String
-  status         LedgerTransactionStatus @default(PENDING)
-  configVersion  Int
-  metadata       Json @default("{}")
-  postedAt       DateTime?
-  reversedById   String? @unique
-  createdAt      DateTime @default(now())
-  postings       LedgerPosting[]
-  reversedBy     LedgerTransaction? @relation("Reversal", fields: [reversedById], references: [id])
-  reverses       LedgerTransaction? @relation("Reversal")
+  id                          String                  @id @default(uuid())
+  idempotencyKey              String                  @unique
+  type                        String
+  sourceType                  String
+  sourceId                    String
+  status                      LedgerTransactionStatus @default(PENDING)
+  configVersion               Int
+  metadata                    Json                    @default("{}")
+  postedAt                    DateTime?
+  reversedById                String?                 @unique
+  createdAt                   DateTime                @default(now())
+  postings                    LedgerPosting[]
+  reversedBy                  LedgerTransaction?      @relation("Reversal", fields: [reversedById], references: [id])
+  reverses                    LedgerTransaction?      @relation("Reversal")
+  config                      EconomicConfigVersion   @relation(fields: [configVersion], references: [id], onDelete: Restrict)
+  faucetClaim                 FaucetClaim?
+  gameSession                 GameSession?
+  missionClaim                MissionClaim?
+  storePurchase               StorePurchase?          @relation("StorePurchaseTransaction")
+  minerAction                 MinerAction?            @relation("MinerActionTransaction")
+  miningEpoch                 MiningEpoch?            @relation("MiningEpochSettlement")
+  miningPayouts               MiningPayout[]          @relation("MiningPayoutTransaction")
+  referralPendingCommissions  ReferralCommission[]    @relation("ReferralPendingTransaction")
+  referralReleaseCommissions  ReferralCommission[]    @relation("ReferralReleaseTransaction")
+  referralClawbackCommissions ReferralCommission[]    @relation("ReferralClawbackTransaction")
+  reservedConversions         Conversion[]            @relation("ConversionReserveTransaction")
+  releasedConversions         Conversion[]            @relation("ConversionReleaseTransaction")
+  settledWithdrawals          Withdrawal[]            @relation("WithdrawalSettlementTransaction")
+
   @@unique([sourceType, sourceId, type])
 }
 
 model LedgerPosting {
-  id            String @id @default(uuid())
+  id            String            @id @default(uuid())
   transactionId String
   accountId     String
-  amount        Decimal @db.Decimal(36, 0)
-  balanceAfter  Decimal? @db.Decimal(36, 0)
-  createdAt     DateTime @default(now())
+  amount        Decimal           @db.Decimal(36, 0)
+  balanceAfter  Decimal?          @db.Decimal(36, 0)
+  createdAt     DateTime          @default(now())
   transaction   LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
-  account       LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  account       LedgerAccount     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
   @@index([accountId, createdAt])
 }
 
 model EconomicConfigVersion {
-  id          Int @id @default(autoincrement())
-  status      String @default("DRAFT")
-  parameters  Json
-  reason      String
-  createdById String
-  approvedById String?
-  effectiveAt DateTime?
-  createdAt   DateTime @default(now())
+  id                    Int                   @id @default(autoincrement())
+  status                String                @default("DRAFT")
+  parameters            Json
+  reason                String
+  createdById           String
+  approvedById          String?
+  effectiveAt           DateTime?
+  createdAt             DateTime              @default(now())
+  transactions          LedgerTransaction[]
+  faucetClaims          FaucetClaim[]
+  gameEnergy            GameEnergy[]
+  gameSessions          GameSession[]
+  missionClaims         MissionClaim[]
+  storePurchases        StorePurchase[]
+  miningProfiles        MiningProfile[]
+  miners                UserMiner[]
+  minerActions          MinerAction[]
+  miningEpochs          MiningEpoch[]
+  monetizableActivities MonetizableActivity[]
+  referralCommissions   ReferralCommission[]
+}
+
+model FaucetChallenge {
+  id         String       @id @default(uuid())
+  userId     String
+  status     String       @default("ISSUED")
+  expiresAt  DateTime
+  consumedAt DateTime?
+  ipHash     String
+  deviceId   String?
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  claim      FaucetClaim?
+
+  @@index([userId, status, expiresAt])
 }
 
 model FaucetClaim {
-  id             String @id @default(uuid())
+  id             String                @id @default(uuid())
   userId         String
-  challengeId    String @unique
-  rewardMinor    Decimal @db.Decimal(36, 0)
+  challengeId    String                @unique
+  idempotencyKey String                @unique
+  rewardMinor    Decimal               @db.Decimal(36, 0)
   status         String
   ruleVersion    Int
+  budgetDate     DateTime              @db.Date
+  streakDays     Int                   @default(1)
+  bonusPercent   Int                   @default(0)
   nextClaimAt    DateTime
-  transactionId String? @unique
+  transactionId  String?               @unique
   ipHash         String?
   deviceId       String?
-  createdAt      DateTime @default(now())
-  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  createdAt      DateTime              @default(now())
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  challenge      FaucetChallenge       @relation(fields: [challengeId], references: [id], onDelete: Restrict)
+  transaction    LedgerTransaction?    @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  config         EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+
   @@index([userId, createdAt])
+  @@index([userId, budgetDate, status])
+  @@index([ruleVersion, budgetDate, status])
+  @@index([budgetDate, status])
+  @@index([deviceId, budgetDate, status])
+  @@index([ipHash, budgetDate, status])
+}
+
+model GameEnergy {
+  userId        String                @id
+  current       Int
+  regeneratedAt DateTime
+  ruleVersion   Int
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config        EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+}
+
+model GameSession {
+  id            String                @id @default(uuid())
+  userId        String
+  game          GameKind
+  status        GameSessionStatus     @default(ACTIVE)
+  creationKey   String                @unique
+  completionKey String?               @unique
+  nonce         String                @unique
+  tokenHash     String                @unique
+  ruleVersion   Int
+  budgetDate    DateTime              @db.Date
+  energyCost    Int
+  nextSequence  Int                   @default(1)
+  lastEventAtMs Int                   @default(-1)
+  eventCount    Int                   @default(0)
+  score         Int                   @default(0)
+  state         Json                  @default("{}")
+  layout        Json?
+  rewardMinor   Decimal?              @db.Decimal(36, 0)
+  transactionId String?               @unique
+  reasonCode    String?
+  deviceId      String
+  ipHash        String
+  startedAt     DateTime
+  expiresAt     DateTime
+  completedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config        EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction   LedgerTransaction?    @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  events        GameEvent[]
+
+  @@index([userId, game, budgetDate, status])
+  @@index([deviceId, budgetDate, status])
+  @@index([ipHash, budgetDate, status])
+  @@index([budgetDate, status])
+}
+
+model GameEvent {
+  id         String      @id @default(uuid())
+  sessionId  String
+  sequence   Int
+  eventId    String
+  type       String
+  atMs       Int
+  payload    Json        @default("{}")
+  acceptedAt DateTime    @default(now())
+  session    GameSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, sequence])
+  @@unique([sessionId, eventId])
+  @@index([sessionId, acceptedAt])
+}
+
+model MissionClaim {
+  id             String                @id @default(uuid())
+  userId         String
+  missionId      String
+  periodKey      String
+  idempotencyKey String                @unique
+  status         String
+  progress       Decimal               @db.Decimal(36, 0)
+  target         Decimal               @db.Decimal(36, 0)
+  rewardMinor    Decimal               @db.Decimal(36, 0)
+  ruleVersion    Int
+  transactionId  String?               @unique
+  createdAt      DateTime              @default(now())
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config         EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction    LedgerTransaction?    @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, missionId, periodKey])
+  @@index([ruleVersion, periodKey, status])
+}
+
+model StorePurchase {
+  id                    String                @id @default(uuid())
+  userId                String
+  productId             String
+  idempotencyKey        String                @unique
+  status                StorePurchaseStatus   @default(POSTED)
+  priceMinor            Decimal               @db.Decimal(36, 0)
+  availableDebitMinor   Decimal               @db.Decimal(36, 0)
+  promotionalDebitMinor Decimal               @db.Decimal(36, 0)
+  burnMinor             Decimal               @db.Decimal(36, 0)
+  recycleMinor          Decimal               @db.Decimal(36, 0)
+  treasuryMinor         Decimal               @db.Decimal(36, 0)
+  effectType            String
+  effectRef             String?
+  evidence              Json                  @default("{}")
+  ruleVersion           Int
+  periodDate            DateTime              @db.Date
+  transactionId         String?               @unique
+  postedAt              DateTime?
+  reversedAt            DateTime?
+  createdAt             DateTime              @default(now())
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config                EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction           LedgerTransaction?    @relation("StorePurchaseTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+  miners                UserMiner[]
+
+  @@index([userId, periodDate, productId, status])
+  @@index([ruleVersion, periodDate, status])
+}
+
+model MiningProfile {
+  userId             String                @id
+  energyCreditMillis Decimal               @db.Decimal(36, 0)
+  lastCheckpointAt   DateTime
+  boostExpiresAt     DateTime?
+  repairKitCount     Int                   @default(0)
+  ruleVersion        Int
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config             EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+}
+
+model UserMiner {
+  id               String                @id @default(uuid())
+  userId           String
+  modelId          String
+  name             String
+  tier             String
+  status           MinerStatus           @default(ACTIVE)
+  slot             Int
+  level            Int                   @default(1)
+  hashRate         Int
+  energyPerHour    Int
+  efficiencyBps    Int
+  durabilityBps    Int                   @default(10000)
+  ruleVersion      Int
+  sourcePurchaseId String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config           EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  sourcePurchase   StorePurchase?        @relation(fields: [sourcePurchaseId], references: [id], onDelete: Restrict)
+  actions          MinerAction[]
+
+  @@unique([sourcePurchaseId])
+  @@unique([userId, slot])
+  @@index([userId, status, createdAt])
+}
+
+model MinerAction {
+  id               String                @id @default(uuid())
+  userId           String
+  minerId          String
+  kind             MinerActionKind
+  idempotencyKey   String                @unique
+  status           MinerActionStatus     @default(POSTED)
+  costMinor        Decimal               @db.Decimal(36, 0)
+  levelBefore      Int
+  levelAfter       Int
+  durabilityBefore Int
+  durabilityAfter  Int
+  formula          Json                  @default("{}")
+  ruleVersion      Int
+  transactionId    String?               @unique
+  postedAt         DateTime?
+  createdAt        DateTime              @default(now())
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  miner            UserMiner             @relation(fields: [minerId], references: [id], onDelete: Restrict)
+  config           EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction      LedgerTransaction?    @relation("MinerActionTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, minerId, createdAt])
+}
+
+model MiningContribution {
+  id         String      @id @default(uuid())
+  userId     String
+  periodDate DateTime    @db.Date
+  hashMillis Decimal     @db.Decimal(36, 0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  user       User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  epoch      MiningEpoch @relation(fields: [periodDate], references: [periodDate], onDelete: Restrict)
+
+  @@unique([userId, periodDate])
+  @@index([periodDate, hashMillis])
+}
+
+model MiningEpoch {
+  periodDate         DateTime              @id @db.Date
+  status             MiningEpochStatus     @default(OPEN)
+  ruleVersion        Int
+  configuredMinor    Decimal               @db.Decimal(36, 0)
+  distributableMinor Decimal               @db.Decimal(36, 0)
+  allocatedMinor     Decimal               @db.Decimal(36, 0)
+  residueMinor       Decimal               @db.Decimal(36, 0)
+  totalHashMillis    Decimal               @db.Decimal(36, 0)
+  reasonCode         String?
+  settlementKey      String?               @unique
+  transactionId      String?               @unique
+  settledAt          DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  config             EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  transaction        LedgerTransaction?    @relation("MiningEpochSettlement", fields: [transactionId], references: [id], onDelete: Restrict)
+  contributions      MiningContribution[]
+  payouts            MiningPayout[]
+}
+
+model MiningPayout {
+  id            String             @id @default(uuid())
+  periodDate    DateTime           @db.Date
+  userId        String
+  status        MiningPayoutStatus @default(POSTED)
+  hashMillis    Decimal            @db.Decimal(36, 0)
+  rewardMinor   Decimal            @db.Decimal(36, 0)
+  transactionId String
+  createdAt     DateTime           @default(now())
+  reversedAt    DateTime?
+  epoch         MiningEpoch        @relation(fields: [periodDate], references: [periodDate], onDelete: Restrict)
+  user          User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transaction   LedgerTransaction  @relation("MiningPayoutTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([periodDate, userId])
+  @@index([userId, periodDate, status])
+  @@index([transactionId, status])
+}
+
+model ReferralProfile {
+  userId    String   @id
+  code      String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+model ReferralEdge {
+  id                  String   @id @default(uuid())
+  sponsorId           String
+  referredUserId      String   @unique
+  codeSnapshot        String
+  attributionEvidence Json     @default("{}")
+  createdAt           DateTime @default(now())
+  sponsor             User     @relation("ReferralSponsor", fields: [sponsorId], references: [id], onDelete: Restrict)
+  referredUser        User     @relation("ReferralReferred", fields: [referredUserId], references: [id], onDelete: Restrict)
+
+  @@index([sponsorId, createdAt])
+}
+
+model ReferralAncestor {
+  descendantId String
+  ancestorId   String
+  depth        Int
+  createdAt    DateTime @default(now())
+  descendant   User     @relation("ReferralDescendant", fields: [descendantId], references: [id], onDelete: Restrict)
+  ancestor     User     @relation("ReferralAncestorUser", fields: [ancestorId], references: [id], onDelete: Restrict)
+
+  @@id([descendantId, depth])
+  @@unique([descendantId, ancestorId])
+  @@index([ancestorId, depth, createdAt])
+}
+
+model MonetizableActivity {
+  id             String                    @id @default(uuid())
+  userId         String
+  sourceType     String
+  sourceId       String
+  idempotencyKey String                    @unique
+  status         MonetizableActivityStatus @default(QUALIFIED)
+  baseMinor      Decimal                   @db.Decimal(36, 0)
+  evidence       Json                      @default("{}")
+  ruleVersion    Int
+  qualifiedAt    DateTime
+  reversedAt     DateTime?
+  createdAt      DateTime                  @default(now())
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config         EconomicConfigVersion     @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  commissions    ReferralCommission[]
+
+  @@unique([sourceType, sourceId])
+  @@index([userId, status, qualifiedAt])
+}
+
+model ReferralCommission {
+  id                    String                   @id @default(uuid())
+  activityId            String
+  beneficiaryId         String
+  level                 Int
+  rateBps               Int
+  baseMinor             Decimal                  @db.Decimal(36, 0)
+  rewardMinor           Decimal                  @db.Decimal(36, 0)
+  cappedMinor           Decimal                  @default(0) @db.Decimal(36, 0)
+  status                ReferralCommissionStatus @default(PENDING)
+  capMonth              String
+  ruleVersion           Int
+  pendingTransactionId  String?
+  releaseTransactionId  String?
+  clawbackTransactionId String?
+  availableAt           DateTime?
+  reversedAt            DateTime?
+  createdAt             DateTime                 @default(now())
+  activity              MonetizableActivity      @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  beneficiary           User                     @relation("ReferralBeneficiary", fields: [beneficiaryId], references: [id], onDelete: Restrict)
+  config                EconomicConfigVersion    @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  pendingTransaction    LedgerTransaction?       @relation("ReferralPendingTransaction", fields: [pendingTransactionId], references: [id], onDelete: Restrict)
+  releaseTransaction    LedgerTransaction?       @relation("ReferralReleaseTransaction", fields: [releaseTransactionId], references: [id], onDelete: Restrict)
+  clawbackTransaction   LedgerTransaction?       @relation("ReferralClawbackTransaction", fields: [clawbackTransactionId], references: [id], onDelete: Restrict)
+
+  @@unique([activityId, beneficiaryId])
+  @@index([beneficiaryId, status, createdAt])
+  @@index([capMonth, beneficiaryId, status])
 }
 
 model AuditEvent {
-  id          String @id @default(uuid())
-  actorId     String?
-  action      String
-  targetType  String
-  targetId    String
-  reason      String?
-  before      Json?
-  after       Json?
-  requestId   String
-  ipHash      String?
-  createdAt   DateTime @default(now())
-  actor       User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String
+  reason     String?
+  before     Json?
+  after      Json?
+  requestId  String
+  ipHash     String?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
   @@index([targetType, targetId, createdAt])
 }
 
 model IdempotencyRecord {
-  key          String @id
+  key          String   @id
   scope        String
   requestHash  String
   responseCode Int?

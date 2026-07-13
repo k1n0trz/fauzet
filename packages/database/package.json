@@ -3,20 +3,33 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "prisma generate",
+    "build": "prisma generate && tsc -p tsconfig.json && tsc -p tsconfig.seed.json",
     "lint": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate",
-    "typecheck": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate",
+    "typecheck": "cross-env DATABASE_URL=postgresql://validation:validation@localhost:5432/validation prisma validate && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.seed.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "6.6.0"
+    "@prisma/client": "6.19.3"
   },
   "devDependencies": {
-    "prisma": "6.6.0",
-    "vitest": "3.1.1"
+    "@types/node": "22.14.1",
+    "prisma": "6.19.3",
+    "tsx": "4.19.3",
+    "vitest": "3.2.7"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

@@ -1,0 +1,31 @@
+steps:
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - --file
+      - Dockerfile.api
+      - --target
+      - api
+      - --tag
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/fauzet-api:${_RELEASE}
+      - .
+  - id: build-migrations
+    name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - --file
+      - Dockerfile.api
+      - --target
+      - migrations
+      - --tag
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/fauzet-migrations:${_RELEASE}
+      - .
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/fauzet-api:${_RELEASE}
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/fauzet-migrations:${_RELEASE}

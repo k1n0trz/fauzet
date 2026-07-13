@@ -11,7 +11,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "next": "16.1.6",
+    "@fauzet/contracts": "workspace:*",
+    "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -20,7 +21,7 @@
     "@types/react": "19.1.2",
     "@types/react-dom": "19.1.2",
     "eslint": "9.24.0",
-    "eslint-config-next": "16.1.6",
-    "vitest": "3.1.1"
+    "eslint-config-next": "16.2.10",
+    "vitest": "3.2.7"
   }
 }

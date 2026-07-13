@@ -38,6 +38,9 @@ export function validateBalancedTransaction(
 
   const totals = new Map<string, bigint>();
   for (const posting of input.postings) {
+    if (posting.amount === 0n) {
+      throw new LedgerInvariantError("Ledger postings cannot be zero");
+    }
     totals.set(
       posting.account.asset,
       (totals.get(posting.account.asset) ?? 0n) + posting.amount,
