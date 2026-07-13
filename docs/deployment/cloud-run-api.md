@@ -125,6 +125,12 @@ periódicamente; mientras el gate legal/económico esté cerrado devuelve un lot
 vacío. El reconciliador fiat sólo se programa después de montar las credenciales
 de prueba; reclama eventos por lease y es seguro ante reintentos.
 
+En el release `740d687`, `fauzet-fiat-reconcile` quedó desplegado y su ejecución
+manual `fauzet-fiat-reconcile-pmmfv` terminó correctamente. El scheduler
+`fauzet-fiat-reconcile-10m` existe con frecuencia de diez minutos, pero debe
+permanecer en `PAUSED` hasta montar el secret firmado del webhook en la API y
+abrir la única prueba TEST allowlisted.
+
 El job de conciliación no carga la configuración del servidor HTTP. Su conjunto
 mínimo y suficiente de variables es:
 
