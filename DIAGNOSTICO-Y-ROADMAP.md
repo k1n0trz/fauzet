@@ -33,18 +33,18 @@ La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 
 
 ### 0.2 Dónde estamos realmente
 
-| Área            | Activo en producción                                                              | Completado en este release                                                                                                              | Pendiente real                                                                                      |
-| --------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Frontend        | `apps/web` fiel a la landing, autenticación y shell aprobados, servido por Vercel | Landing Claude, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales y smoke superado | Continuar la fidelidad y funcionalidad de cada vertical especializada                               |
-| Backend         | Fastify en Cloud Run, revisión `fauzet-api-00003-feg` con 100% del tráfico        | Rutas de perfil e historial personal; corrección de contexto Faucet                                                                     | Monitoreo, alertas, métricas operativas y siguientes integraciones                                  |
-| Datos           | PostgreSQL en Cloud SQL, ledger y 20 migraciones aplicadas                        | Perfil y versiones de consentimiento aplicados tras backup manual exitoso                                                               | Reconciliación automática, alertas y reportes operativos                                            |
-| Email           | Resend verificado; registro y activación por correo comprobados                   | —                                                                                                                                       | Monitorear rebotes/entrega y probar recuperación periódicamente                                     |
-| Auth            | Registro, login, verificación, recuperación y sesiones persistentes               | UI de seguridad/perfil ampliada                                                                                                         | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                         |
-| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side           | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites; rutas publicadas y probadas                                        | Reconciliar pools y reforzar controles operativos                                                   |
-| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                             | Pruebas unitarias/integración verdes                                                                                                    | Reconciliación automática, alertas y reportes operativos                                            |
-| Conversión      | Sandbox sin valor real                                                            | Sección Swap marcada como futura                                                                                                        | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                                  |
-| Pagos fiat      | Ninguno activo                                                                    | Claves test de MP y Stripe detectadas sin exponerlas; catálogo/refunds entregados; arquitectura fiat separada ya diagnosticada          | Normalizar secretos, órdenes, intentos, inventario, webhook, fulfillment, reembolsos y conciliación |
-| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                                   | PR #2 fusionado; CI verde; backup, migraciones, API/jobs y Vercel promovidos; GA, GTM y Clarity bajo consentimiento                     | Observabilidad y alertas mínimas de producción                                                      |
+| Área            | Activo en producción                                                              | Completado en este release                                                                                                              | Pendiente real                                                                              |
+| --------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Frontend        | `apps/web` fiel a la landing, autenticación y shell aprobados, servido por Vercel | Landing Claude, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales y smoke superado | Continuar la fidelidad y funcionalidad de cada vertical especializada                       |
+| Backend         | Fastify en Cloud Run, revisión `fauzet-api-00003-feg` con 100% del tráfico        | Rutas de perfil e historial personal; corrección de contexto Faucet                                                                     | Monitoreo, alertas, métricas operativas y siguientes integraciones                          |
+| Datos           | PostgreSQL en Cloud SQL, ledger y 21 migraciones aplicadas                        | Esquema fiat aditivo con productos, órdenes, intentos, webhooks, inventario y reembolsos; catálogo COP sembrado sin productos activos   | Outbox, conciliación automática, alertas y reportes operativos                              |
+| Email           | Resend verificado; registro y activación por correo comprobados                   | —                                                                                                                                       | Monitorear rebotes/entrega y probar recuperación periódicamente                             |
+| Auth            | Registro, login, verificación, recuperación y sesiones persistentes               | UI de seguridad/perfil ampliada                                                                                                         | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                 |
+| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side           | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites; rutas publicadas y probadas                                        | Reconciliar pools y reforzar controles operativos                                           |
+| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                             | Pruebas unitarias/integración verdes                                                                                                    | Reconciliación automática, alertas y reportes operativos                                    |
+| Conversión      | Sandbox sin valor real                                                            | Sección Swap marcada como futura                                                                                                        | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                          |
+| Pagos fiat      | Catálogo e inventario sandbox informativos; cobros y activaciones bloqueados      | Contratos, persistencia, API y vistas separadas de la tienda ZYXE; gates fail-closed y 13 productos COP sin recompensas                 | Checkout MP, webhook firmado, verificación del pago, fulfillment, reembolsos y conciliación |
+| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                                   | PR #2 fusionado; CI verde; backup, migraciones, API/jobs y Vercel promovidos; GA, GTM y Clarity bajo consentimiento                     | Observabilidad y alertas mínimas de producción                                              |
 
 **Conclusión:** el núcleo de la beta cerrada está publicado con frontend aprobado y autoridad server-side. La prioridad inmediata pasa a ser observabilidad y el agregado de pagos fiat en sandbox; dinero real continúa bloqueado.
 
@@ -52,7 +52,7 @@ La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 
 
 - Registro, entrega de correo y activación real de cuenta con Resend: confirmados.
 - Backend, ledger, Faucet, rewards y flujos sandbox: cubiertos por pruebas automatizadas.
-- Suite local: formato del alcance modificado, lint, tipos, build productivo de 23 rutas, 14 pruebas web y 89 pruebas API con integración: verdes.
+- Suite local: formato del alcance modificado, lint, tipos, build productivo de 25 rutas, 19 pruebas web y 97 pruebas API con integración PostgreSQL: verdes.
 - Cloud Run, Cloud SQL y Vercel: operativos.
 - Credenciales de prueba de Mercado Pago: configuradas por el propietario; no deben copiarse al código, chat ni GitHub.
 - Claves publicable y secreta de Stripe: prefijos de test validados localmente sin mostrar valores; integración y webhook aún no existen.
@@ -143,13 +143,14 @@ No compartas claves privadas, seed phrases ni API secrets por chat o GitHub. Cua
 
 #### B. Mercado Pago — lo próximo que debes decidir
 
-1. Confirma en Mercado Pago Developers que tienes el **Access Token de prueba**. Las variables actuales de usuario/API no prueban por sí solas que sea el token oficial requerido por Checkout Pro.
-2. No las envíes por chat. Déjalas únicamente en variables locales/Secret Manager; desarrollo verificará solo que existan.
-3. La moneda inicial del checkout queda definida como `COP` por el catálogo entregado.
-4. La tabla inicial de productos ya fue entregada: en beta se priorizarán boosts y los mineros Dripper Mini, Flow One y Aqua Rig; los mineros superiores quedarán como próximos.
-5. La política preliminar ya fue entregada: solicitud dentro de cinco días hábiles mientras el producto no haya sido activado/consumido ni generado beneficios, sujeta a los casos y derechos legales aplicables.
-6. Cuando desarrollo entregue la URL, regístrala como webhook de pagos en Mercado Pago.
-7. Crea o conserva las cuentas de comprador/vendedor de prueba que proporcione MP; no uses una compra real durante sandbox.
+1. El valor configurado con prefijo `APP_USR-` es compatible con un **Access Token de prueba**; no lo cambies ni lo envíes por chat. Desarrollo lo validará creando una preferencia sandbox antes de habilitar checkout.
+2. Busca en Mercado Pago Developers el **Seller User ID numérico** de la cuenta vendedora de prueba. La variable actual llamada “API user” parece otro token y no sirve como ese ID.
+3. Déjalo únicamente en variables locales/Secret Manager bajo `MERCADOPAGO_SELLER_USER_ID`; comparte solo el nombre del secreto, nunca el valor.
+4. La moneda inicial del checkout queda definida como `COP` por el catálogo entregado.
+5. La tabla inicial de productos ya fue entregada: en beta se priorizarán los mineros Dripper Mini, Flow One y Aqua Rig; boosts y mineros superiores permanecen cerrados hasta implementar sus efectos server-side.
+6. La política preliminar ya fue entregada: solicitud dentro de cinco días hábiles mientras el producto no haya sido activado/consumido ni generado beneficios, sujeta a los casos y derechos legales aplicables.
+7. Cuando desarrollo entregue la URL HTTPS, regístrala como webhook de pagos en Mercado Pago y guarda el secreto de firma en Secret Manager como `MERCADOPAGO_WEBHOOK_SECRET`.
+8. Crea o conserva las cuentas de comprador/vendedor de prueba que proporcione MP; no uses una compra real durante sandbox.
 
 **Nombres que usará el runtime:** `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`, `MERCADOPAGO_APPLICATION_ID`, `MERCADOPAGO_SELLER_USER_ID` y `MERCADOPAGO_MODE=test`. Access Token y secreto del webhook vivirán únicamente en Secret Manager; usuario, contraseña y código de comprador de prueba no pertenecen al runtime.
 
@@ -251,9 +252,12 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 
 - [x] Credenciales de prueba de Mercado Pago configuradas por el propietario.
 - [x] Catálogo fiat COP y política preliminar de reembolsos entregados.
-- [x] Verificar presencia de la configuración actual sin imprimirla ni versionarla; falta mapearla al Access Token/webhook secret oficiales.
+- [x] Verificar presencia de la configuración actual sin imprimirla ni versionarla; el token `APP_USR-` es compatible con test, pero falta Seller User ID numérico y webhook secret.
 - [x] Diseñar la separación obligatoria entre compra ZYXE actual y compra fiat con inventario/activación posterior.
-- [ ] Modelos versionados `FiatProductVersion`, `PaymentOrder`, `PaymentAttempt`, `PaymentWebhookInbox`, `Entitlement`, refunds, chargebacks, outbox y reconciliación.
+- [x] Modelos versionados `FiatProductVersion`, `PaymentOrder`, `PaymentAttempt`, `PaymentWebhookInbox`, `Entitlement` y `PaymentRefund`, con constraints de importe, identidad, pago y fulfillment.
+- [x] Catálogo COP e inventario autoritativo en API/web, separados de la tienda ZYXE; sin órdenes, cobros, activaciones ni recompensas ZYXE.
+- [x] Gates `FIAT_CATALOG_ENABLED`, `FIAT_SANDBOX_CHECKOUT_ENABLED` y `FIAT_SANDBOX_ACTIVATION_ENABLED`; producción rechaza checkout/activación mientras no estén implementados.
+- [ ] Outbox, worker de conciliación y estados explícitos de contracargo.
 - [ ] Adaptador de pagos abstracto con Mercado Pago Checkout Pro como proveedor sandbox inicial.
 - [ ] Checkout alojado, webhooks firmados e idempotentes y fulfillment efectivamente una vez.
 - [ ] Órdenes, pagos, inventario, activación, recibos, reembolsos totales no activados y contracargos.

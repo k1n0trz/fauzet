@@ -84,8 +84,11 @@ Variables no secretas mínimas:
 | `WITHDRAWALS_ENABLED`             | `false`                                                      |
 | `TRADING_ENABLED`                 | `false`                                                      |
 | `SANDBOX_WITHDRAWALS_ENABLED`     | `true` sólo en el laboratorio aprobado                       |
+| `FIAT_CATALOG_ENABLED`            | `true` para el catálogo informativo COP                      |
+| `FIAT_SANDBOX_CHECKOUT_ENABLED`   | `false`; el checkout todavía no está implementado            |
+| `FIAT_SANDBOX_ACTIVATION_ENABLED` | `false`; ningún producto fiat puede generar recompensas      |
 
-La configuración de producción rechaza el arranque si faltan `DATABASE_URL`, los orígenes HTTPS, un `SESSION_SECRET` único o el transporte SMTP autenticado y cifrado. También impide iniciar si cualquiera de los tres gates de valor real está en `true`.
+La configuración de producción rechaza el arranque si faltan `DATABASE_URL`, los orígenes HTTPS, un `SESSION_SECRET` único o el transporte SMTP autenticado y cifrado. También impide iniciar si cualquiera de los tres gates de valor real está en `true`. En esta fase igualmente impide habilitar checkout o activación fiat; publicar el catálogo no autoriza cobros.
 
 No usar `--allow-unauthenticated` por inercia. Si Vercel reenvía directamente a una API pública, limitar CORS al dominio canónico, mantener rate limits y aplicar Cloud Armor o un gateway según el modelo de exposición. Si se usa autenticación IAM entre Vercel y Cloud Run, el proxy web deberá emitir el token correspondiente.
 

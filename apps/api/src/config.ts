@@ -29,6 +29,9 @@ const envSchema = z.object({
   WITHDRAWALS_ENABLED: z.enum(["true", "false"]).default("false"),
   TRADING_ENABLED: z.enum(["true", "false"]).default("false"),
   SANDBOX_WITHDRAWALS_ENABLED: z.enum(["true", "false"]).default("true"),
+  FIAT_CATALOG_ENABLED: z.enum(["true", "false"]).default("true"),
+  FIAT_SANDBOX_CHECKOUT_ENABLED: z.enum(["true", "false"]).default("false"),
+  FIAT_SANDBOX_ACTIVATION_ENABLED: z.enum(["true", "false"]).default("false"),
 });
 
 export type AppConfig = ReturnType<typeof loadConfig>;
@@ -83,6 +86,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       withdrawals: parsed.WITHDRAWALS_ENABLED === "true",
       trading: parsed.TRADING_ENABLED === "true",
       sandboxWithdrawals: parsed.SANDBOX_WITHDRAWALS_ENABLED === "true",
+      fiatCatalog: parsed.FIAT_CATALOG_ENABLED === "true",
+      fiatSandboxCheckout: parsed.FIAT_SANDBOX_CHECKOUT_ENABLED === "true",
+      fiatSandboxActivation: parsed.FIAT_SANDBOX_ACTIVATION_ENABLED === "true",
     },
   } as const;
 }
@@ -123,6 +129,17 @@ function assertProductionConfig(
   if (enabledValueExternalGates.length > 0) {
     throw new Error(
       `${enabledValueExternalGates.join(", ")} cannot be enabled: real-value integrations are not implemented`,
+    );
+  }
+  const enabledUnimplementedFiatGates = [
+    ["FIAT_SANDBOX_CHECKOUT_ENABLED", parsed.FIAT_SANDBOX_CHECKOUT_ENABLED],
+    ["FIAT_SANDBOX_ACTIVATION_ENABLED", parsed.FIAT_SANDBOX_ACTIVATION_ENABLED],
+  ]
+    .filter(([, value]) => value === "true")
+    .map(([name]) => name);
+  if (enabledUnimplementedFiatGates.length > 0) {
+    throw new Error(
+      `${enabledUnimplementedFiatGates.join(", ")} cannot be enabled: fiat sandbox checkout and activation are not implemented`,
     );
   }
   if (!raw.SMTP_HOST?.trim() || !raw.SMTP_PORT?.trim()) {

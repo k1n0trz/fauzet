@@ -97,6 +97,18 @@ describe("loadConfig", () => {
     expect(() =>
       loadConfig({ ...productionEnv, WITHDRAWALS_ENABLED: "true" }),
     ).toThrow("real-value integrations are not implemented");
+    expect(() =>
+      loadConfig({
+        ...productionEnv,
+        FIAT_SANDBOX_CHECKOUT_ENABLED: "true",
+      }),
+    ).toThrow("fiat sandbox checkout and activation are not implemented");
+    expect(() =>
+      loadConfig({
+        ...productionEnv,
+        FIAT_SANDBOX_ACTIVATION_ENABLED: "true",
+      }),
+    ).toThrow("fiat sandbox checkout and activation are not implemented");
   });
 
   it("accepts a complete production configuration", () => {
@@ -104,5 +116,8 @@ describe("loadConfig", () => {
     expect(config.nodeEnv).toBe("production");
     expect(config.smtp.auth?.user).toBe("smtp-user");
     expect(config.smtp.requireTls).toBe(true);
+    expect(config.features.fiatCatalog).toBe(true);
+    expect(config.features.fiatSandboxCheckout).toBe(false);
+    expect(config.features.fiatSandboxActivation).toBe(false);
   });
 });

@@ -549,6 +549,95 @@ export const storePurchaseResponseSchema = z.object({
   replayed: z.boolean(),
 });
 
+export const fiatProductKindSchema = z.enum([
+  "MINER",
+  "BOOST",
+  "CONSUMABLE",
+  "BUNDLE",
+]);
+export const fiatCatalogProductStateSchema = z.enum([
+  "AVAILABLE",
+  "COMING_SOON",
+  "DISABLED",
+]);
+export const fiatEntitlementStateSchema = z.enum([
+  "PURCHASED",
+  "ACTIVE",
+  "CONSUMED",
+  "EXPIRED",
+  "REFUND_PENDING",
+  "REFUNDED",
+  "REVOKED",
+]);
+const fiatEffectParameterSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+export const fiatEffectSchema = z.object({
+  type: z.string().min(1),
+  label: z.string().min(1),
+  parameters: z.record(fiatEffectParameterSchema),
+});
+export const fiatCatalogResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  mode: z.literal("SANDBOX"),
+  realChargeEnabled: z.literal(false),
+  provider: z.literal("MERCADO_PAGO"),
+  catalogEnabled: z.boolean(),
+  checkoutEnabled: z.boolean(),
+  activationEnabled: z.boolean(),
+  currency: z.literal("COP"),
+  exponent: z.literal(0),
+  disabledReason: z.string().nullable(),
+  products: z.array(
+    z.object({
+      productVersionId: z.string().uuid(),
+      sku: z.string().min(1),
+      version: z.number().int().positive(),
+      kind: fiatProductKindSchema,
+      state: fiatCatalogProductStateSchema,
+      reasonCode: z.string().nullable(),
+      name: z.string().min(1),
+      description: z.string().min(1),
+      price: z.object({
+        currency: z.literal("COP"),
+        minorUnits: z.string().regex(/^\d+$/),
+        exponent: z.literal(0),
+      }),
+      durationSeconds: z.number().int().positive().nullable(),
+      effect: fiatEffectSchema,
+      rewardEligible: z.literal(false),
+      refundPolicyVersion: z.string().min(1),
+      activationConsentVersion: z.string().min(1),
+    }),
+  ),
+});
+export const fiatInventoryResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  activationEnabled: z.boolean(),
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      orderId: z.string().uuid(),
+      productVersionId: z.string().uuid(),
+      sku: z.string().min(1),
+      name: z.string().min(1),
+      state: fiatEntitlementStateSchema,
+      quantity: z.number().int().positive(),
+      purchasedAt: z.string().datetime(),
+      activatedAt: z.string().datetime().nullable(),
+      startsAt: z.string().datetime().nullable(),
+      endsAt: z.string().datetime().nullable(),
+      canActivate: z.boolean(),
+      canRequestRefund: z.boolean(),
+      reasonCode: z.string().nullable(),
+      effect: fiatEffectSchema,
+    }),
+  ),
+});
+
 export const minerMutationRequestSchema = z.object({
   configVersion: z.number().int().positive(),
 });
@@ -1068,6 +1157,8 @@ export type MissionClaimResponse = z.infer<typeof missionClaimResponseSchema>;
 export type StorePurchaseRequest = z.infer<typeof storePurchaseRequestSchema>;
 export type StoreCatalogResponse = z.infer<typeof storeCatalogResponseSchema>;
 export type StorePurchaseResponse = z.infer<typeof storePurchaseResponseSchema>;
+export type FiatCatalogResponse = z.infer<typeof fiatCatalogResponseSchema>;
+export type FiatInventoryResponse = z.infer<typeof fiatInventoryResponseSchema>;
 export type MiningStatusResponse = z.infer<typeof miningStatusResponseSchema>;
 export type MinerMutationRequest = z.infer<typeof minerMutationRequestSchema>;
 export type MinerActionResponse = z.infer<typeof minerActionResponseSchema>;

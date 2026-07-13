@@ -2042,6 +2042,44 @@ html[data-theme="dark"] {
   object-fit: contain;
   filter: drop-shadow(0 20px 30px rgba(34, 211, 238, 0.14));
 }
+.storeTabs {
+  display: flex;
+  gap: 7px;
+  margin: 24px 0 0;
+  overflow-x: auto;
+  padding: 3px;
+  scrollbar-width: thin;
+}
+.storeTab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(229, 231, 235, 0.1);
+  border-radius: 9px;
+  color: var(--muted);
+  padding: 9px 13px;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.storeTab:hover {
+  border-color: rgba(34, 211, 238, 0.32);
+  color: var(--text);
+}
+.storeTab.active {
+  border-color: rgba(46, 230, 166, 0.38);
+  background: rgba(46, 230, 166, 0.09);
+  color: var(--green);
+}
+.storeTabBadge {
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.13);
+  color: #fbbf24;
+  padding: 2px 6px;
+  font-size: 8px;
+  letter-spacing: 0.07em;
+}
 .commerceSummary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2241,6 +2279,38 @@ html[data-theme="dark"] {
 }
 .storeCardAction button:disabled {
   cursor: not-allowed;
+}
+.storePhaseNotice,
+.storeEmpty {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 15px 18px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.storePhaseNotice strong,
+.storeEmpty strong {
+  color: var(--text);
+}
+.storeEmpty {
+  justify-items: start;
+  margin: 0;
+  border-color: rgba(34, 211, 238, 0.18);
+  background: rgba(34, 211, 238, 0.05);
+}
+.storeEmpty a {
+  margin-top: 5px;
+  color: var(--cyan);
+  font-weight: 800;
+  text-decoration: none;
+}
+.storeEmpty a:hover {
+  text-decoration: underline;
 }
 .commercePolicy,
 .miningFormula {
@@ -2664,6 +2734,8 @@ html[data-theme="dark"] {
 .gameResultActions .button:focus-visible,
 .rewardError button:focus-visible,
 .storeCardAction button:focus-visible,
+.storeTab:focus-visible,
+.storeEmpty a:focus-visible,
 .economicDialogActions button:focus-visible,
 .minerActions button:focus-visible,
 .miningSectionTitle a:focus-visible,

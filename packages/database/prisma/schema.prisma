@@ -106,6 +106,92 @@ enum StorePurchaseStatus {
   REVERSAL_PENDING
 }
 
+enum PaymentProvider {
+  MERCADOPAGO
+  STRIPE
+}
+
+enum PaymentEnvironment {
+  TEST
+  LIVE
+}
+
+enum FiatProductStatus {
+  DRAFT
+  COMING_SOON
+  ACTIVE
+  PAUSED
+  RETIRED
+}
+
+enum FiatProductKind {
+  MINER
+  BOOST
+  CONSUMABLE
+  BUNDLE
+}
+
+enum PaymentOrderStatus {
+  CREATED
+  CHECKOUT_READY
+  PENDING
+  PAID
+  REFUND_PENDING
+  REFUNDED
+  CANCELLED
+  EXPIRED
+  HELD
+  DISPUTED
+}
+
+enum PaymentAttemptStatus {
+  CREATED
+  CHECKOUT_READY
+  PENDING
+  APPROVED
+  DECLINED
+  CANCELLED
+  EXPIRED
+  HELD
+  ERROR
+  REFUNDED
+  CHARGEBACK
+}
+
+enum PaymentWebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  IGNORED
+  FAILED
+  DEAD_LETTER
+}
+
+enum EntitlementStatus {
+  PURCHASED
+  ACTIVE
+  CONSUMED
+  EXPIRED
+  REFUND_PENDING
+  REFUNDED
+  REVOKED
+}
+
+enum PaymentRefundStatus {
+  REQUESTED
+  APPROVED
+  SUBMITTED
+  SUCCEEDED
+  REJECTED
+  FAILED
+}
+
+enum PaymentRefundKind {
+  CUSTOMER_REQUEST
+  DUPLICATE_PAYMENT
+  TECHNICAL_FAILURE
+}
+
 enum MinerStatus {
   ACTIVE
   DISABLED
@@ -200,6 +286,8 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   profile                 UserProfile?
+  paymentOrders           PaymentOrder[]
+  requestedPaymentRefunds PaymentRefund[]          @relation("PaymentRefundRequester")
 }
 
 model UserProfile {
@@ -502,6 +590,7 @@ model EconomicConfigVersion {
   miningEpochs          MiningEpoch[]
   monetizableActivities MonetizableActivity[]
   referralCommissions   ReferralCommission[]
+  fiatProductVersions   FiatProductVersion[]
 }
 
 model FaucetChallenge {
@@ -664,6 +753,198 @@ model StorePurchase {
   @@index([ruleVersion, periodDate, status])
 }
 
+model FiatProductVersion {
+  id                       String                 @id @default(uuid())
+  sku                      String
+  version                  Int
+  displayOrder             Int
+  status                   FiatProductStatus      @default(DRAFT)
+  kind                     FiatProductKind
+  name                     String
+  description              String
+  content                  Json                   @default("{}")
+  currency                 String                 @db.Char(3)
+  unitAmountMinor          Decimal                @db.Decimal(36, 0)
+  durationSeconds          Int?
+  effectType               String
+  effectConfig             Json                   @default("{}")
+  ruleVersion              Int?
+  refundPolicyVersion      String
+  refundWindowBusinessDays Int                    @default(5)
+  saleStartsAt             DateTime?
+  saleEndsAt               DateTime?
+  publishedAt              DateTime?
+  retiredAt                DateTime?
+  createdAt                DateTime               @default(now())
+  config                   EconomicConfigVersion? @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  orders                   PaymentOrder[]
+
+  @@unique([sku, version])
+  @@index([sku, status])
+  @@index([status, displayOrder])
+  @@index([status, currency, saleStartsAt, saleEndsAt])
+}
+
+model PaymentOrder {
+  id                  String                @id @default(uuid())
+  userId              String
+  productVersionId    String
+  provider            PaymentProvider
+  environment         PaymentEnvironment
+  idempotencyKey      String                @unique
+  requestHash         String
+  externalReference   String                @unique
+  status              PaymentOrderStatus    @default(CREATED)
+  quantity            Int                   @default(1)
+  currency            String                @db.Char(3)
+  unitAmountMinor     Decimal               @db.Decimal(36, 0)
+  totalAmountMinor    Decimal               @db.Decimal(36, 0)
+  productSnapshot     Json
+  termsVersion        String
+  refundPolicyVersion String
+  paidAttemptId       String?               @unique
+  checkoutExpiresAt   DateTime?
+  paidAt              DateTime?
+  refundEligibleUntil DateTime?
+  refundPendingAt     DateTime?
+  cancelledAt         DateTime?
+  expiredAt           DateTime?
+  refundedAt          DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  productVersion      FiatProductVersion    @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+  attempts            PaymentAttempt[]      @relation("PaymentOrderAttempts")
+  paidAttempt         PaymentAttempt?       @relation("PaymentOrderPaidAttempt", fields: [paidAttemptId], references: [id], onDelete: Restrict)
+  webhookEvents       PaymentWebhookInbox[]
+  entitlement         Entitlement?
+  refunds             PaymentRefund[]
+
+  @@index([userId, status, createdAt])
+  @@index([provider, environment, status, createdAt])
+  @@index([productVersionId, status, createdAt])
+}
+
+model PaymentAttempt {
+  id                     String                @id @default(uuid())
+  orderId                String
+  attemptNo              Int
+  provider               PaymentProvider
+  environment            PaymentEnvironment
+  providerIdempotencyKey String                @unique
+  providerCheckoutId     String?
+  providerPaymentId      String?
+  status                 PaymentAttemptStatus  @default(CREATED)
+  providerStatus         String?
+  providerStatusDetail   String?
+  observedAmountMinor    Decimal?              @db.Decimal(36, 0)
+  observedCurrency       String?               @db.Char(3)
+  verificationEvidence   Json                  @default("{}")
+  checkoutUrl            String?               @db.Text
+  expiresAt              DateTime?
+  approvedAt             DateTime?
+  failedAt               DateTime?
+  lastProviderSyncAt     DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  order                  PaymentOrder          @relation("PaymentOrderAttempts", fields: [orderId], references: [id], onDelete: Restrict)
+  paidForOrder           PaymentOrder?         @relation("PaymentOrderPaidAttempt")
+  webhookEvents          PaymentWebhookInbox[]
+  refund                 PaymentRefund?
+
+  @@unique([orderId, attemptNo])
+  @@unique([provider, environment, providerCheckoutId])
+  @@unique([provider, environment, providerPaymentId])
+  @@index([orderId, status, createdAt])
+}
+
+model PaymentWebhookInbox {
+  id                  String               @id @default(uuid())
+  provider            PaymentProvider
+  environment         PaymentEnvironment
+  dedupeKey           String
+  providerEventId     String?
+  providerObjectId    String?
+  status              PaymentWebhookStatus @default(RECEIVED)
+  signatureVerifiedAt DateTime?
+  payloadHash         String
+  payload             Json?
+  orderId             String?
+  attemptId           String?
+  attemptCount        Int                  @default(0)
+  nextRetryAt         DateTime?
+  lockedAt            DateTime?
+  lastErrorCode       String?
+  processedAt         DateTime?
+  receivedAt          DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  order               PaymentOrder?        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  attempt             PaymentAttempt?      @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, environment, dedupeKey])
+  @@index([status, nextRetryAt, receivedAt])
+  @@index([provider, environment, providerObjectId])
+  @@index([orderId, receivedAt])
+}
+
+model Entitlement {
+  id                       String            @id @default(uuid())
+  orderId                  String            @unique
+  status                   EntitlementStatus @default(PURCHASED)
+  activationIdempotencyKey String?           @unique
+  activationRequestHash    String?
+  effectType               String
+  effectSnapshot           Json
+  effectRef                String?
+  purchasedAt              DateTime          @default(now())
+  activatedAt              DateTime?
+  startsAt                 DateTime?
+  endsAt                   DateTime?
+  consumedAt               DateTime?
+  refundPendingAt          DateTime?
+  refundedAt               DateTime?
+  revokedAt                DateTime?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  order                    PaymentOrder      @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  miner                    UserMiner?        @relation("FiatEntitlementMiner")
+
+  @@index([status, purchasedAt])
+}
+
+model PaymentRefund {
+  id               String              @id @default(uuid())
+  orderId          String
+  attemptId        String              @unique
+  requestedById    String?
+  provider         PaymentProvider
+  environment      PaymentEnvironment
+  kind             PaymentRefundKind
+  status           PaymentRefundStatus @default(REQUESTED)
+  idempotencyKey   String              @unique
+  requestHash      String
+  amountMinor      Decimal             @db.Decimal(36, 0)
+  currency         String              @db.Char(3)
+  reasonCode       String
+  reasonDetail     String?
+  providerRefundId String?
+  providerStatus   String?
+  requestedAt      DateTime            @default(now())
+  reviewedAt       DateTime?
+  submittedAt      DateTime?
+  completedAt      DateTime?
+  failedAt         DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  order            PaymentOrder        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  attempt          PaymentAttempt      @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+  requestedBy      User?               @relation("PaymentRefundRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  @@unique([provider, environment, providerRefundId])
+  @@index([orderId, status, createdAt])
+  @@index([provider, environment, status, createdAt])
+}
+
 model MiningProfile {
   userId             String                @id
   energyCreditMillis Decimal               @db.Decimal(36, 0)
@@ -678,30 +959,35 @@ model MiningProfile {
 }
 
 model UserMiner {
-  id               String                @id @default(uuid())
-  userId           String
-  modelId          String
-  name             String
-  tier             String
-  status           MinerStatus           @default(ACTIVE)
-  slot             Int
-  level            Int                   @default(1)
-  hashRate         Int
-  energyPerHour    Int
-  efficiencyBps    Int
-  durabilityBps    Int                   @default(10000)
-  ruleVersion      Int
-  sourcePurchaseId String?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  user             User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
-  config           EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
-  sourcePurchase   StorePurchase?        @relation(fields: [sourcePurchaseId], references: [id], onDelete: Restrict)
-  actions          MinerAction[]
+  id                  String                @id @default(uuid())
+  userId              String
+  modelId             String
+  name                String
+  tier                String
+  status              MinerStatus           @default(ACTIVE)
+  slot                Int
+  level               Int                   @default(1)
+  hashRate            Int
+  energyPerHour       Int
+  efficiencyBps       Int
+  durabilityBps       Int                   @default(10000)
+  ruleVersion         Int
+  sourcePurchaseId    String?
+  sourceEntitlementId String?
+  expiresAt           DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  config              EconomicConfigVersion @relation(fields: [ruleVersion], references: [id], onDelete: Restrict)
+  sourcePurchase      StorePurchase?        @relation(fields: [sourcePurchaseId], references: [id], onDelete: Restrict)
+  sourceEntitlement   Entitlement?          @relation("FiatEntitlementMiner", fields: [sourceEntitlementId], references: [id], onDelete: Restrict)
+  actions             MinerAction[]
 
   @@unique([sourcePurchaseId])
+  @@unique([sourceEntitlementId])
   @@unique([userId, slot])
   @@index([userId, status, createdAt])
+  @@index([userId, status, expiresAt])
 }
 
 model MinerAction {
