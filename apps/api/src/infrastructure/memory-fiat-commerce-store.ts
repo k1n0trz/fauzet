@@ -2,6 +2,7 @@ import type { FiatCommerceStore } from "../domain/fiat-commerce.js";
 import {
   FIAT_ACTIVATION_CONSENT_VERSION,
   FIAT_CATALOG_PRODUCTS,
+  FIAT_CHECKOUT_TERMS_VERSION,
   FIAT_REFUND_POLICY_VERSION,
 } from "../domain/fiat-catalog.js";
 
@@ -13,6 +14,7 @@ export class MemoryFiatCommerceStore implements FiatCommerceStore {
       mode: "SANDBOX" as const,
       realChargeEnabled: false as const,
       provider: "MERCADO_PAGO" as const,
+      checkoutTermsVersion: FIAT_CHECKOUT_TERMS_VERSION,
       catalogEnabled: flags.catalogEnabled,
       checkoutEnabled: flags.checkoutEnabled,
       activationEnabled: flags.activationEnabled,

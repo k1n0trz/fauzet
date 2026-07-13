@@ -18,6 +18,7 @@
     "db:seed": "corepack pnpm --filter @fauzet/database seed",
     "mining:settle": "corepack pnpm --filter @fauzet/api mining:settle",
     "referrals:release": "corepack pnpm --filter @fauzet/api referrals:release",
+    "fiat:reconcile": "corepack pnpm --filter @fauzet/api fiat:reconcile",
     "admin:grant": "corepack pnpm --filter @fauzet/api admin:grant"
   },
   "devDependencies": {

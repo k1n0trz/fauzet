@@ -261,3 +261,4 @@ export const FIAT_CATALOG_PRODUCTS: readonly FiatCatalogSeedProduct[] = [
 
 export const FIAT_REFUND_POLICY_VERSION = "fiat-beta-2026-07-13";
 export const FIAT_ACTIVATION_CONSENT_VERSION = "fiat-activation-2026-07-13";
+export const FIAT_CHECKOUT_TERMS_VERSION = "fiat-checkout-sandbox-2026-07-13";

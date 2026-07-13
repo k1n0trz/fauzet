@@ -1,7 +1,7 @@
 # Fauzet / ZYXE — Diagnóstico y roadmap técnico integral
 
 **Fecha:** 13 de julio de 2026
-**Estado:** beta cerrada técnica desplegada; frontend canónico, API y migraciones publicados y verificados en producción
+**Estado:** beta cerrada base desplegada; candidato de release Mercado Pago TEST implementado y validado, todavía sin promover a producción
 **Fuentes canónicas:** `data/Fauzet_Ficha_Tecnica_Funcionamiento_v0.1.docx` y `data/Fauzet_ZYXE_Documentacion_Tecnica_Economica_v0.1.docx`
 
 ## 0. Estado canónico — revisión corregida del 13 de julio de 2026
@@ -33,38 +33,41 @@ La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 
 
 ### 0.2 Dónde estamos realmente
 
-| Área            | Activo en producción                                                              | Completado en este release                                                                                                              | Pendiente real                                                                              |
-| --------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Frontend        | `apps/web` fiel a la landing, autenticación y shell aprobados, servido por Vercel | Landing Claude, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales y smoke superado | Continuar la fidelidad y funcionalidad de cada vertical especializada                       |
-| Backend         | Fastify en Cloud Run, revisión `fauzet-api-00003-feg` con 100% del tráfico        | Rutas de perfil e historial personal; corrección de contexto Faucet                                                                     | Monitoreo, alertas, métricas operativas y siguientes integraciones                          |
-| Datos           | PostgreSQL en Cloud SQL, ledger y 21 migraciones aplicadas                        | Esquema fiat aditivo con productos, órdenes, intentos, webhooks, inventario y reembolsos; catálogo COP sembrado sin productos activos   | Outbox, conciliación automática, alertas y reportes operativos                              |
-| Email           | Resend verificado; registro y activación por correo comprobados                   | —                                                                                                                                       | Monitorear rebotes/entrega y probar recuperación periódicamente                             |
-| Auth            | Registro, login, verificación, recuperación y sesiones persistentes               | UI de seguridad/perfil ampliada                                                                                                         | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                 |
-| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side           | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites; rutas publicadas y probadas                                        | Reconciliar pools y reforzar controles operativos                                           |
-| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                             | Pruebas unitarias/integración verdes                                                                                                    | Reconciliación automática, alertas y reportes operativos                                    |
-| Conversión      | Sandbox sin valor real                                                            | Sección Swap marcada como futura                                                                                                        | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                          |
-| Pagos fiat      | Catálogo e inventario sandbox informativos; cobros y activaciones bloqueados      | Contratos, persistencia, API y vistas separadas de la tienda ZYXE; gates fail-closed y 13 productos COP sin recompensas                 | Checkout MP, webhook firmado, verificación del pago, fulfillment, reembolsos y conciliación |
-| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                                   | PR #2 fusionado; CI verde; backup, migraciones, API/jobs y Vercel promovidos; GA, GTM y Clarity bajo consentimiento                     | Observabilidad y alertas mínimas de producción                                              |
+| Área            | Activo en producción                                                              | Completado / candidato actual                                                                                                                                  | Pendiente real                                                                                           |
+| --------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Frontend        | `apps/web` fiel a la landing, autenticación y shell aprobados, servido por Vercel | Landing Claude, dashboard, rail global, wallet/historial, ajustes, favicon y admin portados a Next.js con datos reales y smoke superado                        | Continuar la fidelidad y funcionalidad de cada vertical especializada                                    |
+| Backend         | Fastify en Cloud Run, revisión `fauzet-api-00003-feg` con 100% del tráfico        | Rutas de perfil e historial personal; corrección de contexto Faucet                                                                                            | Monitoreo, alertas, métricas operativas y siguientes integraciones                                       |
+| Datos           | PostgreSQL en Cloud SQL, ledger y 21 migraciones aplicadas                        | Candidato con migración 22: hardening de pagos, órdenes, intentos, webhook inbox, inventario y reembolsos                                                      | Aplicar la migración 22 al publicar; outbox, alertas y reportes operativos                               |
+| Email           | Resend verificado; registro y activación por correo comprobados                   | —                                                                                                                                                              | Monitorear rebotes/entrega y probar recuperación periódicamente                                          |
+| Auth            | Registro, login, verificación, recuperación y sesiones persistentes               | UI de seguridad/perfil ampliada                                                                                                                                | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                              |
+| Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side           | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites; rutas publicadas y probadas                                                               | Reconciliar pools y reforzar controles operativos                                                        |
+| Economía        | Ledger de doble partida, siete buckets y ZYXE interno                             | Pruebas unitarias/integración verdes                                                                                                                           | Reconciliación automática, alertas y reportes operativos                                                 |
+| Conversión      | Sandbox sin valor real                                                            | Sección Swap marcada como futura                                                                                                                               | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                                       |
+| Pagos fiat      | Catálogo e inventario sandbox informativos; cobros y activaciones bloqueados      | Candidato fail-closed con Checkout Pro TEST, órdenes idempotentes, webhook firmado, verificación server-to-server, fulfillment exact-once y frontend conectado | Configurar webhook `Pagos` y secret, ejecutar prueba allowlisted; luego recibos, reembolsos y activación |
+| Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                                   | PR #2 fusionado; CI verde; backup, migraciones, API/jobs y Vercel promovidos; GA, GTM y Clarity bajo consentimiento                                            | Observabilidad y alertas mínimas de producción                                                           |
 
-**Conclusión:** el núcleo de la beta cerrada está publicado con frontend aprobado y autoridad server-side. La prioridad inmediata pasa a ser observabilidad y el agregado de pagos fiat en sandbox; dinero real continúa bloqueado.
+**Conclusión:** el núcleo de la beta cerrada sigue publicado con frontend aprobado y autoridad server-side. El checkout Mercado Pago TEST ya existe como candidato validado, pero no se considera liberado ni operativo hasta configurar el webhook firmado, ejecutar la prueba allowlisted y completar la promoción controlada. Dinero real y activación continúan bloqueados.
 
 ### 0.3 Qué está probado
 
 - Registro, entrega de correo y activación real de cuenta con Resend: confirmados.
 - Backend, ledger, Faucet, rewards y flujos sandbox: cubiertos por pruebas automatizadas.
-- Suite local: formato del alcance modificado, lint, tipos, build productivo de 25 rutas, 19 pruebas web y 97 pruebas API con integración PostgreSQL: verdes.
+- Release base: formato, lint, tipos, build productivo de 25 rutas, 19 pruebas web y 97 pruebas API con integración PostgreSQL: verdes.
+- Candidato Mercado Pago TEST: contratos, adaptador, órdenes, verificación de webhook/pago, persistencia PostgreSQL, reconciliación y frontend cubiertos por pruebas unitarias y de integración; suite API con PostgreSQL 140/140, web 25/25 y build productivo de 25 rutas verdes.
 - Cloud Run, Cloud SQL y Vercel: operativos.
-- Credenciales de prueba de Mercado Pago: configuradas por el propietario; no deben copiarse al código, chat ni GitHub.
-- Claves publicable y secreta de Stripe: prefijos de test validados localmente sin mostrar valores; integración y webhook aún no existen.
+- Credenciales de prueba de Mercado Pago: Access Token validado mediante `/users/me` y coincidente con el Seller User ID numérico; Application ID detectado y validado únicamente como valor numérico, sin verificación remota contra Mercado Pago. Falta el secret que Mercado Pago genera al registrar el webhook `Pagos`.
+- Claves publicable y secreta de Stripe: presentes en modo test y validadas localmente sin mostrar valores; Stripe no está integrado y no participa en este candidato.
 - Google Analytics `G-W8GWS1R97E`, Google Tag Manager `GTM-TVLTFNJG` y Microsoft Clarity `xly1yjpewc`: disponibles únicamente en producción, bloqueados hasta consentimiento y descargados al entrar a la app mediante navegación completa.
 - Release de producción: PR #2 fusionado en `main` (`1597750`), CI verde, backup `pre-release-59d28f6d241a` exitoso y candidata API validada antes de recibir tráfico.
+- Nuevo candidato Mercado Pago TEST: implementación y QA local completos con 22 migraciones totales; todavía no se afirma desplegado, migrado ni promovido en producción.
 - `fauzet.app`: landing canónica, app, ajustes, wallet, admin, términos, privacidad y assets con respuesta `200`; proxy sin sesión responde `401`.
 
 ### 0.4 Qué todavía no puede considerarse terminado
 
 - Las verticales especializadas aún requieren iteración de fidelidad y funcionalidad; juegos futuros, Vault, swap y retiros continúan rotulados como no disponibles.
-- No hay pagos Mercado Pago funcionando: tener credenciales no equivale a checkout, webhook ni conciliación.
+- El checkout Mercado Pago TEST está implementado, pero aún no puede considerarse operativo: el propietario debe registrar el webhook `Pagos`, guardar su secret y completar una compra allowlisted de extremo a extremo.
 - No hay pagos Stripe funcionando: las claves test no equivalen a checkout, PaymentIntent, webhook ni conciliación.
+- Reembolsos iniciados por el usuario, recibos/comprobantes y activación de los productos fiat siguen pendientes; ningún checkout TEST entrega ZYXE ni habilita dinero real.
 - Firebase/Google Auth, KYC, custodia y demás terceros siguen pendientes o en proceso.
 - No hay criptomonedas reales, swaps reales, depósitos ni retiros on-chain habilitados.
 - Minería sigue siendo virtual y recompensa ZYXE desde un pool interno.
@@ -135,26 +138,28 @@ No compartas claves privadas, seed phrases ni API secrets por chat o GitHub. Cua
 
 - [x] Proyecto GCP `fauzet` y dominio `fauzet.app`.
 - [x] Resend verificado y correos reales de activación comprobados.
-- [x] Credenciales de prueba de Mercado Pago configuradas.
+- [x] Access Token de Mercado Pago TEST validado mediante `/users/me` y coincidente con el Seller User ID numérico; Application ID configurado y validado únicamente como numérico, sin verificación remota.
 - [x] Claves publicable y secreta de Stripe en modo test configuradas localmente y validadas por prefijo, sin exponer valores.
 - [x] Tabla inicial de boosts/mineros, precios COP y política operativa de reembolso en `data/Fauzet_Tabla_Boosts_Mineros_y_Politica_Reembolsos_v0.1.docx`.
 - [x] País base informado: Colombia, con RUT y operación inicial a título/estructura local por definir legalmente.
 - [x] Presupuesto exploratorio informado: aproximadamente 300.000 COP.
 
-#### B. Mercado Pago — lo próximo que debes decidir
+#### B. Mercado Pago — tu siguiente acción obligatoria
 
-1. El valor configurado con prefijo `APP_USR-` es compatible con un **Access Token de prueba**; no lo cambies ni lo envíes por chat. Desarrollo lo validará creando una preferencia sandbox antes de habilitar checkout.
-2. Busca en Mercado Pago Developers el **Seller User ID numérico** de la cuenta vendedora de prueba. La variable actual llamada “API user” parece otro token y no sirve como ese ID.
-3. Déjalo únicamente en variables locales/Secret Manager bajo `MERCADOPAGO_SELLER_USER_ID`; comparte solo el nombre del secreto, nunca el valor.
-4. La moneda inicial del checkout queda definida como `COP` por el catálogo entregado.
-5. La tabla inicial de productos ya fue entregada: en beta se priorizarán los mineros Dripper Mini, Flow One y Aqua Rig; boosts y mineros superiores permanecen cerrados hasta implementar sus efectos server-side.
-6. La política preliminar ya fue entregada: solicitud dentro de cinco días hábiles mientras el producto no haya sido activado/consumido ni generado beneficios, sujeta a los casos y derechos legales aplicables.
-7. Cuando desarrollo entregue la URL HTTPS, regístrala como webhook de pagos en Mercado Pago y guarda el secreto de firma en Secret Manager como `MERCADOPAGO_WEBHOOK_SECRET`.
-8. Crea o conserva las cuentas de comprador/vendedor de prueba que proporcione MP; no uses una compra real durante sandbox.
+1. No cambies ni compartas el Access Token, Seller User ID o Application ID. El Access Token fue validado mediante `/users/me` y coincide con el Seller User ID; el Application ID sólo fue detectado y validado como numérico, no verificado remotamente contra Mercado Pago.
+2. Usa el endpoint estable `https://fauzet-api-4day2f4t7q-uc.a.run.app/v1/fiat/webhooks/mercadopago`; el código de la ruta se publica en este release, pero checkout sigue cerrado.
+3. En Mercado Pago Developers abre tu aplicación y entra a **Webhooks → Configurar notificaciones**.
+4. En el ambiente de prueba registra esa URL HTTPS y selecciona el evento **Pagos**.
+5. Guarda la configuración y copia el secret de firma generado directamente a Google Secret Manager como `fauzet-mercadopago-webhook-secret`; Cloud Run lo expondrá al proceso bajo la variable `MERCADOPAGO_WEBHOOK_SECRET`. No lo pegues en chat, GitHub, Vercel ni archivos versionados.
+6. Comunica únicamente que el secret ya existe y cuál es su nombre; desarrollo lo conectará al servicio sin mostrar su valor.
+7. Después del despliegue y del secret, habilitaremos el checkout sólo para el usuario de prueba allowlisted. Ejecuta una compra en ventana incógnita con la cuenta compradora y los medios TEST de Mercado Pago; no uses dinero, cuenta ni tarjeta reales.
+8. Confirma que el retorno muestra primero verificación pendiente y que el inventario aparece únicamente después del webhook y la consulta server-to-server. La URL de retorno nunca acredita el producto.
+9. La moneda inicial permanece en `COP`; Dripper Mini será el primer SKU de la prueba controlada. Los demás productos continúan cerrados hasta superar esta validación y disponer de efectos server-side.
+10. La política preliminar mantiene la ventana de cinco días hábiles antes de activación/consumo/beneficio, pero el flujo de solicitud de reembolso todavía no está implementado.
 
 **Nombres que usará el runtime:** `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`, `MERCADOPAGO_APPLICATION_ID`, `MERCADOPAGO_SELLER_USER_ID` y `MERCADOPAGO_MODE=test`. Access Token y secreto del webhook vivirán únicamente en Secret Manager; usuario, contraseña y código de comprador de prueba no pertenecen al runtime.
 
-**Lo que hará desarrollo:** detectar la configuración sin exponerla, crear el adaptador, órdenes, checkout, webhook firmado/idempotente, acreditación exact-once, reembolsos, contracargos, recibos y conciliación.
+**Estado de desarrollo:** adaptador, órdenes idempotentes, Checkout Pro TEST, webhook firmado/deduplicado, consulta autoritativa del pago, fulfillment exact-once, reconciliación y frontend están implementados en el candidato. Falta conectar el secret generado por el propietario, ejecutar la compra allowlisted y completar la promoción. Reembolsos, recibos y activación siguen pendientes.
 
 #### C. Stripe — en proceso por ti
 
@@ -250,21 +255,27 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 
 #### R3 — Mercado Pago sandbox y monetización fiat
 
-- [x] Credenciales de prueba de Mercado Pago configuradas por el propietario.
+- [x] Access Token de Mercado Pago TEST validado mediante `/users/me` y coincidente con el Seller User ID numérico; Application ID detectado y validado sólo como numérico, sin verificación remota.
 - [x] Catálogo fiat COP y política preliminar de reembolsos entregados.
-- [x] Verificar presencia de la configuración actual sin imprimirla ni versionarla; el token `APP_USR-` es compatible con test, pero falta Seller User ID numérico y webhook secret.
+- [x] Verificar mediante `/users/me` que el Access Token corresponde al vendedor TEST configurado; validar localmente que el Application ID sea numérico, sin afirmar verificación remota. Falta únicamente el secret de firma que se genera al registrar el webhook `Pagos`.
 - [x] Diseñar la separación obligatoria entre compra ZYXE actual y compra fiat con inventario/activación posterior.
 - [x] Modelos versionados `FiatProductVersion`, `PaymentOrder`, `PaymentAttempt`, `PaymentWebhookInbox`, `Entitlement` y `PaymentRefund`, con constraints de importe, identidad, pago y fulfillment.
-- [x] Catálogo COP e inventario autoritativo en API/web, separados de la tienda ZYXE; sin órdenes, cobros, activaciones ni recompensas ZYXE.
-- [x] Gates `FIAT_CATALOG_ENABLED`, `FIAT_SANDBOX_CHECKOUT_ENABLED` y `FIAT_SANDBOX_ACTIVATION_ENABLED`; producción rechaza checkout/activación mientras no estén implementados.
-- [ ] Outbox, worker de conciliación y estados explícitos de contracargo.
-- [ ] Adaptador de pagos abstracto con Mercado Pago Checkout Pro como proveedor sandbox inicial.
-- [ ] Checkout alojado, webhooks firmados e idempotentes y fulfillment efectivamente una vez.
-- [ ] Órdenes, pagos, inventario, activación, recibos, reembolsos totales no activados y contracargos.
+- [x] Migración 22 candidata con hardening de órdenes/intentos/webhook inbox, snapshots económicos, ownership y fulfillment.
+- [x] Catálogo COP, creación/consulta de órdenes e inventario autoritativo conectados entre API y frontend, separados de la tienda ZYXE.
+- [x] Gates `FIAT_CATALOG_ENABLED`, `FIAT_SANDBOX_CHECKOUT_ENABLED` y `FIAT_SANDBOX_ACTIVATION_ENABLED`; checkout sólo puede operar en TEST con configuración completa y activación/dinero real permanecen fail-closed.
+- [x] Adaptador de pagos abstracto con Mercado Pago Checkout Pro como proveedor sandbox inicial.
+- [x] Checkout alojado, webhook con firma/dedupe, verificación server-to-server y fulfillment exact-once implementados y cubiertos por pruebas unitarias/integración.
+- [x] Worker de reconciliación y estados explícitos para retención, disputa, devolución y contracargo; outbox/alertas operativas siguen pendientes.
+- [x] Frontend TEST conectado: CTA gated, consentimiento, clave idempotente, redirección alojada y vista de orden que ignora parámetros de retorno y consulta sólo al servidor.
+- [ ] Propietario: registrar la URL HTTPS en Webhooks, seleccionar `Pagos` y crear `MERCADOPAGO_WEBHOOK_SECRET` en Secret Manager.
+- [ ] Desplegar como candidato aislado y ejecutar una compra completa con usuario allowlisted, cuenta compradora y medios Mercado Pago TEST.
+- [ ] Implementar solicitud/ejecución de reembolsos, recibos/comprobantes y activación explícita; hasta entonces el entitlement permanece `PURCHASED` sin efecto.
 - [ ] Implementar mineros temporales y los efectos server-side del catálogo antes de vender cada SKU.
 - [ ] Conciliación diaria y separación entre ingresos, impuestos, rewards y owner available.
-- [x] Claves Stripe test validadas por prefijo; falta normalizar nombres y crear el webhook.
+- [x] Claves Stripe test presentes y validadas por prefijo; Stripe no está integrado y no participa en este candidato.
 - [ ] Stripe como segundo proveedor solo después de estabilizar MP y aprobar la cuenta/modelo de negocio.
+
+**Estado del candidato R3:** implementación y QA completos con 22 migraciones totales, pero sin afirmación de despliegue o promoción. `FIAT_SANDBOX_ACTIVATION_ENABLED=false` y `REAL_MONEY_ENABLED=false` son condiciones obligatorias de esta prueba.
 
 #### R4 — Piloto cripto real con un activo
 
@@ -566,6 +577,8 @@ Callbacks sandbox/reales de proveedor, rewarded ads/offerwall, catálogo/boosts,
 
 **Gate:** unit economics observables, callback firmado y reversible, fraude dentro del umbral, aprobación legal del modelo referral.
 
+**Estado del candidato actual:** Mercado Pago Checkout Pro TEST está implementado en modo fail-closed, conectado al frontend y cubierto por pruebas unitarias y de integración. El candidato incluye 22 migraciones totales, pero todavía no se afirma desplegado ni promovido. Falta que el propietario registre el webhook `Pagos`, guarde su secret, ejecute la compra TEST con un usuario allowlisted y autorice la promoción sólo si la verificación completa es verde. La activación del inventario y cualquier operación con dinero real permanecen apagadas; reembolsos y recibos siguen pendientes.
+
 ### Fase 3 — Beta pública controlada
 
 Vault interno, temporadas, risk engine avanzado, KYC por umbral, conversiones y retiros sandbox; luego piloto real allowlisted, manual y de límites bajos con un solo activo.
@@ -646,9 +659,9 @@ Estimación relativa: S (1–3 d), M (3–7 d), L (1–2 sem), XL (requiere divi
 
 ## 18. Now / Next / Later
 
-| Now                                                                                  | Next                                                                                                      | Later                                                                   |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Fundación, ADRs, encoding, auth, ledger, dashboard, faucet, dos juegos, admin básico | Monetización, store, mining, referrals gateados, Vault interno, antifraude, treasury, sandbox withdrawals | Piloto real, marketplace, más activos, apps, token público condicionado |
+| Now                                                                                                                                                                              | Next                                                                                                                                                                                           | Later                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Candidato Mercado Pago TEST fail-closed: checkout, webhook firmado, reconciliación y frontend validados; 22 migraciones totales; todavía sin despliegue o promoción confirmados. | Desplegar el candidato aislado; propietario configura webhook `Pagos` y secret; ejecutar prueba allowlisted; promover sólo si queda verde; luego implementar recibos, reembolsos y activación. | Integrar Stripe como segundo proveedor; piloto real y cripto sólo tras gates legales, de custodia, reservas y seguridad; marketplace, apps y token público condicionado. |
 
 ## 19. Checklist maestro de salida a producción
 

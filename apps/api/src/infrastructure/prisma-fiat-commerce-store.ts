@@ -4,7 +4,10 @@ import type {
 } from "@fauzet/contracts";
 import { getDatabase, type PrismaClient } from "@fauzet/database";
 import type { FiatCommerceStore } from "../domain/fiat-commerce.js";
-import { FIAT_ACTIVATION_CONSENT_VERSION } from "../domain/fiat-catalog.js";
+import {
+  FIAT_ACTIVATION_CONSENT_VERSION,
+  FIAT_CHECKOUT_TERMS_VERSION,
+} from "../domain/fiat-catalog.js";
 
 export class PrismaFiatCommerceStore implements FiatCommerceStore {
   constructor(
@@ -31,6 +34,7 @@ export class PrismaFiatCommerceStore implements FiatCommerceStore {
       mode: "SANDBOX",
       realChargeEnabled: false,
       provider: "MERCADO_PAGO",
+      checkoutTermsVersion: FIAT_CHECKOUT_TERMS_VERSION,
       catalogEnabled: flags.catalogEnabled,
       checkoutEnabled: flags.checkoutEnabled,
       activationEnabled: flags.activationEnabled,

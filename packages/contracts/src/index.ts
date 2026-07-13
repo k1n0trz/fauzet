@@ -585,6 +585,7 @@ export const fiatCatalogResponseSchema = z.object({
   mode: z.literal("SANDBOX"),
   realChargeEnabled: z.literal(false),
   provider: z.literal("MERCADO_PAGO"),
+  checkoutTermsVersion: z.string().min(1).max(128),
   catalogEnabled: z.boolean(),
   checkoutEnabled: z.boolean(),
   activationEnabled: z.boolean(),
@@ -636,6 +637,68 @@ export const fiatInventoryResponseSchema = z.object({
       effect: fiatEffectSchema,
     }),
   ),
+});
+
+export const fiatPaymentOrderStatusSchema = z.enum([
+  "CREATED",
+  "CHECKOUT_READY",
+  "PENDING",
+  "PAID",
+  "REFUND_PENDING",
+  "REFUNDED",
+  "CANCELLED",
+  "EXPIRED",
+  "HELD",
+  "DISPUTED",
+]);
+
+export const fiatCheckoutRequestSchema = z
+  .object({
+    productVersionId: z.string().uuid(),
+    quantity: z.literal(1),
+    termsVersion: z.string().trim().min(1).max(128),
+    refundPolicyVersion: z.string().trim().min(1).max(128),
+  })
+  .strict();
+
+const fiatCheckoutSchema = z.object({
+  preferenceId: z.string().min(1).max(256),
+  url: z
+    .string()
+    .url()
+    .refine((value) => new URL(value).protocol === "https:", {
+      message: "Checkout URL must use HTTPS",
+    }),
+  expiresAt: z.string().datetime(),
+});
+
+export const fiatOrderResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  mode: z.literal("SANDBOX"),
+  realChargeEnabled: z.literal(false),
+  provider: z.literal("MERCADO_PAGO"),
+  environment: z.literal("TEST"),
+  order: z.object({
+    id: z.string().uuid(),
+    status: fiatPaymentOrderStatusSchema,
+    productVersionId: z.string().uuid(),
+    sku: z.string().min(1),
+    name: z.string().min(1),
+    quantity: z.literal(1),
+    price: z.object({
+      currency: z.literal("COP"),
+      minorUnits: z.string().regex(/^\d+$/),
+      exponent: z.literal(0),
+    }),
+    termsVersion: z.string().min(1),
+    refundPolicyVersion: z.string().min(1),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+    checkout: fiatCheckoutSchema.nullable(),
+    entitlementId: z.string().uuid().nullable(),
+    reasonCode: z.string().nullable(),
+  }),
+  replayed: z.boolean(),
 });
 
 export const minerMutationRequestSchema = z.object({
@@ -1159,6 +1222,11 @@ export type StoreCatalogResponse = z.infer<typeof storeCatalogResponseSchema>;
 export type StorePurchaseResponse = z.infer<typeof storePurchaseResponseSchema>;
 export type FiatCatalogResponse = z.infer<typeof fiatCatalogResponseSchema>;
 export type FiatInventoryResponse = z.infer<typeof fiatInventoryResponseSchema>;
+export type FiatCheckoutRequest = z.infer<typeof fiatCheckoutRequestSchema>;
+export type FiatOrderResponse = z.infer<typeof fiatOrderResponseSchema>;
+export type FiatPaymentOrderStatus = z.infer<
+  typeof fiatPaymentOrderStatusSchema
+>;
 export type MiningStatusResponse = z.infer<typeof miningStatusResponseSchema>;
 export type MinerMutationRequest = z.infer<typeof minerMutationRequestSchema>;
 export type MinerActionResponse = z.infer<typeof minerActionResponseSchema>;

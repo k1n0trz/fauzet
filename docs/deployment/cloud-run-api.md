@@ -52,7 +52,12 @@ Usar cuentas de servicio distintas y sin claves descargadas:
 - Jobs económicos: acceso de cliente a Cloud SQL y lectura de `DATABASE_URL`; no necesitan invocar la API ni administrar Cloud Run.
 - Scheduler: permiso para ejecutar únicamente el job correspondiente.
 
-Guardar `DATABASE_URL`, `SESSION_SECRET`, `SMTP_USER` y `SMTP_PASSWORD` en Secret Manager. Con Cloud SQL, la URL debe usar el mecanismo de conexión elegido y TLS cuando corresponda. No pasar secretos con `--set-env-vars`, no incrustarlos en la imagen y no reutilizarlos entre staging y producción.
+Guardar `DATABASE_URL`, `SESSION_SECRET`, `SMTP_USER`, `SMTP_PASSWORD`,
+`MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` en Secret Manager. Los
+dos secretos de Mercado Pago sólo se montan cuando se habilite la prueba cerrada;
+no pertenecen a Vercel. Con Cloud SQL, la URL debe usar el mecanismo de conexión
+elegido y TLS cuando corresponda. No pasar secretos con `--set-env-vars`, no
+incrustarlos en la imagen y no reutilizarlos entre sandbox y producción.
 
 ## Migraciones
 
@@ -70,40 +75,69 @@ Cloud Run inyecta `PORT`; Fauzet lo usa si no se define `API_PORT`. No establece
 
 Variables no secretas mínimas:
 
-| Variable                          | Valor esperado                                               |
-| --------------------------------- | ------------------------------------------------------------ |
-| `NODE_ENV`                        | `production`                                                 |
-| `WEB_ORIGIN`                      | origen HTTPS canónico de Vercel, sin slash final             |
-| `APP_BASE_URL`                    | origen HTTPS canónico de Vercel, sin slash final             |
-| `EMAIL_FROM`                      | remitente validado                                           |
-| `SMTP_HOST`, `SMTP_PORT`          | relay privado o proveedor autorizado; ambos son obligatorios |
-| `SMTP_USER`, `SMTP_PASSWORD`      | referencias a secretos; ambos son obligatorios               |
-| `SMTP_SECURE`, `SMTP_REQUIRE_TLS` | exactamente uno en `true`, según TLS implícito o STARTTLS    |
-| `TRUST_PROXY_HOPS`                | cantidad exacta de proxies validada con la topología real    |
-| `REAL_MONEY_ENABLED`              | `false`                                                      |
-| `WITHDRAWALS_ENABLED`             | `false`                                                      |
-| `TRADING_ENABLED`                 | `false`                                                      |
-| `SANDBOX_WITHDRAWALS_ENABLED`     | `true` sólo en el laboratorio aprobado                       |
-| `FIAT_CATALOG_ENABLED`            | `true` para el catálogo informativo COP                      |
-| `FIAT_SANDBOX_CHECKOUT_ENABLED`   | `false`; el checkout todavía no está implementado            |
-| `FIAT_SANDBOX_ACTIVATION_ENABLED` | `false`; ningún producto fiat puede generar recompensas      |
+| Variable                              | Valor esperado                                                |
+| ------------------------------------- | ------------------------------------------------------------- |
+| `NODE_ENV`                            | `production`                                                  |
+| `WEB_ORIGIN`                          | origen HTTPS canónico de Vercel, sin slash final              |
+| `APP_BASE_URL`                        | origen HTTPS canónico de Vercel, sin slash final              |
+| `EMAIL_FROM`                          | remitente validado                                            |
+| `SMTP_HOST`, `SMTP_PORT`              | relay privado o proveedor autorizado; ambos son obligatorios  |
+| `SMTP_USER`, `SMTP_PASSWORD`          | referencias a secretos; ambos son obligatorios                |
+| `SMTP_SECURE`, `SMTP_REQUIRE_TLS`     | exactamente uno en `true`, según TLS implícito o STARTTLS     |
+| `TRUST_PROXY_HOPS`                    | cantidad exacta de proxies validada con la topología real     |
+| `REAL_MONEY_ENABLED`                  | `false`                                                       |
+| `WITHDRAWALS_ENABLED`                 | `false`                                                       |
+| `TRADING_ENABLED`                     | `false`                                                       |
+| `SANDBOX_WITHDRAWALS_ENABLED`         | `true` sólo en el laboratorio aprobado                        |
+| `FIAT_CATALOG_ENABLED`                | `true` para el catálogo informativo COP                       |
+| `FIAT_SANDBOX_CHECKOUT_ENABLED`       | `false` durante despliegue; `true` sólo para beta allowlisted |
+| `FIAT_SANDBOX_ACTIVATION_ENABLED`     | `false`; ningún producto fiat puede generar recompensas       |
+| `FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS` | vacío; UUID/email explícito al abrir la prueba cerrada        |
+| `MERCADOPAGO_MODE`                    | `test`; `live` no está autorizado                             |
+| `MERCADOPAGO_APPLICATION_ID`          | ID numérico de la aplicación de prueba                        |
+| `MERCADOPAGO_SELLER_USER_ID`          | User ID numérico del vendedor de prueba                       |
 
-La configuración de producción rechaza el arranque si faltan `DATABASE_URL`, los orígenes HTTPS, un `SESSION_SECRET` único o el transporte SMTP autenticado y cifrado. También impide iniciar si cualquiera de los tres gates de valor real está en `true`. En esta fase igualmente impide habilitar checkout o activación fiat; publicar el catálogo no autoriza cobros.
+La configuración de producción rechaza el arranque si faltan `DATABASE_URL`, los
+orígenes HTTPS, un `SESSION_SECRET` único o el transporte SMTP autenticado y
+cifrado. También impide iniciar si cualquiera de los tres gates de valor real o
+la activación fiat está en `true`. El checkout sandbox sólo puede abrirse con
+modo `test`, credenciales completas y una allowlist no vacía; publicar el catálogo
+no autoriza cobros ni activa beneficios.
 
 No usar `--allow-unauthenticated` por inercia. Si Vercel reenvía directamente a una API pública, limitar CORS al dominio canónico, mantener rate limits y aplicar Cloud Armor o un gateway según el modelo de exposición. Si se usa autenticación IAM entre Vercel y Cloud Run, el proxy web deberá emitir el token correspondiente.
 
 Configurar la sonda de startup/readiness sobre `/health/ready` y la de liveness sobre `/health`. La primera comprueba PostgreSQL y debe responder `200` antes de promover tráfico.
 
-## Jobs de minería y referidos
+## Jobs de minería, referidos y conciliación fiat
 
 Los jobs reutilizan el target `api`, pero sobrescriben comando y argumentos:
 
 ```text
 node dist/scripts/settle-mining.js
 node dist/scripts/release-referrals.js 100
+node dist/scripts/reconcile-fiat-payments.js 50
 ```
 
-El cierre minero sin argumento liquida ayer UTC. Programarlo después del cambio de día UTC y permitir catch-up; el advisory lock y la idempotencia persistida evitan doble liquidación. El worker de referidos procesa lotes y puede ejecutarse periódicamente; mientras el gate legal/económico esté cerrado devuelve un lote vacío.
+El cierre minero sin argumento liquida ayer UTC. Programarlo después del cambio
+de día UTC y permitir catch-up; el advisory lock y la idempotencia persistida
+evitan doble liquidación. El worker de referidos procesa lotes y puede ejecutarse
+periódicamente; mientras el gate legal/económico esté cerrado devuelve un lote
+vacío. El reconciliador fiat sólo se programa después de montar las credenciales
+de prueba; reclama eventos por lease y es seguro ante reintentos.
+
+El job de conciliación no carga la configuración del servidor HTTP. Su conjunto
+mínimo y suficiente de variables es:
+
+| Variable                     | Valor esperado                              |
+| ---------------------------- | ------------------------------------------- |
+| `DATABASE_URL`               | referencia al secreto de PostgreSQL         |
+| `MERCADOPAGO_MODE`           | `test`; cualquier otro valor detiene el job |
+| `MERCADOPAGO_ACCESS_TOKEN`   | referencia al access token TEST             |
+| `MERCADOPAGO_APPLICATION_ID` | ID numérico de la aplicación TEST           |
+| `MERCADOPAGO_SELLER_USER_ID` | User ID numérico del vendedor TEST          |
+
+No montar en este job secretos de sesión, SMTP o webhook, ni orígenes web. Prisma
+usa `DATABASE_URL` al abrir la conexión; el proceso falla si no puede conectarse.
 
 Cloud Scheduler debe invocar la API `jobs.run` con OAuth mediante una cuenta que sólo tenga permiso sobre el job específico. Definir timeout, reintentos y concurrencia en cada job; no superponer ejecuciones deliberadamente aunque el dominio sea reintentable.
 
@@ -111,9 +145,15 @@ Cloud Scheduler debe invocar la API `jobs.run` con OAuth mediante una cuenta que
 
 1. Construir ambos targets con el mismo ID inmutable de release.
 2. Ejecutar migraciones y exigir salida `0`.
-3. Desplegar una revisión API sin tráfico y comprobar `/health` y `/health/ready`.
-4. Hacer smoke test de autenticación y ledger con una cuenta de prueba.
-5. Promover tráfico gradualmente y vigilar errores, latencia, conexiones de base de datos y fallos SMTP.
-6. Crear/actualizar los jobs con la misma imagen aprobada.
+3. Comprobar dentro de la imagen API `dist/server.js`,
+   `dist/scripts/settle-mining.js`, `dist/scripts/release-referrals.js` y
+   `dist/scripts/reconcile-fiat-payments.js` con `node --check`.
+4. Desplegar una revisión API sin tráfico y comprobar `/health` y `/health/ready`.
+5. Hacer smoke test de autenticación y ledger con una cuenta de prueba.
+6. Promover tráfico gradualmente y vigilar errores, latencia, conexiones de base de datos y fallos SMTP.
+7. Crear/actualizar los jobs con la misma imagen aprobada. El job de conciliación
+   fiat no se crea ni programa hasta montar su access token e identidad TEST;
+   no requiere el secret del webhook y, con checkout apagado, no forma parte de
+   la ruta crítica de este release.
 
 Para rollback, dirigir tráfico a la revisión API anterior. No revertir una migración aplicada automáticamente: usar cambios compatibles expand/contract o una migración correctiva revisada.
