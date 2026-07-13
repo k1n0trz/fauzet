@@ -6,6 +6,8 @@ import {
   adminRiskResponseSchema,
   adminSessionResponseSchema,
   adminUsersResponseSchema,
+  adminWithdrawalDecisionResponseSchema,
+  adminWithdrawalsResponseSchema,
   authResponseSchema,
   type AdminAuditResponse,
   type AdminLedgerResponse,
@@ -13,6 +15,7 @@ import {
   type AdminRiskResponse,
   type AdminSessionResponse,
   type AdminUsersResponse,
+  type AdminWithdrawalsResponse,
 } from "@fauzet/contracts";
 import { API_BASE } from "./api";
 
@@ -82,6 +85,23 @@ export async function getAdminAudit(): Promise<AdminAuditResponse> {
 export async function getAdminRisk(): Promise<AdminRiskResponse> {
   return adminRiskResponseSchema.parse(
     await request("/admin/risk", { method: "GET" }),
+  );
+}
+export async function getAdminWithdrawals(): Promise<AdminWithdrawalsResponse> {
+  return adminWithdrawalsResponseSchema.parse(
+    await request("/admin/withdrawals", { method: "GET" }),
+  );
+}
+export async function decideAdminWithdrawal(
+  withdrawalId: string,
+  decision: "APPROVE" | "REJECT",
+  reason: string,
+) {
+  return adminWithdrawalDecisionResponseSchema.parse(
+    await request(`/admin/withdrawals/${withdrawalId}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ decision, reason }),
+    }),
   );
 }
 export async function updateAdminUserStatus(

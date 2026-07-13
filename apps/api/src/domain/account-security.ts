@@ -32,6 +32,7 @@ export interface AccountSecurityStore {
 export interface TransactionalMailer {
   sendEmailVerification(to: TokenOwner, token: string): Promise<void>;
   sendPasswordReset(to: TokenOwner, token: string): Promise<void>;
+  sendWithdrawalCode(to: TokenOwner, code: string): Promise<void>;
 }
 export class AccountTokenError extends Error {
   readonly code = "TOKEN_INVALID_OR_EXPIRED";

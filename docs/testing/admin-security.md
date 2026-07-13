@@ -13,7 +13,9 @@
 - Motivo, actor, request ID, IP hasheada y before/after quedan registrados.
 - PostgreSQL rechaza `UPDATE` y `DELETE` sobre `AuditEvent` y `RiskSignal`.
 - Ledger administrativo informa débitos/créditos y marca cualquier transacción no balanceada.
-- La consola no expone ajustes de saldo ni controles para dinero real, retiros o trading.
+- Una aprobación de retiro sandbox revalida bajo lock que la cuenta siga activa, verificada y por debajo del umbral de rechazo; si no, no muta ledger ni estados.
+- La consola no expone ajustes de saldo ni controles para dinero real, retiros reales o trading.
+- `FRAUD`, `FINANCE` y `SUPERADMIN` pueden decidir únicamente retiros sandbox en `REVIEW`; toda decisión exige motivo y asiento exact-once.
 
 ## Pruebas
 

@@ -21,6 +21,7 @@ describe("API", () => {
       realMoney: false,
       withdrawals: false,
       trading: false,
+      sandboxWithdrawals: true,
     });
     await app.close();
   });

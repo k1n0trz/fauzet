@@ -3,6 +3,7 @@ import { loginRequestSchema, registerRequestSchema } from "@fauzet/contracts";
 import { AuthError, type AuthService } from "../domain/auth.js";
 import { AccountTokenError } from "../domain/account-security.js";
 import { AdminError } from "../domain/admin.js";
+import { SandboxWithdrawalError } from "../domain/sandbox-withdrawals.js";
 
 const COOKIE = "fz_session";
 
@@ -84,6 +85,10 @@ export async function registerAuthRoutes(
         .code(error.statusCode)
         .send({ error: { code: error.code, message: error.message } });
     if (error instanceof AdminError)
+      return reply
+        .code(error.statusCode)
+        .send({ error: { code: error.code, message: error.message } });
+    if (error instanceof SandboxWithdrawalError)
       return reply
         .code(error.statusCode)
         .send({ error: { code: error.code, message: error.message } });

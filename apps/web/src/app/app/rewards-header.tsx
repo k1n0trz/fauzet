@@ -6,6 +6,7 @@ const destinations = [
   { id: "mining", href: "/app/mining", label: "Minería" },
   { id: "store", href: "/app/store", label: "Tienda" },
   { id: "crew", href: "/app/crew", label: "Crew" },
+  { id: "convert", href: "/app/convert", label: "Sandbox" },
 ] as const;
 
 export function RewardsHeader({

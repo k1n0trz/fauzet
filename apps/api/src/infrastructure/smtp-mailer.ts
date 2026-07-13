@@ -44,6 +44,20 @@ export class SmtpMailer implements TransactionalMailer {
       ),
     });
   }
+  async sendWithdrawalCode(to: TokenOwner, code: string) {
+    await this.getTransport().sendMail({
+      from: this.options.from,
+      to: to.email,
+      subject: "Código de seguridad Fauzet",
+      text: `Tu código para confirmar la simulación de retiro es ${code}. Expira en 10 minutos.`,
+      html: this.template(
+        "Confirma la simulación de retiro",
+        `Tu código de un solo uso es <strong style="color:#67e8f9;font-size:24px;letter-spacing:6px">${code}</strong>. Expira en 10 minutos.`,
+        this.options.appBaseUrl,
+        "Volver a Fauzet",
+      ),
+    });
+  }
   private getTransport() {
     this.transport ??= nodemailer.createTransport({
       host: this.options.host,

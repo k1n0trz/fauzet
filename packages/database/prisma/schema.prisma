@@ -33,6 +33,32 @@ enum RiskSeverity {
   CRITICAL
 }
 
+enum ExternalWalletStatus {
+  PENDING_COOLDOWN
+  ACTIVE
+  REVOKED
+}
+
+enum ConversionQuoteStatus {
+  OPEN
+  CONSUMED
+  EXPIRED
+}
+
+enum ConversionStatus {
+  RESERVED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  REVIEW
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
 enum LedgerAccountKind {
   ASSET
   LIABILITY
@@ -164,6 +190,11 @@ model User {
   adminSessions           AdminSession[]
   riskSignals             RiskSignal[]             @relation("RiskSubject")
   createdRiskSignals      RiskSignal[]             @relation("RiskActor")
+  externalWallets         ExternalWallet[]
+  conversionQuotes        ConversionQuote[]
+  conversions             Conversion[]
+  withdrawals             Withdrawal[]
+  withdrawalChallenges    WithdrawalChallenge[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
 }
@@ -251,6 +282,106 @@ model RiskSignal {
   @@index([severity, createdAt])
 }
 
+model ExternalWallet {
+  id                   String                @id @default(uuid())
+  userId               String
+  network              String
+  address              String
+  label                String
+  status               ExternalWalletStatus  @default(PENDING_COOLDOWN)
+  availableAt          DateTime
+  revokedAt            DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  withdrawals          Withdrawal[]
+  withdrawalChallenges WithdrawalChallenge[]
+
+  @@unique([userId, network, address])
+  @@index([userId, status, createdAt])
+}
+
+model ConversionQuote {
+  id                   String                @id @default(uuid())
+  userId               String
+  asset                String
+  eligibleMinor        Decimal               @db.Decimal(36, 0)
+  rateNumerator        Decimal               @db.Decimal(36, 0)
+  rateDenominator      Decimal               @db.Decimal(36, 0)
+  spreadBps            Int
+  grossAssetMinor      Decimal               @db.Decimal(36, 0)
+  networkFeeAssetMinor Decimal               @db.Decimal(36, 0)
+  netAssetMinor        Decimal               @db.Decimal(36, 0)
+  status               ConversionQuoteStatus @default(OPEN)
+  expiresAt            DateTime
+  createdAt            DateTime              @default(now())
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversion           Conversion?
+
+  @@index([userId, status, expiresAt])
+}
+
+model Conversion {
+  id                   String                @id @default(uuid())
+  userId               String
+  quoteId              String                @unique
+  idempotencyKey       String                @unique
+  status               ConversionStatus      @default(RESERVED)
+  reserveTransactionId String                @unique
+  releaseTransactionId String?               @unique
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  quote                ConversionQuote       @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  reserveTransaction   LedgerTransaction     @relation("ConversionReserveTransaction", fields: [reserveTransactionId], references: [id], onDelete: Restrict)
+  releaseTransaction   LedgerTransaction?    @relation("ConversionReleaseTransaction", fields: [releaseTransactionId], references: [id], onDelete: Restrict)
+  withdrawal           Withdrawal?
+  withdrawalChallenges WithdrawalChallenge[]
+
+  @@index([userId, status, createdAt])
+}
+
+model WithdrawalChallenge {
+  id             String         @id @default(uuid())
+  userId         String
+  conversionId   String
+  walletId       String
+  codeHash       String
+  failedAttempts Int            @default(0)
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversion     Conversion     @relation(fields: [conversionId], references: [id], onDelete: Restrict)
+  wallet         ExternalWallet @relation(fields: [walletId], references: [id], onDelete: Restrict)
+
+  @@index([userId, conversionId, walletId, expiresAt])
+}
+
+model Withdrawal {
+  id                      String             @id @default(uuid())
+  userId                  String
+  conversionId            String             @unique
+  walletId                String
+  idempotencyKey          String             @unique
+  status                  WithdrawalStatus
+  riskScore               Int
+  reasonCodes             Json               @default("[]")
+  assurance               String
+  sandboxTxId             String?            @unique
+  confirmations           Int                @default(0)
+  settlementTransactionId String?            @unique
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversion              Conversion         @relation(fields: [conversionId], references: [id], onDelete: Restrict)
+  wallet                  ExternalWallet     @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  settlementTransaction   LedgerTransaction? @relation("WithdrawalSettlementTransaction", fields: [settlementTransactionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
 model LedgerAccount {
   id            String            @id @default(uuid())
   code          String            @unique
@@ -295,6 +426,9 @@ model LedgerTransaction {
   referralPendingCommissions  ReferralCommission[]    @relation("ReferralPendingTransaction")
   referralReleaseCommissions  ReferralCommission[]    @relation("ReferralReleaseTransaction")
   referralClawbackCommissions ReferralCommission[]    @relation("ReferralClawbackTransaction")
+  reservedConversions         Conversion[]            @relation("ConversionReserveTransaction")
+  releasedConversions         Conversion[]            @relation("ConversionReleaseTransaction")
+  settledWithdrawals          Withdrawal[]            @relation("WithdrawalSettlementTransaction")
 
   @@unique([sourceType, sourceId, type])
 }

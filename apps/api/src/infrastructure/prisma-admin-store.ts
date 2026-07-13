@@ -4,10 +4,13 @@ import type {
   AdminOverviewResponse,
   AdminRiskResponse,
   AdminUsersResponse,
+  AdminWithdrawalDecisionResponse,
+  AdminWithdrawalsResponse,
 } from "@fauzet/contracts";
 import {
   getDatabase,
   Prisma,
+  type LedgerAccountKind,
   type PrismaClient,
   type UserStatus,
 } from "@fauzet/database";
@@ -18,6 +21,7 @@ import {
   type AdminStore,
 } from "../domain/admin.js";
 import { verifyPassword } from "../domain/auth.js";
+import { postLedgerTransactionInTransaction } from "./prisma-ledger-store.js";
 
 type Tx = Prisma.TransactionClient;
 const BUCKETS = [
@@ -306,6 +310,236 @@ export class PrismaAdminStore implements AdminStore {
     };
   }
 
+  async withdrawals(): Promise<AdminWithdrawalsResponse> {
+    const withdrawals = await this.database.withdrawal.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        user: { select: { email: true, displayName: true } },
+        wallet: true,
+        conversion: { include: { quote: true } },
+      },
+    });
+    return { items: withdrawals.map(adminWithdrawal) };
+  }
+
+  async decideWithdrawal(input: {
+    actorId: string;
+    withdrawalId: string;
+    decision: "APPROVE" | "REJECT";
+    reason: string;
+    requestId: string;
+    ipHash?: string;
+  }): Promise<AdminWithdrawalDecisionResponse> {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        return await this.database.$transaction(
+          async (tx) => {
+            const initial = await tx.withdrawal.findUnique({
+              where: { id: input.withdrawalId },
+              select: { conversionId: true, userId: true },
+            });
+            if (!initial) throw invalidWithdrawal();
+            await tx.$queryRaw(Prisma.sql`
+              SELECT "id" FROM "Conversion"
+              WHERE "id" = ${initial.conversionId} FOR UPDATE
+            `);
+            await tx.$queryRaw(Prisma.sql`
+              SELECT "id" FROM "Withdrawal"
+              WHERE "id" = ${input.withdrawalId} FOR UPDATE
+            `);
+            const withdrawal = await tx.withdrawal.findUniqueOrThrow({
+              where: { id: input.withdrawalId },
+              include: {
+                user: { select: { email: true, displayName: true } },
+                wallet: true,
+                conversion: { include: { quote: true } },
+              },
+            });
+            const finalStatus =
+              input.decision === "APPROVE" ? "CONFIRMED" : "REJECTED";
+            const action =
+              input.decision === "APPROVE"
+                ? "ADMIN_SANDBOX_WITHDRAWAL_APPROVED"
+                : "ADMIN_SANDBOX_WITHDRAWAL_REJECTED";
+            if (withdrawal.status === finalStatus) {
+              const audit = await tx.auditEvent.findFirst({
+                where: {
+                  action,
+                  targetType: "Withdrawal",
+                  targetId: withdrawal.id,
+                },
+                orderBy: { createdAt: "desc" },
+              });
+              if (!audit) throw invalidWithdrawal();
+              return {
+                withdrawal: adminWithdrawal(withdrawal),
+                auditEventId: audit.id,
+                replayed: true,
+              };
+            }
+            if (
+              withdrawal.status !== "REVIEW" ||
+              withdrawal.conversion.status !== "RESERVED"
+            )
+              throw invalidWithdrawal();
+
+            if (input.decision === "APPROVE") {
+              const currentUser = await lockedUser(tx, initial.userId);
+              if (
+                currentUser.status !== "ACTIVE" ||
+                !currentUser.emailVerifiedAt ||
+                currentUser.riskLevel >= 70
+              )
+                throw invalidWithdrawal();
+            }
+
+            const now = new Date();
+            const accounts = await tx.ledgerAccount.findMany({
+              where: {
+                userId: withdrawal.userId,
+                asset: "ZYXE",
+                bucket: { in: ["ELIGIBLE", "RESERVED", "WITHDRAWN"] },
+              },
+            });
+            const byBucket = Object.fromEntries(
+              accounts.map((account) => [account.bucket!, account]),
+            ) as Record<
+              "ELIGIBLE" | "RESERVED" | "WITHDRAWN",
+              (typeof accounts)[number]
+            >;
+            if (!byBucket.ELIGIBLE || !byBucket.RESERVED || !byBucket.WITHDRAWN)
+              throw invalidWithdrawal();
+            const config = await tx.economicConfigVersion.findFirst({
+              where: {
+                status: "ACTIVE",
+                OR: [{ effectiveAt: null }, { effectiveAt: { lte: now } }],
+              },
+              orderBy: { id: "desc" },
+            });
+            if (!config) throw invalidWithdrawal();
+            const amount = BigInt(
+              withdrawal.conversion.quote.eligibleMinor.toFixed(0),
+            );
+            let settlementTransactionId: string | null = null;
+            let releaseTransactionId: string | null = null;
+            let sandboxTxId: string | null = null;
+            if (input.decision === "APPROVE") {
+              const settlement = await postLedgerTransactionInTransaction(tx, {
+                idempotencyKey: `sandbox:admin-withdrawal:${withdrawal.id}:approve`,
+                type: "SANDBOX_WITHDRAWAL_SETTLEMENT",
+                sourceType: "sandbox_withdrawal",
+                sourceId: withdrawal.id,
+                configVersion: config.id,
+                metadata: {
+                  mode: "SANDBOX",
+                  noExternalValue: true,
+                  actorId: input.actorId,
+                  manualReview: true,
+                },
+                postings: [
+                  { account: accountRef(byBucket.RESERVED), amount: -amount },
+                  { account: accountRef(byBucket.WITHDRAWN), amount },
+                ],
+              });
+              settlementTransactionId = settlement.id;
+              sandboxTxId = `sandbox_${crypto.randomUUID().replaceAll("-", "")}`;
+              await tx.conversion.update({
+                where: { id: withdrawal.conversionId },
+                data: { status: "COMPLETED" },
+              });
+            } else {
+              const release = await postLedgerTransactionInTransaction(tx, {
+                idempotencyKey: `sandbox:admin-withdrawal:${withdrawal.id}:reject`,
+                type: "SANDBOX_CONVERSION_RELEASE",
+                sourceType: "sandbox_conversion_release",
+                sourceId: withdrawal.conversionId,
+                configVersion: config.id,
+                metadata: {
+                  mode: "SANDBOX",
+                  actorId: input.actorId,
+                  manualReview: true,
+                },
+                postings: [
+                  { account: accountRef(byBucket.RESERVED), amount: -amount },
+                  { account: accountRef(byBucket.ELIGIBLE), amount },
+                ],
+              });
+              releaseTransactionId = release.id;
+              await tx.conversion.update({
+                where: { id: withdrawal.conversionId },
+                data: {
+                  status: "REJECTED",
+                  releaseTransactionId: release.id,
+                },
+              });
+            }
+            const previousReasons = Array.isArray(withdrawal.reasonCodes)
+              ? withdrawal.reasonCodes.filter(
+                  (value): value is string => typeof value === "string",
+                )
+              : [];
+            const updated = await tx.withdrawal.update({
+              where: { id: withdrawal.id },
+              data: {
+                status: finalStatus,
+                reasonCodes: [
+                  ...previousReasons,
+                  input.decision === "APPROVE"
+                    ? "ADMIN_REVIEW_APPROVED"
+                    : "ADMIN_REVIEW_REJECTED",
+                ],
+                sandboxTxId,
+                confirmations: input.decision === "APPROVE" ? 6 : 0,
+                settlementTransactionId,
+              },
+              include: {
+                user: { select: { email: true, displayName: true } },
+                wallet: true,
+                conversion: { include: { quote: true } },
+              },
+            });
+            const audit = await tx.auditEvent.create({
+              data: {
+                actorId: input.actorId,
+                action,
+                targetType: "Withdrawal",
+                targetId: withdrawal.id,
+                reason: input.reason,
+                before: {
+                  status: "REVIEW",
+                  conversionStatus: "RESERVED",
+                  riskScore: withdrawal.riskScore,
+                },
+                after: {
+                  status: finalStatus,
+                  conversionStatus:
+                    input.decision === "APPROVE" ? "COMPLETED" : "REJECTED",
+                  settlementTransactionId,
+                  releaseTransactionId,
+                  sandboxTxId,
+                  noExternalValue: true,
+                },
+                requestId: input.requestId,
+                ...(input.ipHash ? { ipHash: input.ipHash } : {}),
+              },
+            });
+            return {
+              withdrawal: adminWithdrawal(updated),
+              auditEventId: audit.id,
+              replayed: false,
+            };
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+      } catch (error) {
+        if (retryableAdminConflict(error) && attempt < 3) continue;
+        throw error;
+      }
+    }
+    throw invalidWithdrawal();
+  }
+
   async updateUserStatus(input: {
     actorId: string;
     targetId: string;
@@ -534,4 +768,80 @@ function severity(score: number) {
   if (score >= 70) return "HIGH" as const;
   if (score >= 40) return "MEDIUM" as const;
   return "LOW" as const;
+}
+
+function adminWithdrawal(withdrawal: {
+  id: string;
+  userId: string;
+  conversionId: string;
+  status: string;
+  riskScore: number;
+  reasonCodes: Prisma.JsonValue;
+  sandboxTxId: string | null;
+  confirmations: number;
+  createdAt: Date;
+  user: { email: string; displayName: string | null };
+  wallet: { label: string; address: string };
+  conversion: {
+    quote: {
+      asset: string;
+      eligibleMinor: Prisma.Decimal;
+      netAssetMinor: Prisma.Decimal;
+    };
+  };
+}) {
+  return {
+    id: withdrawal.id,
+    userId: withdrawal.userId,
+    userEmail: withdrawal.user.email,
+    userDisplayName: withdrawal.user.displayName,
+    conversionId: withdrawal.conversionId,
+    asset: withdrawal.conversion.quote.asset as "SANDBOX_LTC" | "SANDBOX_DOGE",
+    eligibleMinorUnits: withdrawal.conversion.quote.eligibleMinor.toFixed(0),
+    netAssetMinorUnits: withdrawal.conversion.quote.netAssetMinor.toFixed(0),
+    walletLabel: withdrawal.wallet.label,
+    walletAddressMasked: maskAddress(withdrawal.wallet.address),
+    status: withdrawal.status as
+      | "REVIEW"
+      | "CONFIRMED"
+      | "REJECTED"
+      | "CANCELLED",
+    riskScore: withdrawal.riskScore,
+    reasonCodes: Array.isArray(withdrawal.reasonCodes)
+      ? withdrawal.reasonCodes.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [],
+    sandboxTxId: withdrawal.sandboxTxId,
+    confirmations: withdrawal.confirmations,
+    createdAt: withdrawal.createdAt.toISOString(),
+  };
+}
+
+function accountRef(account: {
+  id: string;
+  asset: string;
+  kind: LedgerAccountKind;
+}) {
+  return { id: account.id, asset: account.asset, kind: account.kind };
+}
+
+function maskAddress(address: string) {
+  return address.length <= 16
+    ? address
+    : `${address.slice(0, 10)}…${address.slice(-5)}`;
+}
+
+function retryableAdminConflict(error: unknown) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  if (["P2034", "P2002"].includes(error.code)) return true;
+  return error.code === "P2010" && error.meta?.code === "40001";
+}
+
+function invalidWithdrawal() {
+  return new AdminError(
+    "ADMIN_WITHDRAWAL_INVALID",
+    "Sandbox withdrawal is not available for this decision",
+    409,
+  );
 }

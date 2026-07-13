@@ -9,6 +9,7 @@ import type {
   AdminRiskResponse,
   AdminSessionResponse,
   AdminUsersResponse,
+  AdminWithdrawalsResponse,
 } from "@fauzet/contracts";
 import {
   adminLogin,
@@ -19,11 +20,13 @@ import {
   getAdminOverview,
   getAdminRisk,
   getAdminUsers,
+  getAdminWithdrawals,
+  decideAdminWithdrawal,
   updateAdminRisk,
   updateAdminUserStatus,
 } from "../../lib/admin-api";
 
-type View = "overview" | "users" | "risk" | "ledger" | "audit";
+type View = "overview" | "users" | "withdrawals" | "risk" | "ledger" | "audit";
 
 export function AdminPortal() {
   const [session, setSession] = useState<AdminSessionResponse | null>(null);
@@ -37,24 +40,34 @@ export function AdminPortal() {
   const [ledger, setLedger] = useState<AdminLedgerResponse | null>(null);
   const [audit, setAudit] = useState<AdminAuditResponse | null>(null);
   const [risk, setRisk] = useState<AdminRiskResponse | null>(null);
+  const [withdrawals, setWithdrawals] =
+    useState<AdminWithdrawalsResponse | null>(null);
 
   const loadData = useCallback(async (current: AdminSessionResponse) => {
     setLoading(true);
     try {
       const permissions = new Set(current.permissions);
-      const [nextOverview, nextUsers, nextLedger, nextAudit, nextRisk] =
-        await Promise.all([
-          getAdminOverview(),
-          permissions.has("USERS_READ") ? getAdminUsers() : null,
-          permissions.has("LEDGER_READ") ? getAdminLedger() : null,
-          permissions.has("AUDIT_READ") ? getAdminAudit() : null,
-          permissions.has("RISK_READ") ? getAdminRisk() : null,
-        ]);
+      const [
+        nextOverview,
+        nextUsers,
+        nextLedger,
+        nextAudit,
+        nextRisk,
+        nextWithdrawals,
+      ] = await Promise.all([
+        getAdminOverview(),
+        permissions.has("USERS_READ") ? getAdminUsers() : null,
+        permissions.has("LEDGER_READ") ? getAdminLedger() : null,
+        permissions.has("AUDIT_READ") ? getAdminAudit() : null,
+        permissions.has("RISK_READ") ? getAdminRisk() : null,
+        permissions.has("WITHDRAWALS_READ") ? getAdminWithdrawals() : null,
+      ]);
       setOverview(nextOverview);
       setUsers(nextUsers);
       setLedger(nextLedger);
       setAudit(nextAudit);
       setRisk(nextRisk);
+      setWithdrawals(nextWithdrawals);
       setError("");
     } catch (loadError) {
       setError(message(loadError));
@@ -101,6 +114,7 @@ export function AdminPortal() {
     [
       ["overview", "Overview", true],
       ["users", "Usuarios", permissions.has("USERS_READ")],
+      ["withdrawals", "Retiros sandbox", permissions.has("WITHDRAWALS_READ")],
       ["risk", "Riesgo", permissions.has("RISK_READ")],
       ["ledger", "Ledger", permissions.has("LEDGER_READ")],
       ["audit", "Auditoría", permissions.has("AUDIT_READ")],
@@ -167,6 +181,17 @@ export function AdminPortal() {
           />
         ) : null}
         {view === "risk" && risk ? <Risk data={risk} /> : null}
+        {view === "withdrawals" && withdrawals ? (
+          <Withdrawals
+            data={withdrawals}
+            canDecide={permissions.has("WITHDRAWALS_WRITE")}
+            onChanged={async (text) => {
+              setNotice(text);
+              await loadData(session);
+            }}
+            onError={(caught) => setError(message(caught))}
+          />
+        ) : null}
         {view === "ledger" && ledger ? <Ledger data={ledger} /> : null}
         {view === "audit" && audit ? <Audit data={audit} /> : null}
       </section>
@@ -475,6 +500,135 @@ function Users({
           <small>
             Owner y Superadmin requieren maker-checker y se bloquean aquí.
           </small>
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function Withdrawals({
+  data,
+  canDecide,
+  onChanged,
+  onError,
+}: {
+  data: AdminWithdrawalsResponse;
+  canDecide: boolean;
+  onChanged: (notice: string) => Promise<void>;
+  onError: (error: unknown) => void;
+}) {
+  const [selectedId, setSelectedId] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const selected = data.items.find((item) => item.id === selectedId) ?? null;
+  const decide = async (decision: "APPROVE" | "REJECT") => {
+    if (!selected || reason.trim().length < 10) return;
+    setBusy(true);
+    try {
+      await decideAdminWithdrawal(selected.id, decision, reason.trim());
+      setSelectedId("");
+      setReason("");
+      await onChanged(
+        decision === "APPROVE"
+          ? "Retiro sandbox aprobado, liquidado y auditado."
+          : "Retiro sandbox rechazado, liberado y auditado.",
+      );
+    } catch (caught) {
+      onError(caught);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="admin-users-layout">
+      <section className="admin-panel admin-table-wrap">
+        <div className="admin-panel-title">
+          <div>
+            <span>Sin valor externo · últimos 100</span>
+            <h2>Cola de retiros sandbox</h2>
+          </div>
+        </div>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Monto</th>
+              <th>Destino</th>
+              <th>Riesgo</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.items.map((item) => (
+              <tr
+                className={selectedId === item.id ? "selected" : ""}
+                key={item.id}
+                onClick={() => setSelectedId(item.id)}
+              >
+                <td>
+                  <strong>{item.userDisplayName ?? item.userEmail}</strong>
+                  <small>{item.userEmail}</small>
+                </td>
+                <td>
+                  {number(item.eligibleMinorUnits)} ZYXE
+                  <small>{item.asset}</small>
+                </td>
+                <td>
+                  {item.walletLabel}
+                  <small>{item.walletAddressMasked}</small>
+                </td>
+                <td>
+                  <code>{item.riskScore}</code>
+                </td>
+                <td>
+                  <Status value={item.status} />
+                </td>
+                <td>{formatDate(item.createdAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      {selected ? (
+        <section className="admin-control-form">
+          <span>Revisión humana</span>
+          <h2>{selected.userDisplayName ?? selected.userEmail}</h2>
+          <p>
+            {number(selected.eligibleMinorUnits)} ZYXE · riesgo{" "}
+            {selected.riskScore}
+            <br />
+            {selected.reasonCodes.join(" · ")}
+          </p>
+          {selected.sandboxTxId ? <code>{selected.sandboxTxId}</code> : null}
+          {canDecide && selected.status === "REVIEW" ? (
+            <>
+              <label>
+                Motivo obligatorio
+                <textarea
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  minLength={10}
+                  placeholder="Describe la evidencia y la decisión…"
+                />
+              </label>
+              <button
+                disabled={busy || reason.trim().length < 10}
+                onClick={() => void decide("APPROVE")}
+              >
+                Aprobar simulación
+              </button>
+              <button
+                className="danger"
+                disabled={busy || reason.trim().length < 10}
+                onClick={() => void decide("REJECT")}
+              >
+                Rechazar y liberar
+              </button>
+            </>
+          ) : (
+            <small>Vista de solo lectura o decisión ya cerrada.</small>
+          )}
         </section>
       ) : null}
     </div>

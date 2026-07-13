@@ -2721,6 +2721,213 @@ h1 em {
 .crewRow b[data-state="CLAWBACK_PENDING"] {
   color: #f87171;
 }
+.sandboxPage {
+  padding-bottom: 80px;
+}
+.sandboxBadge {
+  min-width: 124px;
+  padding: 16px 20px;
+  border: 1px solid rgba(34, 211, 238, 0.45);
+  border-radius: 18px;
+  background: rgba(8, 145, 178, 0.12);
+  color: #67e8f9;
+  font: 800 14px/1 monospace;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+.sandboxWarning,
+.sandboxNotice {
+  margin: 18px 0;
+  padding: 15px 18px;
+  border-radius: 14px;
+  line-height: 1.55;
+}
+.sandboxWarning {
+  border: 1px solid rgba(250, 204, 21, 0.25);
+  background: rgba(133, 77, 14, 0.14);
+  color: #fde68a;
+}
+.sandboxWarning strong {
+  color: #facc15;
+}
+.sandboxNotice {
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  background: rgba(6, 78, 59, 0.18);
+  color: #a7f3d0;
+}
+.sandboxSetupGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 22px 0;
+}
+.sandboxCard,
+.sandboxQuote,
+.sandboxHistory,
+.sandboxWallets {
+  border: 1px solid rgba(229, 231, 235, 0.08);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
+}
+.sandboxCard {
+  display: grid;
+  gap: 13px;
+  padding: 22px;
+}
+.sandboxCard h2,
+.sandboxHistory h2,
+.sandboxWallets h2 {
+  margin: 0;
+}
+.sandboxStep {
+  color: #67e8f9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.sandboxCard label {
+  display: grid;
+  gap: 6px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+.sandboxCard input,
+.sandboxCard select,
+.sandboxActions input,
+.sandboxActions select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid rgba(229, 231, 235, 0.12);
+  border-radius: 10px;
+  background: #090d18;
+  color: #e5e7eb;
+}
+.sandboxCard button,
+.sandboxQuote button,
+.sandboxActions button {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #7c3aed, #0891b2);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+.sandboxCard button:disabled,
+.sandboxQuote button:disabled,
+.sandboxActions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.sandboxQuote {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(300px, 2fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 22px;
+  border-color: rgba(34, 211, 238, 0.25);
+}
+.sandboxQuote > div {
+  display: grid;
+  gap: 5px;
+}
+.sandboxQuote > div span,
+.sandboxQuote dt {
+  color: #6b7280;
+  font-size: 11px;
+}
+.sandboxQuote > div strong {
+  color: #67e8f9;
+  font-size: 21px;
+}
+.sandboxQuote dl {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+.sandboxQuote dl div {
+  display: grid;
+  gap: 3px;
+}
+.sandboxQuote dd {
+  margin: 0;
+  color: #d1d5db;
+  font-size: 12px;
+}
+.sandboxHistory,
+.sandboxWallets {
+  margin-top: 22px;
+  padding: 22px;
+}
+.sandboxOperation {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(260px, 1.2fr);
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.07);
+}
+.sandboxOperation:last-child {
+  border-bottom: 0;
+}
+.sandboxOperation h3 {
+  margin: 8px 0 4px;
+  font-size: 15px;
+}
+.sandboxOperation small,
+.sandboxEmpty {
+  color: #6b7280;
+}
+.sandboxStatus {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.18);
+  color: #c4b5fd;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.sandboxStatus.status-completed {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+}
+.sandboxStatus.status-rejected,
+.sandboxStatus.status-cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+.sandboxActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.sandboxActions .subtleButton,
+.sectionTitleRow .subtleButton {
+  border: 1px solid rgba(229, 231, 235, 0.1);
+  background: transparent;
+  color: #9ca3af;
+}
+.sandboxWallets {
+  display: grid;
+  gap: 10px;
+}
+.sandboxWallets > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.06);
+  color: #9ca3af;
+  font-size: 12px;
+}
+.sandboxWallets strong {
+  color: #67e8f9;
+}
 @media (max-width: 820px) {
   .navLinks {
     display: none;
@@ -2738,5 +2945,14 @@ h1 em {
   }
   .crewGate {
     grid-template-columns: 1fr;
+  }
+  .sandboxSetupGrid,
+  .sandboxOperation,
+  .sandboxQuote {
+    grid-template-columns: 1fr;
+  }
+  .sandboxQuote dl,
+  .sandboxActions {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

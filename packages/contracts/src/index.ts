@@ -655,6 +655,8 @@ export const adminPermissionSchema = z.enum([
   "LEDGER_READ",
   "AUDIT_READ",
   "CONFIG_READ",
+  "WITHDRAWALS_READ",
+  "WITHDRAWALS_WRITE",
 ]);
 export const adminStepUpRequestSchema = z.object({
   password: z.string().min(1).max(128),
@@ -799,6 +801,151 @@ export const adminMutationResponseSchema = z.object({
   auditEventId: z.string().uuid(),
 });
 
+export const adminWithdrawalsResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      userId: z.string().uuid(),
+      userEmail: z.string().email(),
+      userDisplayName: z.string().nullable(),
+      conversionId: z.string().uuid(),
+      asset: z.enum(["SANDBOX_LTC", "SANDBOX_DOGE"]),
+      eligibleMinorUnits: z.string().regex(/^\d+$/),
+      netAssetMinorUnits: z.string().regex(/^\d+$/),
+      walletLabel: z.string(),
+      walletAddressMasked: z.string(),
+      status: z.enum(["REVIEW", "CONFIRMED", "REJECTED", "CANCELLED"]),
+      riskScore: z.number().int().min(0).max(100),
+      reasonCodes: z.array(z.string()),
+      sandboxTxId: z.string().nullable(),
+      confirmations: z.number().int().nonnegative(),
+      createdAt: z.string().datetime(),
+    }),
+  ),
+});
+export const adminWithdrawalDecisionRequestSchema = z.object({
+  decision: z.enum(["APPROVE", "REJECT"]),
+  reason: z.string().trim().min(10).max(500),
+});
+export const adminWithdrawalDecisionResponseSchema = z.object({
+  withdrawal: adminWithdrawalsResponseSchema.shape.items.element,
+  auditEventId: z.string().uuid(),
+  replayed: z.boolean(),
+});
+
+export const sandboxAssetSchema = z.enum(["SANDBOX_LTC", "SANDBOX_DOGE"]);
+export const sandboxWalletRequestSchema = z.object({
+  network: sandboxAssetSchema,
+  address: z
+    .string()
+    .trim()
+    .regex(/^sandbox:[a-zA-Z0-9_-]{8,64}$/),
+  label: z.string().trim().min(2).max(80),
+});
+const sandboxWalletSchema = z.object({
+  id: z.string().uuid(),
+  network: sandboxAssetSchema,
+  addressMasked: z.string(),
+  label: z.string(),
+  status: z.enum(["PENDING_COOLDOWN", "ACTIVE", "REVOKED"]),
+  availableAt: z.string().datetime(),
+  createdAt: z.string().datetime(),
+});
+const sandboxQuoteSchema = z.object({
+  id: z.string().uuid(),
+  asset: sandboxAssetSchema,
+  eligibleMinorUnits: z.string().regex(/^\d+$/),
+  grossAssetMinorUnits: z.string().regex(/^\d+$/),
+  networkFeeAssetMinorUnits: z.string().regex(/^\d+$/),
+  netAssetMinorUnits: z.string().regex(/^\d+$/),
+  spreadBps: z.number().int().nonnegative(),
+  status: z.enum(["OPEN", "CONSUMED", "EXPIRED"]),
+  expiresAt: z.string().datetime(),
+  createdAt: z.string().datetime(),
+});
+const sandboxConversionSchema = z.object({
+  id: z.string().uuid(),
+  quote: sandboxQuoteSchema,
+  status: z.enum(["RESERVED", "COMPLETED", "CANCELLED", "REJECTED"]),
+  reserveTransactionId: z.string().uuid(),
+  releaseTransactionId: z.string().uuid().nullable(),
+  createdAt: z.string().datetime(),
+});
+const sandboxWithdrawalSchema = z.object({
+  id: z.string().uuid(),
+  conversionId: z.string().uuid(),
+  walletId: z.string().uuid(),
+  status: z.enum(["REVIEW", "CONFIRMED", "REJECTED", "CANCELLED"]),
+  riskScore: z.number().int().min(0).max(100),
+  reasonCodes: z.array(z.string()),
+  assurance: z.enum(["PASSWORD_REAUTH_SANDBOX", "PASSWORD_EMAIL_OTP_SANDBOX"]),
+  sandboxTxId: z.string().nullable(),
+  confirmations: z.number().int().nonnegative(),
+  settlementTransactionId: z.string().uuid().nullable(),
+  createdAt: z.string().datetime(),
+});
+export const sandboxStatusResponseSchema = z.object({
+  serverNow: z.string().datetime(),
+  mode: z.literal("SANDBOX"),
+  enabled: z.boolean(),
+  realWithdrawalsEnabled: z.literal(false),
+  disclaimer: z.string(),
+  eligibleMinorUnits: z.string().regex(/^\d+$/),
+  reservedMinorUnits: z.string().regex(/^\d+$/),
+  withdrawnMinorUnits: z.string().regex(/^\d+$/),
+  walletCooldownHours: z.literal(24),
+  quoteTtlSeconds: z.literal(120),
+  wallets: z.array(sandboxWalletSchema),
+  conversions: z.array(sandboxConversionSchema),
+  withdrawals: z.array(sandboxWithdrawalSchema),
+});
+export const sandboxQuoteRequestSchema = z.object({
+  asset: sandboxAssetSchema,
+  eligibleMinorUnits: z
+    .string()
+    .max(36)
+    .regex(/^\d+$/)
+    .refine((value) => {
+      try {
+        return BigInt(value) >= 500n;
+      } catch {
+        return false;
+      }
+    }),
+});
+export const sandboxQuoteResponseSchema = z.object({
+  quote: sandboxQuoteSchema,
+});
+export const sandboxConversionRequestSchema = z.object({
+  quoteId: z.string().uuid(),
+});
+export const sandboxConversionResponseSchema = z.object({
+  conversion: sandboxConversionSchema,
+  replayed: z.boolean(),
+});
+export const sandboxWithdrawalRequestSchema = z.object({
+  conversionId: z.string().uuid(),
+  walletId: z.string().uuid(),
+  password: z.string().min(1).max(128),
+  challengeId: z.string().uuid(),
+  code: z.string().regex(/^\d{6}$/),
+});
+export const sandboxWithdrawalChallengeRequestSchema = z.object({
+  conversionId: z.string().uuid(),
+  walletId: z.string().uuid(),
+});
+export const sandboxWithdrawalChallengeResponseSchema = z.object({
+  challengeId: z.string().uuid(),
+  expiresAt: z.string().datetime(),
+  delivery: z.literal("EMAIL_MASKED"),
+  recipientMasked: z.string(),
+});
+export const sandboxWithdrawalResponseSchema = z.object({
+  withdrawal: sandboxWithdrawalSchema,
+  conversion: sandboxConversionSchema,
+  replayed: z.boolean(),
+});
+
 export const registerRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z
@@ -897,3 +1044,20 @@ export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 export type AdminLedgerResponse = z.infer<typeof adminLedgerResponseSchema>;
 export type AdminAuditResponse = z.infer<typeof adminAuditResponseSchema>;
 export type AdminRiskResponse = z.infer<typeof adminRiskResponseSchema>;
+export type AdminWithdrawalsResponse = z.infer<
+  typeof adminWithdrawalsResponseSchema
+>;
+export type AdminWithdrawalDecisionResponse = z.infer<
+  typeof adminWithdrawalDecisionResponseSchema
+>;
+export type SandboxStatusResponse = z.infer<typeof sandboxStatusResponseSchema>;
+export type SandboxQuoteResponse = z.infer<typeof sandboxQuoteResponseSchema>;
+export type SandboxConversionResponse = z.infer<
+  typeof sandboxConversionResponseSchema
+>;
+export type SandboxWithdrawalResponse = z.infer<
+  typeof sandboxWithdrawalResponseSchema
+>;
+export type SandboxWithdrawalChallengeResponse = z.infer<
+  typeof sandboxWithdrawalChallengeResponseSchema
+>;

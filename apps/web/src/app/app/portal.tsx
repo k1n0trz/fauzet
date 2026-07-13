@@ -340,6 +340,18 @@ export function AuthPortal() {
               </span>
               <span aria-hidden="true">→</span>
             </Link>
+            <Link className="faucetShortcut" href="/app/convert">
+              <span className="faucetShortcutIcon" aria-hidden="true">
+                S
+              </span>
+              <span>
+                <strong>Conversión sandbox</strong>
+                <small>
+                  Ensaya reservas y retiros ficticios sin dinero ni cripto.
+                </small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </nav>
           {balanceError && (
             <div className="notice" role="alert">

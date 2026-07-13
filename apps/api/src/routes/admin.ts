@@ -4,6 +4,7 @@ import {
   adminRiskUpdateRequestSchema,
   adminStepUpRequestSchema,
   adminUserStatusRequestSchema,
+  adminWithdrawalDecisionRequestSchema,
 } from "@fauzet/contracts";
 import { z } from "zod";
 import type { AdminService } from "../domain/admin.js";
@@ -82,6 +83,27 @@ export async function registerAdminRoutes(
     reply.header("cache-control", "no-store");
     return admin.risk(await actor(request, auth, admin));
   });
+  app.get("/v1/admin/withdrawals", async (request, reply) => {
+    reply.header("cache-control", "no-store");
+    return admin.withdrawals(await actor(request, auth, admin));
+  });
+  app.post(
+    "/v1/admin/withdrawals/:withdrawalId/decision",
+    { config: { rateLimit: { max: 20, timeWindow: "5 minutes" } } },
+    async (request, reply) => {
+      reply.header("cache-control", "no-store");
+      const { withdrawalId } = z
+        .object({ withdrawalId: z.string().uuid() })
+        .parse(request.params);
+      const input = adminWithdrawalDecisionRequestSchema.parse(request.body);
+      return admin.decideWithdrawal(await actor(request, auth, admin), {
+        withdrawalId,
+        ...input,
+        requestId: request.id,
+        ipHash: hashIp(request.ip, secret),
+      });
+    },
+  );
 
   app.patch("/v1/admin/users/:userId/status", async (request) => {
     const { userId } = z

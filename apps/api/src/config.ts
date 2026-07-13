@@ -16,6 +16,7 @@ const envSchema = z.object({
   REAL_MONEY_ENABLED: z.enum(["true", "false"]).default("false"),
   WITHDRAWALS_ENABLED: z.enum(["true", "false"]).default("false"),
   TRADING_ENABLED: z.enum(["true", "false"]).default("false"),
+  SANDBOX_WITHDRAWALS_ENABLED: z.enum(["true", "false"]).default("true"),
 });
 
 export type AppConfig = ReturnType<typeof loadConfig>;
@@ -42,6 +43,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       realMoney: parsed.REAL_MONEY_ENABLED === "true",
       withdrawals: parsed.WITHDRAWALS_ENABLED === "true",
       trading: parsed.TRADING_ENABLED === "true",
+      sandboxWithdrawals: parsed.SANDBOX_WITHDRAWALS_ENABLED === "true",
     },
   } as const;
 }

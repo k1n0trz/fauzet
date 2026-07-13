@@ -22,6 +22,10 @@ import {
 } from "./domain/commerce.js";
 import { ReferralService, type ReferralStore } from "./domain/referrals.js";
 import { AdminService, type AdminStore } from "./domain/admin.js";
+import {
+  SandboxWithdrawalService,
+  type SandboxWithdrawalStore,
+} from "./domain/sandbox-withdrawals.js";
 import { MemoryAuthStore } from "./infrastructure/memory-auth-store.js";
 import { MemoryAccountSecurityStore } from "./infrastructure/memory-account-security-store.js";
 import { MemoryBalanceStore } from "./infrastructure/memory-balance-store.js";
@@ -40,6 +44,7 @@ import { PrismaMissionStore } from "./infrastructure/prisma-mission-store.js";
 import { PrismaCommerceStore } from "./infrastructure/prisma-commerce-store.js";
 import { PrismaReferralStore } from "./infrastructure/prisma-referral-store.js";
 import { PrismaAdminStore } from "./infrastructure/prisma-admin-store.js";
+import { PrismaSandboxWithdrawalStore } from "./infrastructure/prisma-sandbox-withdrawal-store.js";
 import { SmtpMailer } from "./infrastructure/smtp-mailer.js";
 import { PrismaWelcomeBonusIssuer } from "./infrastructure/prisma-welcome-bonus.js";
 import type { WelcomeBonusIssuer } from "./domain/welcome-bonus.js";
@@ -52,6 +57,7 @@ import { registerMissionRoutes } from "./routes/missions.js";
 import { registerCommerceRoutes } from "./routes/commerce.js";
 import { registerReferralRoutes } from "./routes/referrals.js";
 import { registerAdminRoutes } from "./routes/admin.js";
+import { registerSandboxWithdrawalRoutes } from "./routes/sandbox-withdrawals.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
@@ -62,6 +68,7 @@ export interface AppDependencies {
   commerceStore?: CommerceStore;
   referralStore?: ReferralStore;
   adminStore?: AdminStore;
+  sandboxWithdrawalStore?: SandboxWithdrawalStore;
   accountSecurityStore?: AccountSecurityStore;
   mailer?: TransactionalMailer;
   welcomeBonus?: WelcomeBonusIssuer;
@@ -183,6 +190,25 @@ export async function createApp(
       auth,
       new AdminService(adminStore, config.sessionSecret),
       config.sessionSecret,
+    );
+  const sandboxWithdrawalStore =
+    dependencies.sandboxWithdrawalStore ??
+    (config.nodeEnv === "test"
+      ? undefined
+      : new PrismaSandboxWithdrawalStore(
+          undefined,
+          undefined,
+          mailer,
+          config.sessionSecret,
+        ));
+  if (sandboxWithdrawalStore)
+    await registerSandboxWithdrawalRoutes(
+      app,
+      auth,
+      new SandboxWithdrawalService(
+        sandboxWithdrawalStore,
+        config.features.sandboxWithdrawals,
+      ),
     );
 
   app.get("/health", async () => ({

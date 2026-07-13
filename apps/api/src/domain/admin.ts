@@ -7,6 +7,8 @@ import type {
   AdminRiskResponse,
   AdminSessionResponse,
   AdminUsersResponse,
+  AdminWithdrawalDecisionResponse,
+  AdminWithdrawalsResponse,
   PublicUser,
 } from "@fauzet/contracts";
 import { hashSessionToken } from "./auth.js";
@@ -31,8 +33,17 @@ const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "USERS_STATUS_WRITE",
     "RISK_READ",
     "RISK_WRITE",
+    "WITHDRAWALS_READ",
+    "WITHDRAWALS_WRITE",
   ],
-  FINANCE: ["OVERVIEW_READ", "USERS_READ", "LEDGER_READ", "CONFIG_READ"],
+  FINANCE: [
+    "OVERVIEW_READ",
+    "USERS_READ",
+    "LEDGER_READ",
+    "CONFIG_READ",
+    "WITHDRAWALS_READ",
+    "WITHDRAWALS_WRITE",
+  ],
   AUDITOR: [
     "OVERVIEW_READ",
     "USERS_READ",
@@ -40,6 +51,7 @@ const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "LEDGER_READ",
     "AUDIT_READ",
     "CONFIG_READ",
+    "WITHDRAWALS_READ",
   ],
   SUPERADMIN: [
     "OVERVIEW_READ",
@@ -50,6 +62,8 @@ const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "LEDGER_READ",
     "AUDIT_READ",
     "CONFIG_READ",
+    "WITHDRAWALS_READ",
+    "WITHDRAWALS_WRITE",
   ],
   OWNER: [
     "OVERVIEW_READ",
@@ -58,6 +72,7 @@ const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "LEDGER_READ",
     "AUDIT_READ",
     "CONFIG_READ",
+    "WITHDRAWALS_READ",
   ],
 };
 
@@ -93,6 +108,15 @@ export interface AdminStore {
   ledger(): Promise<AdminLedgerResponse>;
   audit(): Promise<AdminAuditResponse>;
   risk(): Promise<AdminRiskResponse>;
+  withdrawals(): Promise<AdminWithdrawalsResponse>;
+  decideWithdrawal(input: {
+    actorId: string;
+    withdrawalId: string;
+    decision: "APPROVE" | "REJECT";
+    reason: string;
+    requestId: string;
+    ipHash?: string;
+  }): Promise<AdminWithdrawalDecisionResponse>;
   updateUserStatus(input: {
     actorId: string;
     targetId: string;
@@ -123,7 +147,8 @@ export class AdminError extends Error {
       | "ADMIN_FORBIDDEN"
       | "ADMIN_STEP_UP_INVALID"
       | "ADMIN_SESSION_INVALID"
-      | "ADMIN_TARGET_INVALID",
+      | "ADMIN_TARGET_INVALID"
+      | "ADMIN_WITHDRAWAL_INVALID",
     message: string,
     public readonly statusCode: number,
   ) {
@@ -226,6 +251,17 @@ export class AdminService {
   risk(actor: AdminActor) {
     requirePermission(actor, "RISK_READ");
     return this.store.risk();
+  }
+  withdrawals(actor: AdminActor) {
+    requirePermission(actor, "WITHDRAWALS_READ");
+    return this.store.withdrawals();
+  }
+  decideWithdrawal(
+    actor: AdminActor,
+    input: Omit<Parameters<AdminStore["decideWithdrawal"]>[0], "actorId">,
+  ) {
+    requirePermission(actor, "WITHDRAWALS_WRITE");
+    return this.store.decideWithdrawal({ ...input, actorId: actor.user.id });
   }
   updateUserStatus(
     actor: AdminActor,

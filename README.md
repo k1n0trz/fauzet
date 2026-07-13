@@ -4,7 +4,7 @@ Plataforma gamificada de micro-recompensas con una economía interna auditable. 
 
 ## Estado
 
-La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, juegos, misiones, tienda, minería virtual y Mining Crew de cuatro niveles server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
+La beta cerrada ejecutable ya incluye web Next.js, API Fastify, PostgreSQL/Prisma, autenticación persistente, siete buckets por usuario, ledger de doble partida, faucet, juegos, misiones, tienda, minería virtual, Mining Crew de cuatro niveles y conversiones/retiros sandbox server-authoritative. El diagnóstico y la secuencia completa permanecen en `DIAGNOSTICO-Y-ROADMAP.md`.
 
 ## Inicio local
 
@@ -82,6 +82,10 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Consola `/admin` con reautenticación de contraseña separada por diez minutos, RBAC por endpoint y vistas reales de overview, usuarios, riesgo, ledger y auditoría.
 - Cambios administrativos de estado/riesgo con motivo obligatorio, before/after, request ID, revocación de sesiones al suspender y bloqueo de autoacciones o cambios directos sobre Owner/Superadmin.
 - `AuditEvent` y `RiskSignal` protegidos por triggers append-only; el admin no ofrece edición directa de saldos ni puede habilitar dinero real, retiros o trading.
+- Laboratorio `/app/convert` con cotización de 120 segundos, reserva `ELIGIBLE→RESERVED`, destinos sandbox con cooldown de 24 horas y cancelación compensatoria.
+- Retiro ficticio protegido por contraseña más OTP email de un solo uso; score bajo confirma con txid sandbox, score medio entra a revisión humana y score alto libera la reserva.
+- Cola administrativa de retiros sandbox para `FRAUD`, `FINANCE` y `SUPERADMIN`, con motivo, auditoría, decisión concurrente exact-once y liquidación `RESERVED→WITHDRAWN` o devolución `RESERVED→ELIGIBLE`.
+- Las direcciones, tasas y txid sandbox no tienen valor externo ni realizan broadcast; `WITHDRAWALS_ENABLED=false` sigue siendo independiente.
 - Readiness real de PostgreSQL, cierre ordenado y soporte de proxy confiable para Cloud Run.
 
 ## Seguridad económica
@@ -90,4 +94,4 @@ La integración persistente se ejecuta contra PostgreSQL con `RUN_INTEGRATION=tr
 - Toda transacción posteada debe sumar cero por activo.
 - Reversos crean asientos compensatorios.
 - Owner Wallet no puede debitar fondos de usuarios, rewards, liquidez o seguridad.
-- Retiros, trading y dinero real permanecen deshabilitados hasta superar sus gates.
+- Retiros reales, trading y dinero real permanecen deshabilitados hasta superar sus gates; sólo está habilitado el adaptador de simulación.
