@@ -247,6 +247,9 @@ model User {
   riskLevel               Int                      @default(0)
   credentialVersion       Int                      @default(1)
   emailVerifiedAt         DateTime?
+  googleSubject           String?                  @unique
+  googleLinkedAt          DateTime?
+  googleLastLoginAt       DateTime?
   acceptedTermsAt         DateTime
   acceptedTermsVersion    String?
   acceptedPrivacyVersion  String?

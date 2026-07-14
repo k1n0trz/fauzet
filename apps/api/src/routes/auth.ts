@@ -1,9 +1,19 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { loginRequestSchema, registerRequestSchema } from "@fauzet/contracts";
-import { AuthError, type AuthService } from "../domain/auth.js";
+import {
+  googleAuthRequestSchema,
+  loginRequestSchema,
+  registerRequestSchema,
+} from "@fauzet/contracts";
+import {
+  AuthError,
+  GoogleIdentityVerificationError,
+  type AuthService,
+  type GoogleIdentityVerifier,
+} from "../domain/auth.js";
 import { AccountTokenError } from "../domain/account-security.js";
 import { AdminError } from "../domain/admin.js";
 import { SandboxWithdrawalError } from "../domain/sandbox-withdrawals.js";
+import type { WelcomeBonusIssuer } from "../domain/welcome-bonus.js";
 
 const COOKIE = "fz_session";
 
@@ -35,6 +45,8 @@ function sessionContext(request: FastifyRequest) {
 export async function registerAuthRoutes(
   app: FastifyInstance,
   auth: AuthService,
+  googleVerifier: GoogleIdentityVerifier | null = null,
+  welcomeBonus?: WelcomeBonusIssuer,
 ) {
   app.post(
     "/v1/auth/register",
@@ -47,6 +59,50 @@ export async function registerAuthRoutes(
         user: session.user,
         sessionExpiresAt: session.expiresAt.toISOString(),
       });
+    },
+  );
+  app.post(
+    "/v1/auth/google",
+    { config: { rateLimit: { max: 10, timeWindow: "5 minutes" } } },
+    async (request, reply) => {
+      if (!googleVerifier) {
+        throw new AuthError(
+          "Google authentication is not available",
+          "GOOGLE_AUTH_UNAVAILABLE",
+          503,
+        );
+      }
+      const input = googleAuthRequestSchema.parse(request.body);
+      let identity;
+      try {
+        identity = await googleVerifier.verify(input.idToken);
+      } catch (error) {
+        if (error instanceof GoogleIdentityVerificationError) {
+          throw new AuthError(error.message, "GOOGLE_TOKEN_INVALID", 401);
+        }
+        throw error;
+      }
+      const result = await auth.loginWithGoogle(
+        identity,
+        input.registration,
+        sessionContext(request),
+      );
+      setSession(reply, result.session.token, result.session.expiresAt);
+      if (welcomeBonus && result.becameVerified) {
+        try {
+          await welcomeBonus.issue(result.session.user.id);
+        } catch (error) {
+          app.log.error(
+            { error, userId: result.session.user.id },
+            "Welcome bonus issuance after Google authentication failed",
+          );
+        }
+      }
+      return {
+        user: result.session.user,
+        sessionExpiresAt: result.session.expiresAt.toISOString(),
+        created: result.created,
+      };
     },
   );
   app.post(

@@ -39,14 +39,14 @@ La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 
 | Backend         | Fastify en Cloud Run, revisión `fauzet-api-00007-kiw` con 100% del tráfico          | Rutas Mercado Pago TEST desplegadas detrás de gates fail-closed; health/readiness y proxy verificados                                               | Monitoreo, alertas, métricas operativas y siguientes integraciones                                                                        |
 | Datos           | PostgreSQL en Cloud SQL, ledger y 22 migraciones aplicadas                          | Hardening de pagos, órdenes, intentos, webhook inbox, inventario y reembolsos aplicado                                                              | Outbox, alertas y reportes operativos                                                                                                     |
 | Email           | Resend verificado; registro y activación por correo comprobados                     | —                                                                                                                                                   | Monitorear rebotes/entrega y probar recuperación periódicamente                                                                           |
-| Auth            | Registro, login, verificación, recuperación y sesiones persistentes                 | UI de seguridad/perfil ampliada                                                                                                                     | TOTP 2FA, alertas, Google/Firebase y recuperación reforzada                                                                               |
+| Auth            | Registro, login, verificación, recuperación y sesiones persistentes                 | UI de seguridad/perfil ampliada; Google/Firebase integrado localmente con vinculación segura                                                       | Publicar y validar Google en producción; TOTP 2FA, alertas y recuperación reforzada                                                        |
 | Rewards         | Faucet, misiones, minería virtual, tienda y Crew con lógica server-side             | Faucet desligado de IP proxy volátil; IP continúa en riesgo/límites; rutas publicadas y probadas                                                    | Reconciliar pools y reforzar controles operativos                                                                                         |
 | Economía        | Ledger de doble partida, siete buckets y ZYXE interno                               | Pruebas unitarias/integración verdes                                                                                                                | Reconciliación automática, alertas y reportes operativos                                                                                  |
 | Conversión      | Sandbox sin valor real                                                              | Sección Swap marcada como futura                                                                                                                    | Custodia, liquidez, KYC/AML y legal antes de activar valor externo                                                                        |
-| Pagos fiat      | Código Checkout Pro TEST y frontend desplegados; checkout y activaciones bloqueados | Órdenes idempotentes, webhook firmado, verificación server-to-server, fulfillment exact-once y reconciliación                                       | Registrar webhook `Pagos`, agregar su secret, montar secrets en API y ejecutar prueba allowlisted; luego recibos, reembolsos y activación |
+| Pagos fiat      | Base Checkout Pro TEST desplegada; checkout y activaciones bloqueados               | Órdenes idempotentes, verificación server-to-server, fulfillment exact-once y reconciliación                                                        | Adaptar el proveedor a Checkout API —decisión vigente— y ejecutar una prueba TEST allowlisted; luego recibos, reembolsos y activación     |
 | Infraestructura | GitHub, CI, Vercel, Cloud Run, Cloud SQL y jobs                                     | PR #5 fusionado; backup, migración 22, API/jobs y Vercel promovidos; reconciliador fiat validado y scheduler pausado; analytics bajo consentimiento | Observabilidad y alertas antes de abrir checkout                                                                                          |
 
-**Conclusión:** el núcleo de la beta cerrada y la base Mercado Pago TEST están publicados con autoridad server-side. El reconciliador ya está desplegado y validado, pero su scheduler permanece pausado. El checkout no está operativo: faltan registrar el webhook, agregar la versión de su secret, montar los secrets en la API y completar la prueba allowlisted. Dinero real y activación continúan bloqueados.
+**Conclusión:** el núcleo de la beta cerrada y la base Mercado Pago TEST están publicados con autoridad server-side. El reconciliador ya está desplegado y validado, pero su scheduler permanece pausado. El propietario eligió Checkout API; como el código publicado aún usa Checkout Pro, antes de probar pagos debe adaptarse ese proveedor y validarse de extremo a extremo. Dinero real y activación continúan bloqueados.
 
 ### 0.3 Qué está probado
 
@@ -67,10 +67,10 @@ La aplicación Claude contiene 14 destinos de usuario y el admin 16 entradas (8 
 ### 0.4 Qué todavía no puede considerarse terminado
 
 - Las verticales especializadas aún requieren iteración de fidelidad y funcionalidad; juegos futuros, Vault, swap y retiros continúan rotulados como no disponibles.
-- El checkout Mercado Pago TEST está implementado, pero aún no puede considerarse operativo: el propietario debe registrar el webhook `Pagos`, agregar su secret al recurso ya creado y completar una compra allowlisted de extremo a extremo.
+- El checkout Mercado Pago TEST aún no puede considerarse operativo: la base publicada usa Checkout Pro y debe adaptarse a Checkout API antes de una compra allowlisted de extremo a extremo.
 - No hay pagos Stripe funcionando: las claves test no equivalen a checkout, PaymentIntent, webhook ni conciliación.
 - Reembolsos iniciados por el usuario, recibos/comprobantes y activación de los productos fiat siguen pendientes; ningún checkout TEST entrega ZYXE ni habilita dinero real.
-- Firebase/Google Auth, KYC, custodia y demás terceros siguen pendientes o en proceso.
+- Google Auth/Firebase está implementado localmente y pendiente de publicación/prueba final; KYC, custodia y demás terceros siguen pendientes o en proceso.
 - No hay criptomonedas reales, swaps reales, depósitos ni retiros on-chain habilitados.
 - Minería sigue siendo virtual y recompensa ZYXE desde un pool interno.
 - 2FA, KYC real, medios de pago guardados mediante tokens, facturación real y seguridad financiera reforzada siguen incompletos.
@@ -187,11 +187,11 @@ Las APIs de Binance pueden servir más adelante para precio/liquidez o conciliac
 
 #### E. Google Auth/Firebase
 
-1. En Firebase habilita Authentication → Sign-in method → Google.
-2. Agrega `fauzet.app` a dominios autorizados.
-3. Configura la pantalla de consentimiento con nombre, logo, correo de soporte, privacidad y términos.
-4. Comparte el `projectId` y la configuración web pública; guarda cualquier credencial privada/service account en Secret Manager.
-5. No reemplazaremos el usuario actual: vincularemos Google por email verificado y evitaremos cuentas duplicadas.
+1. [x] Google habilitado en Firebase, dominio autorizado y configuración web pública agregada a Vercel.
+2. [x] Backend implementado con verificación del ID token de Firebase, sesión propia Fauzet y revocación comprobada.
+3. [x] Vinculación por email verificado sin duplicar cuentas; un segundo sujeto Google incompatible se rechaza.
+4. [x] Registro nuevo exige país, mayoría de edad y aceptación de términos antes de crear la cuenta.
+5. [ ] Publicar la migración y API/web, y ejecutar una prueba real de acceso con Google en `fauzet.app`.
 
 #### F. Terceros que debes investigar — uno por categoría
 
@@ -252,7 +252,7 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 - [x] Avatar validado, username, contactos, privacidad y cierre/exportación.
 - [ ] Recuperación por email y sesiones/dispositivos listas; falta cambio autenticado de contraseña y alertas de acceso.
 - [ ] TOTP 2FA, códigos de recuperación y step-up para acciones sensibles.
-- [ ] Google Auth con Firebase y vinculación segura de cuentas.
+- [x] Google Auth con Firebase y vinculación segura de cuentas implementado y cubierto por pruebas; publicación/prueba real pendiente.
 - [ ] Estado KYC incorporado al perfil; falta seleccionar proveedor y construir su adaptador sandbox.
 
 #### R3 — Mercado Pago sandbox y monetización fiat
@@ -269,7 +269,8 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 - [x] Checkout alojado, webhook con firma/dedupe, verificación server-to-server y fulfillment exact-once implementados y cubiertos por pruebas unitarias/integración.
 - [x] Worker de reconciliación y estados explícitos para retención, disputa, devolución y contracargo; outbox/alertas operativas siguen pendientes.
 - [x] Frontend TEST conectado: CTA gated, consentimiento, clave idempotente, redirección alojada y vista de orden que ignora parámetros de retorno y consulta sólo al servidor.
-- [ ] Propietario: registrar la URL HTTPS en Webhooks, seleccionar `Pagos` y agregar una versión al recurso `fauzet-mercadopago-webhook-secret` ya creado en Secret Manager.
+- [x] Propietario: confirmar Checkout API como modalidad vigente; no se exige una acción manual de webhook en esta fase.
+- [ ] Desarrollo: sustituir el inicio de Checkout Pro por Checkout API conservando idempotencia, consulta autoritativa y reconciliación.
 - [x] Desplegar código y migración como candidata aislada, superar smoke y promover API/web/jobs con checkout apagado.
 - [x] Job `fauzet-fiat-reconcile` desplegado con credenciales TEST mínimas y ejecución manual exitosa; scheduler `fauzet-fiat-reconcile-10m` creado y dejado en `PAUSED` hasta abrir la prueba allowlisted.
 - [ ] Ejecutar una compra completa con usuario allowlisted, cuenta compradora y medios Mercado Pago TEST.
@@ -279,7 +280,7 @@ Envíanos únicamente nombres, enlaces, precios y capacidades. Nunca llaves, see
 - [x] Claves Stripe test presentes y validadas por prefijo; Stripe no está integrado y no participa en este release.
 - [ ] Stripe como segundo proveedor solo después de estabilizar MP y aprobar la cuenta/modelo de negocio.
 
-**Estado de R3:** base técnica, migración 22 y reconciliador desplegados en producción con `FIAT_SANDBOX_CHECKOUT_ENABLED=false`, `FIAT_SANDBOX_ACTIVATION_ENABLED=false` y `REAL_MONEY_ENABLED=false`. El siguiente gate es configurar webhook/secret, montar la configuración en la API, reanudar el scheduler y realizar una única compra TEST allowlisted.
+**Estado de R3:** base técnica, migración 22 y reconciliador desplegados en producción con `FIAT_SANDBOX_CHECKOUT_ENABLED=false`, `FIAT_SANDBOX_ACTIVATION_ENABLED=false` y `REAL_MONEY_ENABLED=false`. La decisión vigente es Checkout API: el siguiente gate es adaptar el proveedor publicado, verificar notificaciones/consulta autoritativa según esa modalidad y realizar una única compra TEST allowlisted.
 
 #### R4 — Piloto cripto real con un activo
 
@@ -581,7 +582,7 @@ Callbacks sandbox/reales de proveedor, rewarded ads/offerwall, catálogo/boosts,
 
 **Gate:** unit economics observables, callback firmado y reversible, fraude dentro del umbral, aprobación legal del modelo referral.
 
-**Estado actual:** Mercado Pago Checkout Pro TEST, la migración 22 y el reconciliador están desplegados en modo fail-closed, conectados al frontend y cubiertos por pruebas unitarias y de integración. El scheduler quedó creado y pausado. Falta que el propietario registre el webhook `Pagos` y agregue su secret; después desarrollo montará los secrets, reanudará el scheduler y abrirá una única prueba allowlisted. La activación del inventario y cualquier operación con dinero real permanecen apagadas; reembolsos y recibos siguen pendientes.
+**Estado actual:** la base Mercado Pago Checkout Pro TEST, la migración 22 y el reconciliador están desplegados en modo fail-closed. La modalidad elegida por el propietario es Checkout API, por lo que desarrollo debe adaptar el proveedor antes de abrir una prueba allowlisted. La activación del inventario y cualquier operación con dinero real permanecen apagadas; reembolsos y recibos siguen pendientes.
 
 ### Fase 3 — Beta pública controlada
 
@@ -665,7 +666,7 @@ Estimación relativa: S (1–3 d), M (3–7 d), L (1–2 sem), XL (requiere divi
 
 | Now                                                                                                                                                                                        | Next                                                                                                                                                                                          | Later                                                                                                                                                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Base Mercado Pago TEST fail-closed desplegada: checkout, webhook firmado, reconciliación y frontend validados; 22 migraciones aplicadas; job validado y scheduler pausado; gates apagados. | Propietario configura webhook `Pagos` y agrega su secret; desarrollo monta secrets en API, reanuda scheduler y ejecuta prueba allowlisted; luego implementa recibos, reembolsos y activación. | Integrar Stripe como segundo proveedor; piloto real y cripto sólo tras gates legales, de custodia, reservas y seguridad; marketplace, apps y token público condicionado. |
+| Google Auth listo para publicación; base Mercado Pago TEST fail-closed desplegada; 22 migraciones aplicadas; job validado y scheduler pausado; gates apagados. | Publicar/probar Google; adaptar Mercado Pago de Checkout Pro a Checkout API y ejecutar prueba TEST allowlisted; luego recibos, reembolsos y activación. | Integrar Stripe como segundo proveedor; piloto real y cripto sólo tras gates legales, de custodia, reservas y seguridad; marketplace, apps y token público condicionado. |
 
 ## 19. Checklist maestro de salida a producción
 

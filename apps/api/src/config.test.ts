@@ -168,6 +168,23 @@ describe("loadConfig", () => {
     ).toBeUndefined();
   });
 
+  it("keeps Google Auth fail-closed until a Firebase project is explicit", () => {
+    expect(loadConfig({ NODE_ENV: "test" }).googleAuth).toEqual({
+      enabled: false,
+      projectId: undefined,
+    });
+    expect(() =>
+      loadConfig({ NODE_ENV: "test", GOOGLE_AUTH_ENABLED: "true" }),
+    ).toThrow("FIREBASE_PROJECT_ID");
+    expect(
+      loadConfig({
+        NODE_ENV: "test",
+        GOOGLE_AUTH_ENABLED: "true",
+        FIREBASE_PROJECT_ID: "fauzet",
+      }).googleAuth,
+    ).toEqual({ enabled: true, projectId: "fauzet" });
+  });
+
   it("accepts a complete production configuration", () => {
     const config = loadConfig(productionEnv);
     expect(config.nodeEnv).toBe("production");

@@ -3,9 +3,14 @@
 import type { AccountActivityResponse } from "@fauzet/contracts";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { API_BASE } from "../../lib/api";
 import { getDeviceId } from "../../lib/device";
+import {
+  googleAuthConfigured,
+  signInWithGooglePopup,
+  signOutGoogle,
+} from "../../lib/firebase-auth";
 import { fetchGameCatalog, type GameCatalog } from "../../lib/games-api";
 import { fetchMiningStatus, type MiningStatus } from "../../lib/mining-api";
 import { fetchMissions, type MissionCatalog } from "../../lib/missions-api";
@@ -15,7 +20,7 @@ import styles from "./portal.module.css";
 type User = { email: string; displayName: string | null; status: string };
 type Balance = { bucket: string; minorUnits: string };
 type ApiError = {
-  error?: string | { message?: string };
+  error?: string | { code?: string; message?: string };
   message?: string;
 };
 
@@ -109,6 +114,7 @@ export function AuthPortal() {
   const [modules, setModules] = useState<DashboardModules | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [balancesLoading, setBalancesLoading] = useState(false);
   const [modulesLoading, setModulesLoading] = useState(true);
@@ -116,6 +122,7 @@ export function AuthPortal() {
   const [accountMessage, setAccountMessage] = useState("");
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
+  const authFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -210,6 +217,128 @@ export function AuthPortal() {
     );
   }
 
+  async function acceptAuthenticatedUser(
+    result: ApiError & { user?: User },
+    requestEmailVerification: boolean,
+  ) {
+    if (!result.user) throw new Error("No fue posible autenticarte");
+    setModules(null);
+    setModulesLoading(true);
+    setUser(result.user);
+    window.history.replaceState(null, "", "/app");
+    window.dispatchEvent(new Event("fauzet:session"));
+    setBalances([]);
+    window.localStorage.removeItem("fz_referral_code");
+    setReferralCode("");
+
+    if (requestEmailVerification) {
+      const verification = await fetch(
+        `${API_BASE}/auth/email-verification/request`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: "{}",
+        },
+      );
+      setAccountMessage(
+        verification.ok
+          ? "Te enviamos el enlace de verificación."
+          : "La cuenta fue creada, pero no pudimos enviar el email.",
+      );
+    }
+
+    try {
+      setBalances(await fetchBalances());
+    } catch (caught) {
+      setBalanceError(balanceErrorMessage(caught));
+    }
+  }
+
+  async function authenticateWithGoogle() {
+    if (googleLoading || !googleAuthConfigured) return;
+    setError("");
+    setBalanceError("");
+
+    let registration:
+      | {
+          displayName: string;
+          countryCode: string;
+          locale: "es";
+          acceptedTerms: true;
+          isAdult: true;
+          termsVersion: "beta-2026-07-13";
+          privacyVersion: "beta-2026-07-13";
+          referralCode?: string;
+        }
+      | undefined;
+    if (mode === "register") {
+      const formElement = authFormRef.current;
+      if (!formElement) return;
+      const form = new FormData(formElement);
+      const displayName = String(form.get("displayName") ?? "").trim();
+      const countryCode = String(form.get("countryCode") ?? "")
+        .trim()
+        .toUpperCase();
+      if (displayName.length < 2 || !/^[A-Z]{2}$/.test(countryCode)) {
+        setError("Completa tu nombre y el código de país antes de continuar.");
+        return;
+      }
+      if (form.get("acceptedTerms") !== "on" || form.get("isAdult") !== "on") {
+        setError(
+          "Debes aceptar las condiciones y confirmar la edad requerida.",
+        );
+        return;
+      }
+      const referral = String(form.get("referralCode") ?? "").trim();
+      registration = {
+        displayName,
+        countryCode,
+        locale: "es",
+        acceptedTerms: true,
+        isAdult: true,
+        termsVersion: "beta-2026-07-13",
+        privacyVersion: "beta-2026-07-13",
+        ...(referral ? { referralCode: referral } : {}),
+      };
+    }
+
+    setGoogleLoading(true);
+    try {
+      const idToken = await signInWithGooglePopup();
+      const response = await fetch(`${API_BASE}/auth/google`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          "x-device-id": getDeviceId(),
+        },
+        body: JSON.stringify({
+          idToken,
+          ...(registration ? { registration } : {}),
+        }),
+      });
+      const result = (await response.json()) as ApiError & { user?: User };
+      if (!response.ok || !result.user) {
+        if (apiErrorCode(result) === "GOOGLE_REGISTRATION_REQUIRED") {
+          selectMode("register");
+          setError(
+            "Completa los datos y consentimientos de registro; después pulsa Google nuevamente.",
+          );
+          return;
+        }
+        throw new Error(
+          apiErrorMessage(result) ?? "No fue posible autenticarte con Google",
+        );
+      }
+      await acceptAuthenticatedUser(result, false);
+    } catch (caught) {
+      setError(googleErrorMessage(caught));
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -257,36 +386,7 @@ export function AuthPortal() {
         );
       }
 
-      setModules(null);
-      setModulesLoading(true);
-      setUser(result.user);
-      window.history.replaceState(null, "", "/app");
-      window.dispatchEvent(new Event("fauzet:session"));
-      setBalances([]);
-
-      if (mode === "register") {
-        window.localStorage.removeItem("fz_referral_code");
-        const verification = await fetch(
-          `${API_BASE}/auth/email-verification/request`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "content-type": "application/json" },
-            body: "{}",
-          },
-        );
-        setAccountMessage(
-          verification.ok
-            ? "Te enviamos el enlace de verificación."
-            : "La cuenta fue creada, pero no pudimos enviar el email.",
-        );
-      }
-
-      try {
-        setBalances(await fetchBalances());
-      } catch (caught) {
-        setBalanceError(balanceErrorMessage(caught));
-      }
+      await acceptAuthenticatedUser(result, mode === "register");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Error inesperado");
     } finally {
@@ -301,6 +401,7 @@ export function AuthPortal() {
         credentials: "include",
       });
       if (!response.ok) throw new Error("logout_failed");
+      await signOutGoogle().catch(() => undefined);
       setUser(null);
       window.dispatchEvent(new Event("fauzet:session"));
       setBalances([]);
@@ -430,19 +531,26 @@ export function AuthPortal() {
         <button
           className={styles.googleButton}
           type="button"
-          disabled
+          disabled={!googleAuthConfigured || googleLoading}
           aria-describedby="google-status"
+          onClick={() => void authenticateWithGoogle()}
         >
           <GoogleMark />
-          Continuar con Google
-          <small id="google-status">Próximamente</small>
+          {googleLoading ? "Conectando…" : "Continuar con Google"}
+          <small id="google-status">
+            {googleAuthConfigured
+              ? mode === "register"
+                ? "Completa abajo tus datos y consentimientos"
+                : "Acceso seguro"
+              : "Configuración pendiente"}
+          </small>
         </button>
 
         <div className={styles.authDivider}>
           <span>o continúa con email</span>
         </div>
 
-        <form className={styles.authForm} onSubmit={submit}>
+        <form ref={authFormRef} className={styles.authForm} onSubmit={submit}>
           {mode === "register" && (
             <div className={styles.fieldGrid}>
               <label className={styles.field}>
@@ -487,7 +595,7 @@ export function AuthPortal() {
           {mode === "register" ? (
             <div className={styles.fieldGrid}>
               <label className={styles.field}>
-                <span>Contraseña</span>
+                <span>Contraseña (registro con email)</span>
                 <input
                   name="password"
                   type="password"
@@ -498,7 +606,7 @@ export function AuthPortal() {
                 />
               </label>
               <label className={styles.field}>
-                <span>Confirmar contraseña</span>
+                <span>Confirmar contraseña (registro con email)</span>
                 <input
                   name="confirmPassword"
                   type="password"
@@ -1190,6 +1298,32 @@ async function readJson(response: Response): Promise<unknown> {
 function apiErrorMessage(payload: ApiError | null) {
   if (typeof payload?.error === "string") return payload.error;
   return payload?.error?.message ?? payload?.message ?? null;
+}
+
+function apiErrorCode(payload: ApiError | null) {
+  return typeof payload?.error === "object" ? payload.error.code : undefined;
+}
+
+function googleErrorMessage(caught: unknown) {
+  const code =
+    typeof caught === "object" &&
+    caught !== null &&
+    "code" in caught &&
+    typeof caught.code === "string"
+      ? caught.code
+      : "";
+  if (code === "auth/popup-closed-by-user") {
+    return "Cerraste la ventana de Google antes de terminar.";
+  }
+  if (code === "auth/popup-blocked") {
+    return "El navegador bloqueó la ventana de Google. Permite ventanas emergentes e inténtalo de nuevo.";
+  }
+  if (code === "auth/unauthorized-domain") {
+    return "Este dominio todavía no está autorizado en Firebase.";
+  }
+  return caught instanceof Error
+    ? caught.message
+    : "No fue posible autenticarte con Google.";
 }
 
 function balanceErrorMessage(caught: unknown) {

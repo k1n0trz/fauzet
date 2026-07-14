@@ -33,6 +33,13 @@ const envSchema = z.object({
   FIAT_SANDBOX_CHECKOUT_ENABLED: z.enum(["true", "false"]).default("false"),
   FIAT_SANDBOX_ACTIVATION_ENABLED: z.enum(["true", "false"]).default("false"),
   FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS: z.string().default(""),
+  GOOGLE_AUTH_ENABLED: z.enum(["true", "false"]).default("false"),
+  FIREBASE_PROJECT_ID: optionalNonEmptyString.pipe(
+    z
+      .string()
+      .regex(/^[a-z0-9-]{6,30}$/)
+      .optional(),
+  ),
   MERCADOPAGO_MODE: z.enum(["test", "live"]).default("test"),
   MERCADOPAGO_ACCESS_TOKEN: optionalNonEmptyString.pipe(
     z.string().min(20).max(512).optional(),
@@ -68,6 +75,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const allowlistedCheckoutUsers = parseCheckoutAllowlist(
     parsed.FIAT_SANDBOX_CHECKOUT_ALLOWED_USERS,
   );
+  const googleAuthEnabled = parsed.GOOGLE_AUTH_ENABLED === "true";
+  if (googleAuthEnabled && !parsed.FIREBASE_PROJECT_ID) {
+    throw new Error("GOOGLE_AUTH_ENABLED requires FIREBASE_PROJECT_ID");
+  }
   const mercadoPago = {
     mode: parsed.MERCADOPAGO_MODE,
     accessToken:
@@ -117,6 +128,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       parsed.SESSION_SECRET ?? "development-only-secret-change-me-now",
     sessionTtlDays: parsed.SESSION_TTL_DAYS,
     appBaseUrl: parsed.APP_BASE_URL,
+    googleAuth: {
+      enabled: googleAuthEnabled,
+      projectId: parsed.FIREBASE_PROJECT_ID,
+    },
     smtp: {
       host: parsed.SMTP_HOST,
       port: parsed.SMTP_PORT,
