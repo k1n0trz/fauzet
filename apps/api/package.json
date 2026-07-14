@@ -26,6 +26,7 @@
     "@fauzet/contracts": "workspace:*",
     "@fauzet/database": "workspace:*",
     "fastify": "5.10.0",
+    "firebase-admin": "14.1.0",
     "lossless-json": "4.3.0",
     "mercadopago": "3.2.0",
     "nodemailer": "9.0.3",

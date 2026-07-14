@@ -6,6 +6,7 @@ import {
 } from "node:crypto";
 import { promisify } from "node:util";
 import type {
+  GoogleAuthRequest,
   LoginRequest,
   PublicUser,
   RegisterRequest,
@@ -35,12 +36,45 @@ export interface AuthenticatedSession {
   context: SessionContext;
 }
 
+export type GoogleRegistration = NonNullable<GoogleAuthRequest["registration"]>;
+
+export interface VerifiedGoogleIdentity {
+  subject: string;
+  email: string;
+  displayName: string | null;
+}
+
+export interface GoogleIdentityVerifier {
+  verify(idToken: string): Promise<VerifiedGoogleIdentity>;
+}
+
+export class GoogleIdentityVerificationError extends Error {}
+
+export interface GoogleAuthenticationResult {
+  session: StoredSession;
+  created: boolean;
+  becameVerified: boolean;
+}
+
 export interface AuthStore {
   findUserByEmail(email: string): Promise<StoredUser | null>;
   createUser(
     input: RegisterRequest & { passwordHash: string },
     context?: SessionContext,
   ): Promise<StoredUser>;
+  authenticateWithGoogle(
+    input: {
+      identity: VerifiedGoogleIdentity;
+      registration?: GoogleRegistration;
+      passwordHash?: string;
+      now: Date;
+    },
+    context?: SessionContext,
+  ): Promise<{
+    user: StoredUser;
+    created: boolean;
+    becameVerified: boolean;
+  }>;
   createSession(
     userId: string,
     tokenHash: string,
@@ -63,6 +97,10 @@ export class AuthError extends Error {
       | "INVALID_CREDENTIALS"
       | "UNAUTHORIZED"
       | "ACCOUNT_RESTRICTED"
+      | "GOOGLE_AUTH_UNAVAILABLE"
+      | "GOOGLE_TOKEN_INVALID"
+      | "GOOGLE_REGISTRATION_REQUIRED"
+      | "GOOGLE_IDENTITY_CONFLICT"
       | "REFERRAL_CODE_INVALID"
       | "REFERRAL_ATTRIBUTION_BLOCKED",
     public readonly statusCode: number,
@@ -72,6 +110,19 @@ export class AuthError extends Error {
 }
 
 export class AuthStoreConflictError extends Error {}
+export class AuthStoreGoogleError extends Error {
+  constructor(
+    public readonly code:
+      | "ACCOUNT_RESTRICTED"
+      | "GOOGLE_REGISTRATION_REQUIRED"
+      | "GOOGLE_IDENTITY_CONFLICT"
+      | "REFERRAL_CODE_INVALID"
+      | "REFERRAL_ATTRIBUTION_BLOCKED",
+    message: string,
+  ) {
+    super(message);
+  }
+}
 export class AuthStoreReferralError extends Error {
   constructor(
     public readonly code:
@@ -172,6 +223,46 @@ export class AuthService {
       );
     }
     return this.issueSession(user, context);
+  }
+
+  async loginWithGoogle(
+    identity: VerifiedGoogleIdentity,
+    registration: GoogleRegistration | undefined,
+    context: SessionContext = {},
+  ): Promise<GoogleAuthenticationResult> {
+    try {
+      const result = await this.store.authenticateWithGoogle(
+        {
+          identity,
+          ...(registration ? { registration } : {}),
+          ...(registration
+            ? {
+                passwordHash: await hashPassword(
+                  randomBytes(48).toString("base64url"),
+                ),
+              }
+            : {}),
+          now: new Date(),
+        },
+        context,
+      );
+      return {
+        session: await this.issueSession(result.user, context),
+        created: result.created,
+        becameVerified: result.becameVerified,
+      };
+    } catch (error) {
+      if (error instanceof AuthStoreGoogleError) {
+        const statusCode =
+          error.code === "ACCOUNT_RESTRICTED"
+            ? 403
+            : error.code === "GOOGLE_REGISTRATION_REQUIRED"
+              ? 409
+              : 409;
+        throw new AuthError(error.message, error.code, statusCode);
+      }
+      throw error;
+    }
   }
 
   async authenticate(token: string | undefined): Promise<PublicUser> {

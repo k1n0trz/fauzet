@@ -88,6 +88,8 @@ Variables no secretas mínimas:
 | `REAL_MONEY_ENABLED`                  | `false`                                                       |
 | `WITHDRAWALS_ENABLED`                 | `false`                                                       |
 | `TRADING_ENABLED`                     | `false`                                                       |
+| `GOOGLE_AUTH_ENABLED`                 | `true` sólo cuando Firebase Auth esté configurado             |
+| `FIREBASE_PROJECT_ID`                 | ID exacto del proyecto Firebase                               |
 | `SANDBOX_WITHDRAWALS_ENABLED`         | `true` sólo en el laboratorio aprobado                        |
 | `FIAT_CATALOG_ENABLED`                | `true` para el catálogo informativo COP                       |
 | `FIAT_SANDBOX_CHECKOUT_ENABLED`       | `false` durante despliegue; `true` sólo para beta allowlisted |

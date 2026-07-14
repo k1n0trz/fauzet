@@ -5,7 +5,11 @@ import rateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
 import { getDatabase } from "@fauzet/database";
 import type { AppConfig } from "./config.js";
-import { AuthService, type AuthStore } from "./domain/auth.js";
+import {
+  AuthService,
+  type AuthStore,
+  type GoogleIdentityVerifier,
+} from "./domain/auth.js";
 import {
   AccountSecurityService,
   type AccountSecurityStore,
@@ -52,6 +56,7 @@ import { MemoryFiatPaymentStore } from "./infrastructure/memory-fiat-payment-sto
 import { MemoryReferralStore } from "./infrastructure/memory-referral-store.js";
 import { MemoryMailer } from "./infrastructure/memory-mailer.js";
 import { PrismaAuthStore } from "./infrastructure/prisma-auth-store.js";
+import { FirebaseGoogleIdentityVerifier } from "./infrastructure/firebase-google-identity.js";
 import { PrismaAccountSecurityStore } from "./infrastructure/prisma-account-security-store.js";
 import { PrismaBalanceStore } from "./infrastructure/prisma-balance-store.js";
 import { PrismaAccountActivityStore } from "./infrastructure/prisma-account-activity-store.js";
@@ -85,6 +90,7 @@ import { registerProfileRoutes } from "./routes/profile.js";
 
 export interface AppDependencies {
   authStore?: AuthStore;
+  googleIdentityVerifier?: GoogleIdentityVerifier | null;
   balanceStore?: BalanceStore;
   accountActivityStore?: AccountActivityStore;
   faucetStore?: FaucetStore;
@@ -128,12 +134,21 @@ export async function createApp(
     config.sessionSecret,
     config.sessionTtlDays,
   );
+  const welcomeBonus =
+    dependencies.welcomeBonus ??
+    (config.nodeEnv === "test" ? undefined : new PrismaWelcomeBonusIssuer());
+  const googleIdentityVerifier =
+    dependencies.googleIdentityVerifier !== undefined
+      ? dependencies.googleIdentityVerifier
+      : config.googleAuth.enabled && config.googleAuth.projectId
+        ? new FirebaseGoogleIdentityVerifier(config.googleAuth.projectId)
+        : null;
   const balanceStore =
     dependencies.balanceStore ??
     (config.nodeEnv === "test"
       ? new MemoryBalanceStore()
       : new PrismaBalanceStore());
-  await registerAuthRoutes(app, auth);
+  await registerAuthRoutes(app, auth, googleIdentityVerifier, welcomeBonus);
   const accountSecurityStore =
     dependencies.accountSecurityStore ??
     (config.nodeEnv === "test"
@@ -144,9 +159,6 @@ export async function createApp(
     (config.nodeEnv === "test"
       ? new MemoryMailer()
       : new SmtpMailer({ ...config.smtp, appBaseUrl: config.appBaseUrl }));
-  const welcomeBonus =
-    dependencies.welcomeBonus ??
-    (config.nodeEnv === "test" ? undefined : new PrismaWelcomeBonusIssuer());
   await registerAccountSecurityRoutes(
     app,
     auth,

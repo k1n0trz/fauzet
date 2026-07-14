@@ -177,7 +177,11 @@ function serialize(user: ProfileRecord, currentTokenHash: string) {
         available: false,
         reason: "TOTP_PENDING_IMPLEMENTATION",
       },
-      google: { linked: false, available: false, reason: "FIREBASE_PENDING" },
+      google: {
+        linked: Boolean(user.googleSubject),
+        available: true,
+        reason: user.googleSubject ? "LINKED" : "AVAILABLE",
+      },
     },
     sessions: user.sessions
       .filter((session) => session.expiresAt > new Date())

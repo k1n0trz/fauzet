@@ -1162,6 +1162,13 @@ export const loginRequestSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
+export const googleAuthRequestSchema = z.object({
+  idToken: z.string().min(100).max(8192),
+  registration: registerRequestSchema
+    .omit({ email: true, password: true })
+    .optional(),
+});
+
 export const emailRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
 });
@@ -1201,6 +1208,7 @@ export type AccountActivityResponse = z.infer<
 >;
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type GoogleAuthRequest = z.infer<typeof googleAuthRequestSchema>;
 export type PublicUser = z.infer<typeof publicUserSchema>;
 export type FaucetStatusResponse = z.infer<typeof faucetStatusResponseSchema>;
 export type FaucetChallengeResponse = z.infer<

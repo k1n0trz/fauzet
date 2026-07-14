@@ -510,8 +510,14 @@ export function SettingsExperience() {
                 />
                 <StatusCard
                   title="Google Auth"
-                  status="Pendiente de Firebase"
-                  copy="Se activará cuando el proyecto Firebase esté conectado."
+                  status={
+                    data.security.google.linked ? "Vinculado" : "Disponible"
+                  }
+                  copy={
+                    data.security.google.linked
+                      ? "Tu cuenta puede iniciar sesión de forma segura con Google."
+                      : "Usa el botón Google al iniciar sesión para vincular el mismo correo verificado."
+                  }
                 />
                 <StatusCard
                   title="2FA"

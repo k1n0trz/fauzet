@@ -1,8 +1,15 @@
 import type { RegisterRequest } from "@fauzet/contracts";
-import type { AuthStore, SessionContext, StoredUser } from "../domain/auth.js";
+import {
+  AuthStoreGoogleError,
+  type AuthStore,
+  type SessionContext,
+  type StoredUser,
+} from "../domain/auth.js";
 
 export class MemoryAuthStore implements AuthStore {
   private readonly users = new Map<string, StoredUser>();
+  private readonly googleSubjects = new Map<string, string>();
+  private readonly googleByUser = new Map<string, string>();
   private readonly sessions = new Map<
     string,
     {
@@ -31,6 +38,58 @@ export class MemoryAuthStore implements AuthStore {
     };
     this.users.set(user.email, user);
     return user;
+  }
+  async authenticateWithGoogle(
+    input: Parameters<AuthStore["authenticateWithGoogle"]>[0],
+  ) {
+    const { identity, registration, passwordHash } = input;
+    const linkedUserId = this.googleSubjects.get(identity.subject);
+    const linked = linkedUserId
+      ? [...this.users.values()].find(({ id }) => id === linkedUserId)
+      : undefined;
+    if (linked) {
+      assertGoogleUserAllowed(linked);
+      return { user: linked, created: false, becameVerified: false };
+    }
+
+    const existing = this.users.get(identity.email);
+    if (existing) {
+      assertGoogleUserAllowed(existing);
+      const otherSubject = this.googleByUser.get(existing.id);
+      if (otherSubject && otherSubject !== identity.subject) {
+        throw new AuthStoreGoogleError(
+          "GOOGLE_IDENTITY_CONFLICT",
+          "This account is already linked to another Google identity",
+        );
+      }
+      const becameVerified = existing.status === "PENDING_VERIFICATION";
+      if (becameVerified) existing.status = "ACTIVE";
+      this.googleSubjects.set(identity.subject, existing.id);
+      this.googleByUser.set(existing.id, identity.subject);
+      return { user: existing, created: false, becameVerified };
+    }
+
+    if (!registration || !passwordHash) {
+      throw new AuthStoreGoogleError(
+        "GOOGLE_REGISTRATION_REQUIRED",
+        "Complete registration details before creating a Google account",
+      );
+    }
+    const user: StoredUser = {
+      id: crypto.randomUUID(),
+      email: identity.email,
+      passwordHash,
+      displayName: registration.displayName || identity.displayName,
+      locale: registration.locale,
+      countryCode: registration.countryCode,
+      status: "ACTIVE",
+      roles: ["USER"],
+      credentialVersion: 1,
+    };
+    this.users.set(user.email, user);
+    this.googleSubjects.set(identity.subject, user.id);
+    this.googleByUser.set(user.id, identity.subject);
+    return { user, created: true, becameVerified: true };
   }
   async createSession(
     userId: string,
@@ -67,5 +126,14 @@ export class MemoryAuthStore implements AuthStore {
   async revokeSession(tokenHash: string, now: Date) {
     const session = this.sessions.get(tokenHash);
     if (session) session.revokedAt = now;
+  }
+}
+
+function assertGoogleUserAllowed(user: StoredUser) {
+  if (["SUSPENDED", "CLOSED"].includes(user.status)) {
+    throw new AuthStoreGoogleError(
+      "ACCOUNT_RESTRICTED",
+      "Account access is restricted",
+    );
   }
 }
