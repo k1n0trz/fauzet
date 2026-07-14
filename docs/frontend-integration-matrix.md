@@ -38,7 +38,7 @@
 | Login/registro    | `/app`                      | `/v1/auth/login`, `/register`, `/logout`, `/me` | Real; portado visual en curso                                         |
 | Verificación      | `/app/verify`               | `/v1/auth/email-verification/*`                 | Real; conservar enlaces/tokens seguros                                |
 | Recuperación      | `/app/forgot`, `/app/reset` | `/v1/auth/password/*`                           | Real; paridad visual pendiente                                        |
-| Google Auth       | `/app`                      | `/v1/auth/google` + Firebase ID token            | Integrado; vincula email verificado y evita cuentas duplicadas         |
+| Google Auth       | `/app`                      | `/v1/auth/google` + Firebase ID token           | Integrado; vincula email verificado y evita cuentas duplicadas        |
 | 2FA               | Ajustes                     | Sin backend TOTP                                | Deshabilitado honestamente                                            |
 | Onboarding        | Pendiente                   | Requiere estado servidor                        | No portar bono local                                                  |
 | Shell/rail        | `/app/*`                    | Sesión y rutas Next                             | Rail de iconos aprobado; portado visual en curso                      |
