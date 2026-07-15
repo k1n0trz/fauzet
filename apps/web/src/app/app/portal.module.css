@@ -168,18 +168,51 @@
   font: inherit;
   font-size: 13px;
   font-weight: 700;
-  opacity: 0.78;
+  opacity: 1;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.googleButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(57, 255, 136, 0.62);
+  background: rgba(57, 255, 136, 0.09);
+  box-shadow: 0 9px 26px rgba(57, 255, 136, 0.14);
+}
+
+.googleButton:focus-visible {
+  outline: 2px solid #39ff88;
+  outline-offset: 3px;
+}
+
+.googleButton:active:not(:disabled) {
+  transform: translateY(0);
+  background: rgba(57, 255, 136, 0.14);
+}
+
+.googleButton:disabled {
+  opacity: 0.52;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .googleButton small {
   padding: 4px 6px;
   border-radius: 999px;
-  color: #aeb9cf;
-  background: rgba(148, 163, 184, 0.1);
+  color: #91ffb9;
+  background: rgba(57, 255, 136, 0.1);
   font-size: 8px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.googleButton:disabled small {
+  color: #aeb9cf;
+  background: rgba(148, 163, 184, 0.1);
 }
 
 .authDivider {
