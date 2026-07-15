@@ -89,4 +89,30 @@ describe("Google authentication routes", () => {
     expect(response.json().error.code).toBe("GOOGLE_TOKEN_INVALID");
     await app.close();
   });
+
+  it("does not expose Firebase provider diagnostics to the client", async () => {
+    const app = await createApp(loadConfig({ NODE_ENV: "test" }), {
+      googleIdentityVerifier: {
+        async verify() {
+          throw new GoogleIdentityVerificationError(
+            "Google identity token is invalid or expired",
+            "provider_configuration",
+            "auth/insufficient-permission",
+          );
+        },
+      },
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/auth/google",
+      payload: { idToken },
+    });
+    expect(response.statusCode).toBe(401);
+    expect(response.body).not.toContain("insufficient-permission");
+    expect(response.json().error).toMatchObject({
+      code: "GOOGLE_TOKEN_INVALID",
+      message: "Google identity token is invalid or expired",
+    });
+    await app.close();
+  });
 });

@@ -48,7 +48,21 @@ export interface GoogleIdentityVerifier {
   verify(idToken: string): Promise<VerifiedGoogleIdentity>;
 }
 
-export class GoogleIdentityVerificationError extends Error {}
+export type GoogleIdentityVerificationReason =
+  | "invalid_token"
+  | "invalid_identity"
+  | "provider_configuration";
+
+export class GoogleIdentityVerificationError extends Error {
+  constructor(
+    message: string,
+    readonly reason: GoogleIdentityVerificationReason = "invalid_token",
+    readonly providerCode?: string,
+  ) {
+    super(message);
+    this.name = "GoogleIdentityVerificationError";
+  }
+}
 
 export interface GoogleAuthenticationResult {
   session: StoredSession;

@@ -78,6 +78,13 @@ export async function registerAuthRoutes(
         identity = await googleVerifier.verify(input.idToken);
       } catch (error) {
         if (error instanceof GoogleIdentityVerificationError) {
+          app.log.warn(
+            {
+              verificationReason: error.reason,
+              providerCode: error.providerCode,
+            },
+            "Google identity verification rejected",
+          );
           throw new AuthError(error.message, "GOOGLE_TOKEN_INVALID", 401);
         }
         throw error;

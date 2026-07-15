@@ -31,6 +31,7 @@ export class FirebaseGoogleIdentityVerifier implements GoogleIdentityVerifier {
       ) {
         throw new GoogleIdentityVerificationError(
           "A verified Google identity is required",
+          "invalid_identity",
         );
       }
       const displayName = decoded.name?.trim();
@@ -41,9 +42,30 @@ export class FirebaseGoogleIdentityVerifier implements GoogleIdentityVerifier {
       };
     } catch (error) {
       if (error instanceof GoogleIdentityVerificationError) throw error;
+      const providerCode = firebaseErrorCode(error);
+      const reason =
+        providerCode === "auth/insufficient-permission" ||
+        providerCode === "auth/invalid-credential" ||
+        providerCode === "app/invalid-credential"
+          ? "provider_configuration"
+          : "invalid_token";
       throw new GoogleIdentityVerificationError(
         "Google identity token is invalid or expired",
+        reason,
+        providerCode,
       );
     }
   }
+}
+
+function firebaseErrorCode(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return error.code.slice(0, 100);
+  }
+  return undefined;
 }

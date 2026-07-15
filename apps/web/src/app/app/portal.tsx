@@ -320,12 +320,18 @@ export function AuthPortal() {
       });
       const result = (await response.json()) as ApiError & { user?: User };
       if (!response.ok || !result.user) {
-        if (apiErrorCode(result) === "GOOGLE_REGISTRATION_REQUIRED") {
+        const code = apiErrorCode(result);
+        if (code === "GOOGLE_REGISTRATION_REQUIRED") {
           selectMode("register");
           setError(
             "Completa los datos y consentimientos de registro; después pulsa Google nuevamente.",
           );
           return;
+        }
+        if (code === "GOOGLE_TOKEN_INVALID") {
+          throw new Error(
+            "No pudimos validar tu acceso con Google. Inténtalo nuevamente.",
+          );
         }
         throw new Error(
           apiErrorMessage(result) ?? "No fue posible autenticarte con Google",
@@ -539,9 +545,9 @@ export function AuthPortal() {
           {googleLoading ? "Conectando…" : "Continuar con Google"}
           <small id="google-status">
             {googleAuthConfigured
-              ? mode === "register"
-                ? "Completa abajo tus datos y consentimientos"
-                : "Acceso seguro"
+              ? googleLoading
+                ? "Abriendo Google"
+                : "Disponible"
               : "Configuración pendiente"}
           </small>
         </button>
